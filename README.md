@@ -44,12 +44,17 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - [`spec/imports.wat`](spec/imports.wat) — canonical Core Wasm import declarations.
 - [`docs/design.md`](docs/design.md) — design rationale and non-goals.
 - [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — runtime implementation guidance, including GC array borrowing.
+- [`docs/open-questions.md`](docs/open-questions.md) — decisions to resolve before the 0.1 ABI is considered stable.
+- [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
+- [`tests/README.md`](tests/README.md) — cross-runtime conformance-test plan.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and specification-change process.
 - [`SECURITY.md`](SECURITY.md) — security model and vulnerability reporting guidance.
 
 ## Status
 
 WPSI 0.1 is a draft intended for implementation experiments, conformance tests, and API review. Function signatures are expected to stabilize before a 1.0 release.
+
+The planned first reference implementation is a Wago plugin, followed by a second independent runtime prototype before ABI stabilization.
 
 ## License
 
