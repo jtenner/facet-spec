@@ -1,0 +1,37 @@
+name: Bootstrap WPSI conformance suite
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/scripts/bootstrap_wpsi_suite.py"
+      - ".github/scripts/wpsi-suite.part*"
+      - ".github/workflows/bootstrap-suite.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install staged suite
+        run: python3 .github/scripts/bootstrap_wpsi_suite.py
+      - name: Check suite integrity
+        run: python3 spec/tests/tools/check_suite.py
+      - name: Commit suite
+        shell: bash
+        run: |
+          git add -A -- README.md CHANGELOG.md spec
+          if git diff --cached --quiet; then
+            echo "The conformance suite is already installed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test: add comprehensive WPSI conformance suite"
+          git push
