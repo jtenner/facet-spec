@@ -4,10 +4,16 @@ on:
   push:
     branches: [main]
     paths:
+      - "SPEC.md"
+      - "spec/imports.wat"
+      - "spec/behavior.md"
       - "spec/tests/**"
       - ".github/workflows/conformance-suite.yml"
   pull_request:
     paths:
+      - "SPEC.md"
+      - "spec/imports.wat"
+      - "spec/behavior.md"
       - "spec/tests/**"
       - ".github/workflows/conformance-suite.yml"
 
@@ -22,7 +28,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - name: Validate catalog, manifests, and S-expressions
+      - name: Validate catalog, manifests, and import signatures
         run: python3 spec/tests/tools/check_suite.py
       - name: Install pinned wasm-tools
         shell: bash
@@ -33,5 +39,7 @@ jobs:
           echo "0b488be25c9e8a74dfa09f7eac614a927ea197f389d8fa5a21ffb1c15deb469d  /tmp/wasm-tools.tar.gz" | sha256sum --check
           tar -xzf /tmp/wasm-tools.tar.gz -C /tmp
           sudo install /tmp/wasm-tools-1.256.0-x86_64-linux/wasm-tools /usr/local/bin/wasm-tools
+      - name: Parse canonical import declarations
+        run: wasm-tools parse spec/imports.wat -o /tmp/wpsi-imports.wasm
       - name: Parse every WAST file
         run: python3 spec/tests/tools/parse_wast.py
