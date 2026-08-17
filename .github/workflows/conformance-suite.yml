@@ -1,0 +1,37 @@
+name: WPSI conformance sources
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "spec/tests/**"
+      - ".github/workflows/conformance-suite.yml"
+  pull_request:
+    paths:
+      - "spec/tests/**"
+      - ".github/workflows/conformance-suite.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Validate catalog, manifests, and S-expressions
+        run: python3 spec/tests/tools/check_suite.py
+      - name: Install pinned wasm-tools
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/bytecodealliance/wasm-tools/releases/download/v1.256.0/wasm-tools-1.256.0-x86_64-linux.tar.gz \
+            --output /tmp/wasm-tools.tar.gz
+          echo "0b488be25c9e8a74dfa09f7eac614a927ea197f389d8fa5a21ffb1c15deb469d  /tmp/wasm-tools.tar.gz" | sha256sum --check
+          tar -xzf /tmp/wasm-tools.tar.gz -C /tmp
+          sudo install /tmp/wasm-tools-1.256.0-x86_64-linux/wasm-tools /usr/local/bin/wasm-tools
+      - name: Parse every WAST file
+        run: python3 spec/tests/tools/parse_wast.py
