@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - ".github/scripts/convert_scratch_consumers.py"
       - ".github/scripts/remove_scratch_abi.py"
       - ".github/workflows/remove-scratch-abi.yml"
 
@@ -19,11 +20,12 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Convert ordinary scratch consumers to preopens
+        run: python3 .github/scripts/convert_scratch_consumers.py
+
       - name: Apply scratch ABI migration
         shell: bash
         run: |
-          echo "Legacy scratch import consumers:"
-          grep -RIl 'fs_scratch' spec/tests --include='*.wast' | sort || true
           python3 - <<'PY'
           from pathlib import Path
           p = Path('.github/scripts/remove_scratch_abi.py')
@@ -60,6 +62,7 @@ jobs:
 
       - name: Remove migration machinery
         run: |
+          rm .github/scripts/convert_scratch_consumers.py
           rm .github/scripts/remove_scratch_abi.py
           rm .github/workflows/remove-scratch-abi.yml
 
