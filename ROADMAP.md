@@ -10,13 +10,23 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Define UTF-8, UTF-16, and UTF-32 text representations.
 - [x] Define private scratch filesystem semantics.
 - [x] Define canonical WAT import signatures.
-- [ ] Validate every WAT declaration with current Core Wasm tooling.
-- [ ] Add a machine-readable function/signature manifest.
-- [ ] Resolve the open questions in `docs/open-questions.md`.
+- [x] Define deterministic validation and error precedence.
+- [x] Define WASI-compatible error semantics and host-error normalization.
+- [x] Define WASI-style capability-beneath path and symlink resolution.
+- [x] Freeze WPSI 0.1 GC raw-buffer behavior: `i64` byte ranges, partial wide elements, abstract `(ref array)`, and immutable sources.
+- [x] Define system-string conversion and capacity semantics.
+- [x] Define polling snapshot/readiness semantics.
+- [x] Define synchronous socket state and error semantics using WASI as the compatibility baseline.
+- [x] Add a comprehensive WAST conformance suite and pinned syntax validation in CI.
+- [ ] Validate `spec/imports.wat` directly with current Core Wasm tooling in CI.
+- [ ] Add a machine-readable function/signature manifest independent of the test catalog.
+- [ ] Resolve or explicitly defer the remaining questions in `docs/open-questions.md` before declaring the ABI stable.
 
 ## Phase 1 — Wago reference implementation
 
-Use Wago as the first implementation vehicle because it already has:
+Implement WPSI as a Wago plugin.
+
+Wago is the first implementation vehicle because it already has:
 
 - Core Wasm 3.0 GC types;
 - typed host-function boundaries;
@@ -26,25 +36,31 @@ Use Wago as the first implementation vehicle because it already has:
 
 Initial implementation order:
 
-1. `wpsi-core`.
+1. `wpsi-core`, including handles, errors, arguments/environment, clocks, and randomness.
 2. `wpsi-memory32`.
-3. `wpsi-filesystem` with private scratch storage.
+3. `wpsi-filesystem` with private scratch storage and preopens.
 4. `wpsi-gc-array`, beginning with `array_i8` and then wider numeric/SIMD buffers.
 5. `wpsi-memory64`.
 6. `wpsi-poll`.
 7. `wpsi-network`.
 8. `wpsi-links`.
 
+The plugin should use [`spec/behavior.md`](spec/behavior.md) as the behavioral contract and the conformance suite as the acceptance test.
+
 A Wago implementation should add a scoped internal GC-array byte-borrow primitive rather than exposing collector backing addresses as persistent public API.
 
-## Phase 2 — Conformance suite
+## Phase 2 — Conformance execution
 
-- Build portable Core Wasm fixtures for every profile.
-- Add cross-representation byte-oracle tests.
-- Add multi-memory differential tests.
-- Add forced moving-GC tests.
-- Add capability-escape tests.
-- Publish a runtime conformance matrix.
+The source conformance suite now exists. The remaining work is to execute it against real implementations.
+
+- [x] Build portable Core Wasm/WAST fixtures for every current profile.
+- [x] Add multi-memory and GC logical-byte-view tests.
+- [x] Add capability-escape and stale-handle tests.
+- [x] Add WASI-compatible JSON host manifests and deterministic fixtures.
+- [ ] Connect the Wago plugin to the complete suite.
+- [ ] Add forced moving-GC runtime tests.
+- [ ] Add cross-representation differential execution against the Wago plugin.
+- [ ] Publish a runtime conformance matrix.
 
 ## Phase 3 — Second-runtime prototype
 
@@ -63,6 +79,10 @@ Before WPSI 1.0:
 - require two independent runtime implementations for stable profiles;
 - require cross-runtime conformance for GC logical byte views;
 - decide whether networking and links are 1.0 core profiles or remain extensions.
+
+## Deferred / post-0.1 questions
+
+The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They include handle encoding, path-encoding API shape, scratch persistence, per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
 
 ## Post-1.0 candidates
 
