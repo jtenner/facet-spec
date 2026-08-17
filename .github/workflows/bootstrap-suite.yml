@@ -1,11 +1,11 @@
-name: Bootstrap WPSI conformance suite
+name: Bootstrap validated WPSI conformance suite
 
 on:
   push:
     branches: [main]
     paths:
-      - ".github/scripts/bootstrap_wpsi_suite.py"
-      - ".github/scripts/wpsi-suite.part*"
+      - ".github/scripts/bootstrap_wpsi_final.py"
+      - ".github/scripts/wpsi-final.part*"
       - ".github/workflows/bootstrap-suite.yml"
 
 permissions:
@@ -19,16 +19,35 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - name: Install staged suite
-        run: python3 .github/scripts/bootstrap_wpsi_suite.py
-      - name: Check suite integrity
+
+      - name: Install staged suite sources
+        run: python3 .github/scripts/bootstrap_wpsi_final.py
+
+      - name: Check generated catalog
+        run: python3 spec/tests/tools/generate_suite.py --check
+
+      - name: Validate catalog, manifests, fixtures, and import signatures
         run: python3 spec/tests/tools/check_suite.py
-      - name: Commit suite
+
+      - name: Install pinned wasm-tools
         shell: bash
         run: |
-          git add -A -- README.md CHANGELOG.md spec
+          curl --fail --location --retry 3 \
+            https://github.com/bytecodealliance/wasm-tools/releases/download/v1.256.0/wasm-tools-1.256.0-x86_64-linux.tar.gz \
+            --output /tmp/wasm-tools.tar.gz
+          echo "0b488be25c9e8a74dfa09f7eac614a927ea197f389d8fa5a21ffb1c15deb469d  /tmp/wasm-tools.tar.gz" | sha256sum --check
+          tar -xzf /tmp/wasm-tools.tar.gz -C /tmp
+          sudo install /tmp/wasm-tools-1.256.0-x86_64-linux/wasm-tools /usr/local/bin/wasm-tools
+
+      - name: Parse every WAST source
+        run: python3 spec/tests/tools/parse_wast.py
+
+      - name: Commit the reviewable suite sources
+        shell: bash
+        run: |
+          git add -A -- README.md CHANGELOG.md CONTRIBUTING.md tests/README.md spec/tests
           if git diff --cached --quiet; then
-            echo "The conformance suite is already installed."
+            echo "The WPSI conformance suite is already installed."
             exit 0
           fi
           git config user.name "github-actions[bot]"
