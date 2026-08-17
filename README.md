@@ -42,13 +42,22 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 
 - [`SPEC.md`](SPEC.md) — normative WPSI 0.1 specification.
 - [`spec/imports.wat`](spec/imports.wat) — canonical Core Wasm import declarations.
+- [`spec/tests/README.md`](spec/tests/README.md) — normative conformance-suite and host-manifest contract.
+- [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable inventory of conformance tests and required profiles.
 - [`docs/design.md`](docs/design.md) — design rationale and non-goals.
 - [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — runtime implementation guidance, including GC array borrowing.
 - [`docs/open-questions.md`](docs/open-questions.md) — decisions to resolve before the 0.1 ABI is considered stable.
 - [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
-- [`tests/README.md`](tests/README.md) — cross-runtime conformance-test plan.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and specification-change process.
 - [`SECURITY.md`](SECURITY.md) — security model and vulnerability reporting guidance.
+
+## Conformance suite
+
+The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, text encodings, scratch storage, preopens, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
+
+The suite deliberately mirrors `WebAssembly/wasi-testsuite` host-manifest conventions—same-basename JSON, `run`, `wait`, `read`, `connect`, `send`, `recv`, `root`, fixtures, and `.cleanup` artifacts—so existing runtime adapters can be extended instead of replaced. WPSI adds only the `preopens` and `scratch` provisioning needed for its own model.
+
+Static checks validate catalog generation, manifests, fixture paths, metadata, exact WPSI import signatures, and source hygiene. CI additionally parses every script with a pinned `wasm-tools` release.
 
 ## Status
 

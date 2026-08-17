@@ -36,6 +36,31 @@ Avoid:
 - ABI behavior that depends on one runtime's private object layout;
 - host ambient authority that bypasses resource capabilities.
 
+## Conformance tests
+
+Contributions to the test suite are explicitly welcome. Add normative tests under
+[`spec/tests`](spec/tests) and follow its compatibility-first runner contract.
+A test should isolate one important observable behavior, preserve sentinels
+around writable ranges, avoid public-network dependencies, and distinguish
+invalid guest input from engine traps or host crashes.
+
+Do not add a new manifest field or operation when the existing
+`WebAssembly/wasi-testsuite` convention can express the same setup. Tests that
+need only guest-visible assertions should remain pure WAST. Use same-basename
+JSON only for arguments, environment, preopens, scratch quotas, process output,
+or deterministic network interaction.
+
+After adding or changing tests, run:
+
+```bash
+python3 spec/tests/tools/generate_suite.py
+python3 spec/tests/tools/check_suite.py
+python3 spec/tests/tools/parse_wast.py --wasm-tools wasm-tools
+```
+
+Every implementation bug, security finding, or fuzzing regression should be
+reduced to the smallest permanent conformance test that reproduces it.
+
 ## Pull requests
 
 Keep specification changes focused. Update `SPEC.md`, `spec/imports.wat`, and relevant conformance documentation together when an ABI function changes.

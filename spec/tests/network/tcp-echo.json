@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "proposals": [
+    "sockets"
+  ],
+  "operations": [
+    {
+      "type": "run"
+    },
+    {
+      "type": "connect",
+      "id": "server",
+      "protocol_type": "tcp"
+    },
+    {
+      "type": "send",
+      "id": "server",
+      "payload": "ping"
+    },
+    {
+      "type": "recv",
+      "id": "server",
+      "payload": "ping"
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

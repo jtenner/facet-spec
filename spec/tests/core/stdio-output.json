@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run"
+    },
+    {
+      "type": "read",
+      "id": "stdout",
+      "payload": "out\n"
+    },
+    {
+      "type": "read",
+      "id": "stderr",
+      "payload": "err\n"
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

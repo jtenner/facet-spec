@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "args": [
+        "wpsi-test",
+        "café"
+      ]
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

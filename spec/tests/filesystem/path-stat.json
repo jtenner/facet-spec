@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "root": "../fixtures/root"
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

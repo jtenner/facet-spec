@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jtenner/wpsi/blob/main/spec/tests/manifest.schema.json",
+  "title": "WPSI test manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/run"
+          },
+          {
+            "$ref": "#/$defs/wait"
+          },
+          {
+            "$ref": "#/$defs/read"
+          },
+          {
+            "$ref": "#/$defs/connect"
+          },
+          {
+            "$ref": "#/$defs/send"
+          },
+          {
+            "$ref": "#/$defs/recv"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "version",
+    "operations"
+  ],
+  "$defs": {
+    "rights": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "read",
+          "write",
+          "seek",
+          "tell",
+          "stat",
+          "set-size",
+          "sync",
+          "open",
+          "create",
+          "remove",
+          "rename",
+          "link",
+          "symlink",
+          "readlink",
+          "iterate"
+        ]
+      }
+    },
+    "preopen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "guest"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "guest": {
+          "type": "string"
+        },
+        "rights": {
+          "$ref": "#/$defs/rights"
+        }
+      }
+    },
+    "scratch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "byte_quota": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "object_quota": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "run"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "root": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "preopens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preopen"
+          }
+        },
+        "scratch": {
+          "$ref": "#/$defs/scratch"
+        }
+      }
+    },
+    "wait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "wait"
+        },
+        "exit_code": {
+          "type": "integer"
+        }
+      }
+    },
+    "read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "read"
+        },
+        "id": {
+          "enum": [
+            "stdout",
+            "stderr"
+          ]
+        },
+        "payload": {
+          "type": "string"
+        }
+      }
+    },
+    "connect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "connect"
+        },
+        "id": {
+          "type": "string"
+        },
+        "protocol_type": {
+          "enum": [
+            "tcp",
+            "udp",
+            "http"
+          ]
+        }
+      }
+    },
+    "send": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "const": "send"
+        },
+        "id": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "string"
+        }
+      }
+    },
+    "recv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "const": "recv"
+        },
+        "id": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

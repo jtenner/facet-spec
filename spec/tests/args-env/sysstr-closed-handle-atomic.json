@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "args": [
+        "wpsi-test"
+      ]
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "args": [
+        "first",
+        "second"
+      ]
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,1523 @@
+{
+  "version": 1,
+  "specification": "WPSI 0.1",
+  "test_count": 143,
+  "tests": [
+    {
+      "id": "adversarial/instance-handle-isolation",
+      "path": "spec/tests/adversarial/instance-handle-isolation.wast",
+      "profiles": [
+        "core",
+        "filesystem",
+        "adversarial"
+      ],
+      "purpose": "Resource handles are instance-local and cannot be reused by another module instance.",
+      "kind": "harness"
+    },
+    {
+      "id": "adversarial/stale-handle-after-reallocation",
+      "path": "spec/tests/adversarial/stale-handle-after-reallocation.wast",
+      "profiles": [
+        "core",
+        "args-env",
+        "adversarial"
+      ],
+      "purpose": "A closed numeric handle never aliases a subsequently allocated resource.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/counts",
+      "path": "spec/tests/args-env/counts.wast",
+      "profiles": [
+        "core",
+        "args-env"
+      ],
+      "purpose": "Arguments and environment are provisioned exactly by the manifest.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/out-of-range-zeroes",
+      "path": "spec/tests/args-env/out-of-range-zeroes.wast",
+      "profiles": [
+        "core",
+        "args-env"
+      ],
+      "purpose": "Out-of-range indexes return zero handles and ERR_RANGE.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-array-i16",
+      "path": "spec/tests/args-env/sysstr-array-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env"
+      ],
+      "purpose": "sysstr_read_array_i16 writes a UTF-16 surrogate pair directly into a packed GC array.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-array-i32",
+      "path": "spec/tests/args-env/sysstr-array-i32.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env"
+      ],
+      "purpose": "sysstr_read_array_i32 writes the exact UTF-32 scalar into a GC array.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-array-i8",
+      "path": "spec/tests/args-env/sysstr-array-i8.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env"
+      ],
+      "purpose": "sysstr_read_array_i8 writes UTF-8 directly into a packed GC byte array and preserves sentinels.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-closed-handle-atomic",
+      "path": "spec/tests/args-env/sysstr-closed-handle-atomic.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env",
+        "adversarial"
+      ],
+      "purpose": "Reading a closed sysstr returns ERR_BAD_HANDLE, zero units, and leaves destination bytes untouched.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-utf16",
+      "path": "spec/tests/args-env/sysstr-utf16.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env"
+      ],
+      "purpose": "UTF-16 encodes a non-BMP scalar as the expected surrogate pair.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-utf32",
+      "path": "spec/tests/args-env/sysstr-utf32.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env"
+      ],
+      "purpose": "UTF-32 exposes the exact Unicode scalar value.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-utf8",
+      "path": "spec/tests/args-env/sysstr-utf8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env"
+      ],
+      "purpose": "UTF-8 sysstr length and bytes are exact and not NUL-terminated.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/sysstr-zero-capacity",
+      "path": "spec/tests/args-env/sysstr-zero-capacity.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env"
+      ],
+      "purpose": "A zero-capacity sysstr read succeeds and preserves the destination sentinel.",
+      "kind": "wast"
+    },
+    {
+      "id": "clocks/monotonic-nondecreasing",
+      "path": "spec/tests/clocks/monotonic-nondecreasing.wast",
+      "profiles": [
+        "core",
+        "clocks"
+      ],
+      "purpose": "Successive monotonic clock observations never move backwards.",
+      "kind": "wast"
+    },
+    {
+      "id": "clocks/resolution-positive",
+      "path": "spec/tests/clocks/resolution-positive.wast",
+      "profiles": [
+        "core",
+        "clocks"
+      ],
+      "purpose": "Monotonic clock resolution is a positive duration.",
+      "kind": "wast"
+    },
+    {
+      "id": "clocks/sleep-for-zero",
+      "path": "spec/tests/clocks/sleep-for-zero.wast",
+      "profiles": [
+        "core",
+        "clocks"
+      ],
+      "purpose": "A zero-duration sleep succeeds and does not require special timer handling.",
+      "kind": "wast"
+    },
+    {
+      "id": "clocks/sleep-until-past",
+      "path": "spec/tests/clocks/sleep-until-past.wast",
+      "profiles": [
+        "core",
+        "clocks"
+      ],
+      "purpose": "Sleeping until a deadline that has already arrived succeeds immediately.",
+      "kind": "wast"
+    },
+    {
+      "id": "clocks/system-nanoseconds-range",
+      "path": "spec/tests/clocks/system-nanoseconds-range.wast",
+      "profiles": [
+        "core",
+        "clocks"
+      ],
+      "purpose": "System clock nanoseconds are always less than one billion.",
+      "kind": "wast"
+    },
+    {
+      "id": "core/abi-version",
+      "path": "spec/tests/core/abi-version.wast",
+      "profiles": [
+        "core"
+      ],
+      "purpose": "WPSI 0.1 reports ABI version 1.",
+      "kind": "wast"
+    },
+    {
+      "id": "core/double-close-sysstr",
+      "path": "spec/tests/core/double-close-sysstr.wast",
+      "profiles": [
+        "core",
+        "args-env"
+      ],
+      "purpose": "Closing a handle twice reports ERR_BAD_HANDLE instead of aliasing another resource.",
+      "kind": "wast"
+    },
+    {
+      "id": "core/handle-zero-invalid",
+      "path": "spec/tests/core/handle-zero-invalid.wast",
+      "profiles": [
+        "core"
+      ],
+      "purpose": "Handle zero is permanently invalid.",
+      "kind": "wast"
+    },
+    {
+      "id": "core/proc-exit-nonzero",
+      "path": "spec/tests/core/proc-exit-nonzero.wast",
+      "profiles": [
+        "core"
+      ],
+      "purpose": "proc_exit terminates execution with the exact unsigned exit code supplied by the guest.",
+      "kind": "harness"
+    },
+    {
+      "id": "core/proc-yield",
+      "path": "spec/tests/core/proc-yield.wast",
+      "profiles": [
+        "core"
+      ],
+      "purpose": "A cooperative yield succeeds without changing guest-visible state.",
+      "kind": "wast"
+    },
+    {
+      "id": "core/stdio-output",
+      "path": "spec/tests/core/stdio-output.wast",
+      "profiles": [
+        "core",
+        "memory32"
+      ],
+      "purpose": "Standard output and error descriptors integrate with WASI-compatible read operations in the host manifest.",
+      "kind": "harness"
+    },
+    {
+      "id": "core/stdio-valid",
+      "path": "spec/tests/core/stdio-valid.wast",
+      "profiles": [
+        "core"
+      ],
+      "purpose": "All standard streams resolve to nonzero descriptor handles.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/create-remove-directory",
+      "path": "spec/tests/filesystem/create-remove-directory.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "A newly created empty directory can be removed, and a second removal reports ERR_NO_ENTRY.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/create-rename-remove",
+      "path": "spec/tests/filesystem/create-rename-remove.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Rename removes the old name, creates the new name, and removal deletes it.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/dir-iterate-file-error",
+      "path": "spec/tests/filesystem/dir-iterate-file-error.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "adversarial"
+      ],
+      "purpose": "Opening a directory iterator on a regular file returns a zero handle and ERR_NOT_DIRECTORY.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/dir-iterate-rewind",
+      "path": "spec/tests/filesystem/dir-iterate-rewind.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Directory iteration visits each scratch entry once, reports regular-file types, and rewinds deterministically.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/eof-is-success",
+      "path": "spec/tests/filesystem/eof-is-success.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "EOF is represented as zero bytes and ERR_OK.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/exclusive-create",
+      "path": "spec/tests/filesystem/exclusive-create.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "OPEN_EXCLUSIVE rejects an existing path and returns a zero descriptor.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/fd-invalid-handle-atomic",
+      "path": "spec/tests/filesystem/fd-invalid-handle-atomic.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "adversarial"
+      ],
+      "purpose": "fd_read validates an invalid descriptor before touching the destination buffer.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/fd-rights-requested-subset",
+      "path": "spec/tests/filesystem/fd-rights-requested-subset.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "capabilities"
+      ],
+      "purpose": "An opened descriptor receives exactly the requested rights and no ambient parent rights.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-array-i16",
+      "path": "spec/tests/filesystem/path-array-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "path_open_array_i16 consumes the native GC code-unit representation without linear-memory lowering.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-array-i32",
+      "path": "spec/tests/filesystem/path-array-i32.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "path_open_array_i32 consumes the native GC code-unit representation without linear-memory lowering.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-array-i8",
+      "path": "spec/tests/filesystem/path-array-i8.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "path_open_array_i8 consumes the native GC code-unit representation without linear-memory lowering.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-embedded-nul",
+      "path": "spec/tests/filesystem/path-embedded-nul.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "Filesystem paths reject embedded NUL without truncating the name.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-invalid-utf16-surrogate",
+      "path": "spec/tests/filesystem/path-invalid-utf16-surrogate.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "An unpaired UTF-16 high surrogate is rejected as an illegal sequence.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-invalid-utf32-surrogate",
+      "path": "spec/tests/filesystem/path-invalid-utf32-surrogate.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "A UTF-32 surrogate value is rejected as an illegal sequence.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-invalid-utf32-too-large",
+      "path": "spec/tests/filesystem/path-invalid-utf32-too-large.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "A UTF-32 value above U+10FFFF is rejected as an illegal sequence.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-invalid-utf8",
+      "path": "spec/tests/filesystem/path-invalid-utf8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "Overlong UTF-8 is rejected as an illegal sequence.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-parent-escape-rejected",
+      "path": "spec/tests/filesystem/path-parent-escape-rejected.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "capabilities",
+        "adversarial"
+      ],
+      "purpose": "Parent traversal cannot escape a directory capability.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-raw8",
+      "path": "spec/tests/filesystem/path-raw8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "ENC_RAW8 accepts an uninterpreted ASCII path without Unicode conversion.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-stat",
+      "path": "spec/tests/filesystem/path-stat.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "path_stat reports the exact type and size without opening the file.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-utf16",
+      "path": "spec/tests/filesystem/path-utf16.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "A UTF-16LE path opens a Unicode-named fixture without UTF-8 canonicalization.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-utf32",
+      "path": "spec/tests/filesystem/path-utf32.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "A UTF-32LE path opens a Unicode-named fixture without UTF-8 canonicalization.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-utf8",
+      "path": "spec/tests/filesystem/path-utf8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "A UTF-8 path opens a Unicode-named fixture without UTF-8 canonicalization.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/preopen-multiple-order",
+      "path": "spec/tests/filesystem/preopen-multiple-order.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Multiple preopens are returned in manifest order.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/preopen-root",
+      "path": "spec/tests/filesystem/preopen-root.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "The WASI-compatible root manifest creates one preopen whose display name is `/`.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/readonly-rights-no-escalation",
+      "path": "spec/tests/filesystem/readonly-rights-no-escalation.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "capabilities"
+      ],
+      "purpose": "A read-only preopen cannot create a writable child descriptor.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/scratch-quota-reported",
+      "path": "spec/tests/filesystem/scratch-quota-reported.wast",
+      "profiles": [
+        "core",
+        "filesystem"
+      ],
+      "purpose": "Manifest-configured scratch quotas are reported exactly.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/scratch-roundtrip",
+      "path": "spec/tests/filesystem/scratch-roundtrip.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Scratch supports create, write, seek, read, and close without a host preopen.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/scratch-starts-empty",
+      "path": "spec/tests/filesystem/scratch-starts-empty.wast",
+      "profiles": [
+        "core",
+        "filesystem"
+      ],
+      "purpose": "Every test receives a fresh, logically empty scratch filesystem.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/seek-tell-size",
+      "path": "spec/tests/filesystem/seek-tell-size.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Tell tracks sequential writes and SEEK_END observes a truncated size.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/stat-size-and-type",
+      "path": "spec/tests/filesystem/stat-size-and-type.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "fd_stat reports a regular file and exact byte size.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/sync-datasync",
+      "path": "spec/tests/filesystem/sync-datasync.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "fd_sync and fd_datasync succeed for a writable scratch file with sync rights.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-read-partial-i16",
+      "path": "spec/tests/gc-array/fd-read-partial-i16.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "A partial i16 read overlays bytes while preserving unselected bytes in boundary elements.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-read-partial-v128",
+      "path": "spec/tests/gc-array/fd-read-partial-v128.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "A partial v128 read overlays only selected lanes and preserves every surrounding byte.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-write-logical-byte-view-i16",
+      "path": "spec/tests/gc-array/fd-write-logical-byte-view-i16.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "fd_write_array_i16 uses the normative little-endian logical byte view.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-write-logical-byte-view-i32",
+      "path": "spec/tests/gc-array/fd-write-logical-byte-view-i32.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "fd_write_array_i32 uses the normative little-endian logical byte view.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-write-logical-byte-view-i64",
+      "path": "spec/tests/gc-array/fd-write-logical-byte-view-i64.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "fd_write_array_i64 uses the normative little-endian logical byte view.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-write-logical-byte-view-i8",
+      "path": "spec/tests/gc-array/fd-write-logical-byte-view-i8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "fd_write_array_i8 uses the normative little-endian logical byte view.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/fd-write-logical-byte-view-v128",
+      "path": "spec/tests/gc-array/fd-write-logical-byte-view-v128.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "simd",
+        "filesystem"
+      ],
+      "purpose": "fd_write_array_v128 exposes the same 16 bytes as v128.store.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/immutable-destination",
+      "path": "spec/tests/gc-array/immutable-destination.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "Destination operations reject immutable arrays.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/immutable-source-accepted",
+      "path": "spec/tests/gc-array/immutable-source-accepted.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "Source-only GC I/O accepts an immutable packed byte array.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/random-fill-i16",
+      "path": "spec/tests/gc-array/random-fill-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array"
+      ],
+      "purpose": "array<i16> is recognized and only the selected logical byte range is modified.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/random-fill-i32",
+      "path": "spec/tests/gc-array/random-fill-i32.wast",
+      "profiles": [
+        "core",
+        "gc-array"
+      ],
+      "purpose": "array<i32> is recognized and only the selected logical byte range is modified.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/random-fill-i64",
+      "path": "spec/tests/gc-array/random-fill-i64.wast",
+      "profiles": [
+        "core",
+        "gc-array"
+      ],
+      "purpose": "array<i64> is recognized and only the selected logical byte range is modified.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/random-fill-i8",
+      "path": "spec/tests/gc-array/random-fill-i8.wast",
+      "profiles": [
+        "core",
+        "gc-array"
+      ],
+      "purpose": "array<i8> is recognized and only the selected logical byte range is modified.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/random-fill-v128",
+      "path": "spec/tests/gc-array/random-fill-v128.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "simd"
+      ],
+      "purpose": "array<v128> exposes 16-byte elements and preserves nonselected elements.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/range-overflow-atomic",
+      "path": "spec/tests/gc-array/range-overflow-atomic.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "GC logical-byte range overflow is rejected atomically.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/writev-nested-i8",
+      "path": "spec/tests/gc-array/writev-nested-i8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "gc-array",
+        "filesystem"
+      ],
+      "purpose": "GC writev traverses a nested array in outer-index order.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/writev-null-child",
+      "path": "spec/tests/gc-array/writev-null-child.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "filesystem",
+        "adversarial"
+      ],
+      "purpose": "A selected null child is rejected before scatter/gather I/O.",
+      "kind": "harness"
+    },
+    {
+      "id": "gc-array/wrong-type-i16-from-i32",
+      "path": "spec/tests/gc-array/wrong-type-i16-from-i32.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "The i16 entry point rejects a dynamic array<i32> with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/wrong-type-i32-from-i64",
+      "path": "spec/tests/gc-array/wrong-type-i32-from-i64.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "The i32 entry point rejects a dynamic array<i64> with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/wrong-type-i64-from-i32",
+      "path": "spec/tests/gc-array/wrong-type-i64-from-i32.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "The i64 entry point rejects a dynamic array<i32> with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/wrong-type-i8-from-i16",
+      "path": "spec/tests/gc-array/wrong-type-i8-from-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "The i8 entry point rejects a dynamic array<i16> with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/wrong-type-v128-from-i64",
+      "path": "spec/tests/gc-array/wrong-type-v128-from-i64.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "adversarial"
+      ],
+      "purpose": "The v128 entry point rejects a dynamic array<i64> with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "gc-array/zero-length-at-end",
+      "path": "spec/tests/gc-array/zero-length-at-end.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "random"
+      ],
+      "purpose": "A zero-length GC operation at the exact logical end succeeds and preserves the element.",
+      "kind": "wast"
+    },
+    {
+      "id": "imports/fd_pread_array_i16",
+      "path": "spec/tests/imports/fd_pread_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pread_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pread_array_i32",
+      "path": "spec/tests/imports/fd_pread_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pread_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pread_array_i64",
+      "path": "spec/tests/imports/fd_pread_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pread_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pread_array_i8",
+      "path": "spec/tests/imports/fd_pread_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pread_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pread_array_v128",
+      "path": "spec/tests/imports/fd_pread_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pread_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pwrite_array_i16",
+      "path": "spec/tests/imports/fd_pwrite_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pwrite_array_i32",
+      "path": "spec/tests/imports/fd_pwrite_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pwrite_array_i64",
+      "path": "spec/tests/imports/fd_pwrite_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pwrite_array_i8",
+      "path": "spec/tests/imports/fd_pwrite_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_pwrite_array_v128",
+      "path": "spec/tests/imports/fd_pwrite_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_read_array_i16",
+      "path": "spec/tests/imports/fd_read_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_read_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_read_array_i32",
+      "path": "spec/tests/imports/fd_read_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_read_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_read_array_i64",
+      "path": "spec/tests/imports/fd_read_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_read_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_read_array_i8",
+      "path": "spec/tests/imports/fd_read_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_read_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_read_array_v128",
+      "path": "spec/tests/imports/fd_read_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_read_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_write_array_i16",
+      "path": "spec/tests/imports/fd_write_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_write_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_write_array_i32",
+      "path": "spec/tests/imports/fd_write_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_write_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_write_array_i64",
+      "path": "spec/tests/imports/fd_write_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_write_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_write_array_i8",
+      "path": "spec/tests/imports/fd_write_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_write_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/fd_write_array_v128",
+      "path": "spec/tests/imports/fd_write_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.fd_write_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/profile-surface",
+      "path": "spec/tests/imports/profile-surface.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "memory64",
+        "gc-array",
+        "filesystem",
+        "links",
+        "network",
+        "poll"
+      ],
+      "purpose": "Representative imports guard profile naming and Core signatures.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/random_fill_array_i16",
+      "path": "spec/tests/imports/random_fill_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.random_fill_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/random_fill_array_i32",
+      "path": "spec/tests/imports/random_fill_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.random_fill_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/random_fill_array_i64",
+      "path": "spec/tests/imports/random_fill_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.random_fill_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/random_fill_array_i8",
+      "path": "spec/tests/imports/random_fill_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.random_fill_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/random_fill_array_v128",
+      "path": "spec/tests/imports/random_fill_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.random_fill_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_recvfrom_array_i16",
+      "path": "spec/tests/imports/socket_recvfrom_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_recvfrom_array_i32",
+      "path": "spec/tests/imports/socket_recvfrom_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_recvfrom_array_i64",
+      "path": "spec/tests/imports/socket_recvfrom_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_recvfrom_array_i8",
+      "path": "spec/tests/imports/socket_recvfrom_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_recvfrom_array_v128",
+      "path": "spec/tests/imports/socket_recvfrom_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_sendto_array_i16",
+      "path": "spec/tests/imports/socket_sendto_array_i16.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i16.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_sendto_array_i32",
+      "path": "spec/tests/imports/socket_sendto_array_i32.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i32.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_sendto_array_i64",
+      "path": "spec/tests/imports/socket_sendto_array_i64.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i64.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_sendto_array_i8",
+      "path": "spec/tests/imports/socket_sendto_array_i8.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i8.",
+      "kind": "link"
+    },
+    {
+      "id": "imports/socket_sendto_array_v128",
+      "path": "spec/tests/imports/socket_sendto_array_v128.wast",
+      "profiles": [
+        "gc-array"
+      ],
+      "purpose": "Exact Core signature for wpsi.socket_sendto_array_v128.",
+      "kind": "link"
+    },
+    {
+      "id": "links/hard-link-survives-source-removal",
+      "path": "spec/tests/links/hard-link-survives-source-removal.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "links"
+      ],
+      "purpose": "A hard link remains valid after the original directory entry is removed.",
+      "kind": "wast"
+    },
+    {
+      "id": "links/symlink-readlink",
+      "path": "spec/tests/links/symlink-readlink.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "links"
+      ],
+      "purpose": "A symbolic-link target round-trips through a sysstr without reinterpretation.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/iovec-invalid-second-atomic",
+      "path": "spec/tests/memory32/iovec-invalid-second-atomic.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "multi-memory",
+        "filesystem",
+        "adversarial"
+      ],
+      "purpose": "All iovecs are validated before writev performs a partial write.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/multi-memory-selection",
+      "path": "spec/tests/memory32/multi-memory-selection.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "multi-memory"
+      ],
+      "purpose": "The explicit memory index selects memory one while memory zero remains unchanged.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/pread-pwrite-preserve-position",
+      "path": "spec/tests/memory32/pread-pwrite-preserve-position.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "Positional I/O modifies file data without changing the sequential descriptor position.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/readv-cross-memory",
+      "path": "spec/tests/memory32/readv-cross-memory.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "multi-memory",
+        "filesystem"
+      ],
+      "purpose": "Memory32 readv scatters bytes across memories in iovec order.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/writev-cross-memory",
+      "path": "spec/tests/memory32/writev-cross-memory.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "multi-memory",
+        "filesystem"
+      ],
+      "purpose": "Memory32 writev gathers buffers from different memories in iovec order.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory32/wrong-memory-width",
+      "path": "spec/tests/memory32/wrong-memory-width.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "adversarial"
+      ],
+      "purpose": "A Memory32 operation rejects a Memory64 memory with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory64/file-roundtrip",
+      "path": "spec/tests/memory64/file-roundtrip.wast",
+      "profiles": [
+        "core",
+        "memory64",
+        "filesystem"
+      ],
+      "purpose": "Memory64 paths and buffers can round-trip file data without narrowing addresses.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory64/oob-overflow-atomic",
+      "path": "spec/tests/memory64/oob-overflow-atomic.wast",
+      "profiles": [
+        "core",
+        "memory64",
+        "adversarial"
+      ],
+      "purpose": "Unsigned pointer-plus-length overflow is rejected before mutation.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory64/random-fill",
+      "path": "spec/tests/memory64/random-fill.wast",
+      "profiles": [
+        "core",
+        "memory64"
+      ],
+      "purpose": "Memory64 uses i64 addresses while preserving adjacent bytes.",
+      "kind": "wast"
+    },
+    {
+      "id": "memory64/wrong-memory-width",
+      "path": "spec/tests/memory64/wrong-memory-width.wast",
+      "profiles": [
+        "core",
+        "memory64",
+        "adversarial"
+      ],
+      "purpose": "A Memory64 operation rejects a Memory32 memory with ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "network/dns-localhost-terminates",
+      "path": "spec/tests/network/dns-localhost-terminates.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "network"
+      ],
+      "purpose": "DNS iteration for localhost yields at least one address and terminates.",
+      "kind": "wast"
+    },
+    {
+      "id": "network/socket-bind-ephemeral",
+      "path": "spec/tests/network/socket-bind-ephemeral.wast",
+      "profiles": [
+        "core",
+        "network"
+      ],
+      "purpose": "Binding UDP to port zero assigns a nonzero local port.",
+      "kind": "wast"
+    },
+    {
+      "id": "network/socket-invalid-handle",
+      "path": "spec/tests/network/socket-invalid-handle.wast",
+      "profiles": [
+        "core",
+        "network"
+      ],
+      "purpose": "Socket operations validate handles before host access.",
+      "kind": "wast"
+    },
+    {
+      "id": "network/socket-open-close",
+      "path": "spec/tests/network/socket-open-close.wast",
+      "profiles": [
+        "core",
+        "network"
+      ],
+      "purpose": "A TCP/IPv4 socket is an ordinary closeable WPSI resource.",
+      "kind": "wast"
+    },
+    {
+      "id": "network/tcp-echo",
+      "path": "spec/tests/network/tcp-echo.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "network"
+      ],
+      "purpose": "The WASI-compatible connect/send/recv harness can drive a WPSI TCP listener through accept and stream I/O.",
+      "kind": "harness"
+    },
+    {
+      "id": "network/udp-echo",
+      "path": "spec/tests/network/udp-echo.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "network"
+      ],
+      "purpose": "The WASI-compatible connect/send/recv harness can drive WPSI datagram receive and reply operations.",
+      "kind": "harness"
+    },
+    {
+      "id": "poll/add-invalid-fd",
+      "path": "spec/tests/poll/add-invalid-fd.wast",
+      "profiles": [
+        "core",
+        "poll",
+        "adversarial"
+      ],
+      "purpose": "Poll registration rejects the permanently invalid descriptor zero.",
+      "kind": "wast"
+    },
+    {
+      "id": "poll/empty-zero-deadline",
+      "path": "spec/tests/poll/empty-zero-deadline.wast",
+      "profiles": [
+        "core",
+        "poll"
+      ],
+      "purpose": "An empty poll set with an expired deadline returns no events and succeeds.",
+      "kind": "wast"
+    },
+    {
+      "id": "poll/next-exhausted",
+      "path": "spec/tests/poll/next-exhausted.wast",
+      "profiles": [
+        "core",
+        "poll"
+      ],
+      "purpose": "poll_next reports done after an empty wait result.",
+      "kind": "wast"
+    },
+    {
+      "id": "poll/remove-timer",
+      "path": "spec/tests/poll/remove-timer.wast",
+      "profiles": [
+        "core",
+        "clocks",
+        "poll"
+      ],
+      "purpose": "Removing a timer subscription prevents it from appearing in the next ready set.",
+      "kind": "wast"
+    },
+    {
+      "id": "poll/timer-and-drain",
+      "path": "spec/tests/poll/timer-and-drain.wast",
+      "profiles": [
+        "core",
+        "clocks",
+        "poll"
+      ],
+      "purpose": "An expired timer produces one timer event with exact userdata.",
+      "kind": "wast"
+    },
+    {
+      "id": "poll/wait-before-drain-busy",
+      "path": "spec/tests/poll/wait-before-drain-busy.wast",
+      "profiles": [
+        "core",
+        "clocks",
+        "poll",
+        "adversarial"
+      ],
+      "purpose": "A second poll_wait before draining ready events returns ERR_BUSY.",
+      "kind": "wast"
+    },
+    {
+      "id": "random/invalid-memory-index",
+      "path": "spec/tests/random/invalid-memory-index.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "adversarial"
+      ],
+      "purpose": "An invalid memory index returns ERR_FAULT rather than selecting memory zero.",
+      "kind": "wast"
+    },
+    {
+      "id": "random/mem32-bounds-and-sentinels",
+      "path": "spec/tests/random/mem32-bounds-and-sentinels.wast",
+      "profiles": [
+        "core",
+        "memory32"
+      ],
+      "purpose": "Random fill mutates exactly the requested range and preserves adjacent bytes.",
+      "kind": "wast"
+    },
+    {
+      "id": "random/mem32-oob-atomic",
+      "path": "spec/tests/random/mem32-oob-atomic.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "adversarial"
+      ],
+      "purpose": "An out-of-bounds fill is rejected atomically and returns zero bytes written.",
+      "kind": "wast"
+    },
+    {
+      "id": "random/mem32-zero-length",
+      "path": "spec/tests/random/mem32-zero-length.wast",
+      "profiles": [
+        "core",
+        "memory32"
+      ],
+      "purpose": "Zero-length fill at the final byte is valid and does not mutate it.",
+      "kind": "wast"
+    },
+    {
+      "id": "random/u64-success",
+      "path": "spec/tests/random/u64-success.wast",
+      "profiles": [
+        "core",
+        "random"
+      ],
+      "purpose": "random_u64 returns a scalar and an ERR_OK status without requiring guest storage.",
+      "kind": "wast"
+    }
+  ]
+}
