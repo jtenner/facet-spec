@@ -18,3 +18,7 @@ All notable specification changes will be recorded here.
 - Filesystem, links, sockets, DNS, clocks, randomness, and polling function families.
 - Canonical WAT import declarations and runtime implementation guidance.
 - Comprehensive initial conformance suite with 143 focused WAST tests, WASI-compatible host manifests, deterministic fixtures, generated catalog metadata, exact import-signature validation, and pinned `wasm-tools` parsing in CI.
+
+### Decided
+
+- GC raw-buffer byte offsets and lengths are `i64`. The existing normative signatures remain unchanged; runtimes bounds-check these values against the actual GC array byte length.
