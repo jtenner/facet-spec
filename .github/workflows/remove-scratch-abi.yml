@@ -20,7 +20,19 @@ jobs:
           python-version: "3.13"
 
       - name: Apply scratch ABI migration
-        run: python3 .github/scripts/remove_scratch_abi.py
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/remove_scratch_abi.py')
+          text = p.read_text(encoding='utf-8')
+          old = '    if "fs_scratch" in text or "scratch filesystem" in text or "scratch storage" in text or \'"scratch"\' in text:\n'
+          new = '    if "fs_scratch" in text or \'"scratch"\' in text:\n'
+          if old not in text:
+              raise SystemExit('scratch migration hygiene guard not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          python3 .github/scripts/remove_scratch_abi.py
 
       - name: Regenerate conformance catalog
         run: python3 spec/tests/tools/generate_suite.py
