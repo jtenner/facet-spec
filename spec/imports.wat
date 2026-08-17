@@ -4,6 +4,13 @@
 ;; functions they actually require.
 
 (module
+  ;; Representative concrete result types for host-allocated strings.
+  ;; Allocating string imports are templates: an importing module supplies its
+  ;; own concrete array type with the matching element storage class.
+  (type $wpsi_string_i8 (array (mut i8)))
+  (type $wpsi_string_i16 (array (mut i16)))
+  (type $wpsi_string_i32 (array (mut i32)))
+
   ;; Core
   (import "wpsi" "abi_version" (func $abi_version (result i32)))
   (import "wpsi" "handle_close" (func $handle_close (param i32) (result i32)))
@@ -15,23 +22,26 @@
 
   ;; Arguments and environment
   (import "wpsi" "args_count" (func $args_count (result i32 i32)))
-  (import "wpsi" "args_get" (func $args_get (param i32) (result i32 i32)))
-  (import "wpsi" "env_count" (func $env_count (result i32 i32)))
-  (import "wpsi" "env_get" (func $env_get (param i32) (result i32 i32 i32)))
+  (import "wpsi" "args_len" (func $args_len (param i32 i32) (result i64 i32)))
+  (import "wpsi" "args_read_mem32" (func $args_read_mem32 (param i32 i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "args_read_mem64" (func $args_read_mem64 (param i32 i32 i32 i64 i64) (result i64 i32)))
+  (import "wpsi" "args_read_into_array_i8" (func $args_read_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "args_read_into_array_i16" (func $args_read_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "args_read_into_array_i32" (func $args_read_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "args_read_array_i8" (func $args_read_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32)))
+  (import "wpsi" "args_read_array_i16" (func $args_read_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32)))
+  (import "wpsi" "args_read_array_i32" (func $args_read_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32)))
 
-  ;; System strings
-  (import "wpsi" "sysstr_len"
-    (func $sysstr_len (param i32 i32) (result i64 i32)))
-  (import "wpsi" "sysstr_read_mem32"
-    (func $sysstr_read_mem32 (param i32 i32 i32 i32 i32) (result i64 i32)))
-  (import "wpsi" "sysstr_read_mem64"
-    (func $sysstr_read_mem64 (param i32 i32 i32 i64 i64) (result i64 i32)))
-  (import "wpsi" "sysstr_read_array_i8"
-    (func $sysstr_read_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
-  (import "wpsi" "sysstr_read_array_i16"
-    (func $sysstr_read_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
-  (import "wpsi" "sysstr_read_array_i32"
-    (func $sysstr_read_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "env_count" (func $env_count (result i32 i32)))
+  (import "wpsi" "env_len" (func $env_len (param i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "env_read_mem32" (func $env_read_mem32 (param i32 i32 i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "env_read_mem64" (func $env_read_mem64 (param i32 i32 i32 i32 i64 i64) (result i64 i32)))
+  (import "wpsi" "env_read_into_array_i8" (func $env_read_into_array_i8 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "env_read_into_array_i16" (func $env_read_into_array_i16 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "env_read_into_array_i32" (func $env_read_into_array_i32 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "env_read_array_i8" (func $env_read_array_i8 (param i32 i32 i32) (result (ref null $wpsi_string_i8) i32)))
+  (import "wpsi" "env_read_array_i16" (func $env_read_array_i16 (param i32 i32 i32) (result (ref null $wpsi_string_i16) i32)))
+  (import "wpsi" "env_read_array_i32" (func $env_read_array_i32 (param i32 i32 i32) (result (ref null $wpsi_string_i32) i32)))
 
   ;; Clocks
   (import "wpsi" "clock_system_now"
@@ -62,14 +72,19 @@
 
   ;; Filesystem roots
   (import "wpsi" "fs_scratch" (func $fs_scratch (result i32 i32)))
-  (import "wpsi" "fs_scratch_limits"
-    (func $fs_scratch_limits (result i64 i64 i32)))
-  (import "wpsi" "fs_scratch_usage"
-    (func $fs_scratch_usage (result i64 i64 i32)))
-  (import "wpsi" "fs_preopen_count"
-    (func $fs_preopen_count (result i32 i32)))
-  (import "wpsi" "fs_preopen_get"
-    (func $fs_preopen_get (param i32) (result i32 i32 i32)))
+  (import "wpsi" "fs_scratch_limits" (func $fs_scratch_limits (result i64 i64 i32)))
+  (import "wpsi" "fs_scratch_usage" (func $fs_scratch_usage (result i64 i64 i32)))
+  (import "wpsi" "fs_preopen_count" (func $fs_preopen_count (result i32 i32)))
+  (import "wpsi" "fs_preopen_get" (func $fs_preopen_get (param i32) (result i32 i32)))
+  (import "wpsi" "fs_preopen_name_len" (func $fs_preopen_name_len (param i32 i32) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_mem32" (func $fs_preopen_name_read_mem32 (param i32 i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_mem64" (func $fs_preopen_name_read_mem64 (param i32 i32 i32 i64 i64) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_into_array_i8" (func $fs_preopen_name_read_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_into_array_i16" (func $fs_preopen_name_read_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_into_array_i32" (func $fs_preopen_name_read_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
+  (import "wpsi" "fs_preopen_name_read_array_i8" (func $fs_preopen_name_read_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32)))
+  (import "wpsi" "fs_preopen_name_read_array_i16" (func $fs_preopen_name_read_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32)))
+  (import "wpsi" "fs_preopen_name_read_array_i32" (func $fs_preopen_name_read_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32)))
 
   ;; Descriptor metadata
   (import "wpsi" "fd_rights" (func $fd_rights (param i32) (result i64 i32)))
@@ -262,12 +277,17 @@
       (result i32)))
 
   ;; Directory iteration
-  (import "wpsi" "dir_iter_open"
-    (func $dir_iter_open (param i32) (result i32 i32)))
-  (import "wpsi" "dir_iter_next"
-    (func $dir_iter_next (param i32) (result i32 i32 i64 i32 i32)))
-  (import "wpsi" "dir_iter_rewind"
-    (func $dir_iter_rewind (param i32) (result i32)))
+  (import "wpsi" "dir_iter_open" (func $dir_iter_open (param i32) (result i32 i32)))
+  (import "wpsi" "dir_iter_next_len" (func $dir_iter_next_len (param i32 i32) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_mem32" (func $dir_iter_next_mem32 (param i32 i32 i32 i32 i32) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_mem64" (func $dir_iter_next_mem64 (param i32 i32 i32 i64 i64) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_into_array_i8" (func $dir_iter_next_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_into_array_i16" (func $dir_iter_next_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_into_array_i32" (func $dir_iter_next_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_array_i8" (func $dir_iter_next_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_array_i16" (func $dir_iter_next_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_next_array_i32" (func $dir_iter_next_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32 i64 i32 i32)))
+  (import "wpsi" "dir_iter_rewind" (func $dir_iter_rewind (param i32) (result i32)))
 
   ;; Hard links
   (import "wpsi" "path_link_mem32"
@@ -314,16 +334,19 @@
       (result i32)))
 
   ;; Read symbolic link
-  (import "wpsi" "path_readlink_mem32"
-    (func $path_readlink_mem32 (param i32 i32 i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "path_readlink_mem64"
-    (func $path_readlink_mem64 (param i32 i32 i64 i64 i32) (result i32 i32)))
-  (import "wpsi" "path_readlink_array_i8"
-    (func $path_readlink_array_i8 (param i32 (ref array) i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "path_readlink_array_i16"
-    (func $path_readlink_array_i16 (param i32 (ref array) i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "path_readlink_array_i32"
-    (func $path_readlink_array_i32 (param i32 (ref array) i32 i32 i32) (result i32 i32)))
+  (import "wpsi" "path_readlink_len_mem32" (func $path_readlink_len_mem32 (param i32 i32 i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_mem32" (func $path_readlink_mem32 (param i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_len_mem64" (func $path_readlink_len_mem64 (param i32 i32 i64 i64 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_mem64" (func $path_readlink_mem64 (param i32 i32 i64 i64 i32 i32 i64 i64 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_len_array_i8" (func $path_readlink_len_array_i8 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_len_array_i16" (func $path_readlink_len_array_i16 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_len_array_i32" (func $path_readlink_len_array_i32 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_into_array_i8" (func $path_readlink_into_array_i8 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_into_array_i16" (func $path_readlink_into_array_i16 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_into_array_i32" (func $path_readlink_into_array_i32 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
+  (import "wpsi" "path_readlink_array_i8" (func $path_readlink_array_i8 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i8) i32)))
+  (import "wpsi" "path_readlink_array_i16" (func $path_readlink_array_i16 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i16) i32)))
+  (import "wpsi" "path_readlink_array_i32" (func $path_readlink_array_i32 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i32) i32)))
 
   ;; Socket lifecycle
   (import "wpsi" "socket_open"

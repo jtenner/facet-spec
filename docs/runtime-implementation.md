@@ -88,6 +88,24 @@ logical-byte-view extraction -> temporary bytes -> host write
 
 This is conforming as long as partial-element behavior and all observable values match the specification.
 
+## Host-allocated GC string results
+
+Allocating string imports such as `args_read_array_i16` are specialized to the concrete nullable array result type requested by the importing module.
+
+At import instantiation a runtime should:
+
+1. inspect the requested function result type;
+2. require a concrete array heap type with the storage class named by the import;
+3. retain the runtime type identity in the host-function instance;
+4. encode the selected source string completely;
+5. allocate exactly that array type at the exact required length;
+6. initialize every element before returning the reference;
+7. return `null` plus `ERR_NO_MEMORY` if allocation fails.
+
+The result array may be mutable or immutable. This path does not borrow an existing object and therefore does not use the scoped raw-array byte-borrow primitive.
+
+Caller-owned `*_read_into_array_*` functions still use normal destination validation and require mutable arrays.
+
 ## Current runtime layout observations
 
 These observations motivated the WPSI 0.1 array design. They are not normative requirements.

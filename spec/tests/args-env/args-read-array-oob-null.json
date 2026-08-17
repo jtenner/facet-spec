@@ -4,9 +4,13 @@
     {
       "type": "run",
       "args": [
-        "wpsi-test",
-        "😀"
-      ]
+        "alpha",
+        "βeta",
+        "𐐷"
+      ],
+      "env": {
+        "WPSI_TEST": "café"
+      }
     },
     {
       "type": "wait",

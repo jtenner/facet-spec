@@ -15,7 +15,7 @@ WPSI functions MUST validate guest-controlled inputs in the following order unle
 1. **Scalar form.** Validate enum values, flag masks, reserved bits, mutually incompatible scalar options, numeric domains such as port ranges, and other scalar-only constraints.
 2. **Resource handles.** Validate handles in parameter order. A zero, stale, closed, unknown, or wrong-resource-kind handle fails with `ERR_BAD_HANDLE`.
 3. **Resource state and authority.** Validate socket/file state, descriptor rights, and embedder-granted capabilities before accessing guest buffers or host namespaces.
-4. **Guest representation.** Resolve the selected linear memory or GC reference and validate the expected address width, GC array kind, dynamic element storage type, and destination mutability.
+4. **Guest representation.** Resolve the selected linear memory or GC reference and validate the expected address width, GC array kind, dynamic element storage type, destination mutability, and any caller-selected concrete GC allocation result type.
 5. **Ranges.** Validate indexes, offsets, lengths, descriptor tables, and all checked arithmetic. Overflow MUST be detected before address arithmetic or host calls.
 6. **Text.** Validate the requested encoding and decode or validate text where the operation requires text semantics.
 7. **Namespace resolution.** Resolve filesystem paths, symbolic links, DNS names, and similar namespace-dependent inputs subject to the operation's capability boundary.
@@ -63,7 +63,7 @@ The intended semantics deliberately track WASI/POSIX categories where possible:
 | `ERR_OVERFLOW` | Arithmetic result or host result cannot be represented in the required WPSI value type. |
 | `ERR_ILLEGAL_SEQUENCE` | Text cannot be represented or decoded losslessly in the requested encoding. |
 | `ERR_FAULT` | Guest linear-memory selection or byte address range is invalid or out of bounds. |
-| `ERR_TYPE` | Guest representation has the wrong physical type, such as Memory64 passed to a `_mem32` operation, wrong GC element storage, or immutable GC storage used as a destination. |
+| `ERR_TYPE` | Guest representation has the wrong physical type, such as Memory64 passed to a `_mem32` operation, wrong GC element storage, immutable GC storage used as a destination, or an incompatible concrete GC allocation result type. |
 | `ERR_QUOTA` | An explicit WPSI/host quota was exceeded. |
 | `ERR_CANCELED` | Operation was canceled by a supported host mechanism. WPSI 0.1 does not otherwise require cancellation support. |
 | `ERR_ADDRESS_IN_USE` | Socket address or ephemeral port is already in use. |
@@ -188,17 +188,15 @@ The following rules are fixed for WPSI 0.1:
 6. Dynamic kind, storage-type, or destination-mutability mismatch returns `ERR_TYPE`.
 7. These rules specify observable values only and do not require contiguous physical GC storage.
 
-## 5. System-string semantics
+## 5. Host-originated string transfer
 
-A `sysstr` is an immutable snapshot of one host-originated string value.
+WPSI does not use resource handles merely to transport strings.
 
-Its contents MUST remain stable until the handle is closed, even if the host argument list, environment, directory, symlink, or preopen metadata changes later.
+The string source is identified directly by its owning operation: argument index, environment index plus field selector, preopen index, iterator state, or symlink path. This removes handle allocation, lookup, and close operations from ordinary string access.
 
-### 5.1 Length
+### 5.1 Length queries
 
-`sysstr_len` returns the exact number of encoding units required by the requested encoding, excluding any terminator.
-
-Encoding units are:
+Every stable indexed source exposes a `*_len` operation. Length is the exact number of encoding units required, excluding any terminator.
 
 ```text
 UTF-8 / WTF-8 / RAW8 = bytes
@@ -206,32 +204,43 @@ UTF-16 / WTF-16      = 16-bit code units
 UTF-32                = 32-bit code units
 ```
 
-If the value cannot be represented losslessly in the requested encoding, `sysstr_len` returns zero and `ERR_ILLEGAL_SEQUENCE`.
+An invalid source index returns zero and `ERR_RANGE`. An invalid encoding enum returns zero and `ERR_INVALID`. A source value that cannot be represented losslessly in the requested encoding returns zero and `ERR_ILLEGAL_SEQUENCE`.
 
-### 5.2 Reads and capacity
+### 5.2 Caller-owned destinations
 
-`sysstr_read_*` writes the longest prefix that fits in the supplied capacity while remaining valid in the requested encoding.
+`*_read_mem32`, `*_read_mem64`, and `*_read_into_array_*` copy the complete encoded string into caller-owned storage.
 
-It MUST NOT split a UTF-8 encoded scalar, a UTF-16 surrogate pair in `ENC_UTF16`, or another multi-unit encoded scalar sequence. RAW8 may stop at any byte boundary.
+The operation succeeds only when the supplied capacity can hold the entire encoded value. If capacity is too small, it returns zero units and `ERR_RANGE` and MUST NOT modify the destination.
 
-Insufficient capacity is not an error. The function returns the number of encoding units written and `ERR_OK`.
+On success, `units_written` is the complete encoded length. No NUL terminator is appended and storage after the encoded value is unchanged.
 
-A capacity of zero therefore returns:
+A zero-capacity destination succeeds only for an empty string.
+
+Array destination offsets and capacities are measured in array elements. Array destinations must be mutable and must match the storage class named by the import. Linear-memory pointers are byte addresses while capacity is measured in encoding units.
+
+### 5.3 Allocating GC results
+
+`*_read_array_i8`, `*_read_array_i16`, and `*_read_array_i32` allocate a fresh Wasm GC array using the **concrete result heap type declared by the importing module**.
+
+The runtime validates that the result type is a concrete array whose element storage matches the import suffix. The returned array may have mutable or immutable elements because the runtime initializes the complete object before exposing it to the guest.
+
+On success:
 
 ```text
-units_written = 0
-errno         = ERR_OK
+value = non-null reference to a fresh exact-length array
+errno = ERR_OK
 ```
 
-No NUL terminator is appended. Destination storage after `units_written` MUST remain unchanged.
+On failure:
 
-Callers requiring the entire string SHOULD call `sysstr_len` first and allocate enough capacity.
+```text
+value = null
+errno = specific error
+```
 
-### 5.3 Encoding compatibility
+An empty string still returns a non-null zero-length array. Allocation failure returns `ERR_NO_MEMORY`.
 
-An invalid encoding enum returns `ERR_INVALID`.
-
-For GC destinations, a valid encoding that is incompatible with the representation family returns `ERR_TYPE`:
+A valid encoding incompatible with the result family returns `ERR_TYPE`:
 
 ```text
 array_i8  -> UTF-8, WTF-8, RAW8
@@ -239,9 +248,28 @@ array_i16 -> UTF-16, WTF-16
 array_i32 -> UTF-32
 ```
 
-Normal Unicode scalar strings can be represented by the corresponding UTF or WTF encodings. Host-originated values containing surrogate code units or non-Unicode native bytes may require WTF or RAW8; requesting a representation that cannot preserve the value returns `ERR_ILLEGAL_SEQUENCE`.
+### 5.4 Stable sources
 
-Embedded NUL is permitted in a `sysstr`; individual consumers such as filesystem path functions may reject it.
+Arguments, environment entries, and preopen display names are immutable WPSI instance inputs and therefore remain stable for the lifetime of the instance.
+
+Directory iteration is stateful. `dir_iter_next_len` snapshots but does not consume the next entry. A successful read/allocating next call consumes it; a failed capacity or encoding check does not. Rewind discards any pending snapshot.
+
+A symbolic-link target is identified by the supplied path rather than a string handle. As with ordinary filesystem operations, concurrent host changes may cause separate length and read calls to observe different filesystem states. Callers requiring one atomic result SHOULD use an allocating GC readlink when available or provide sufficient caller-owned capacity in one read operation.
+
+### 5.5 Error examples
+
+```text
+args_read_array_i16(index_out_of_range, ENC_UTF16)
+  -> (null, ERR_RANGE)
+
+args_read_array_i8(valid_index, ENC_UTF16)
+  -> (null, ERR_TYPE)
+
+args_read_mem32(valid_index, ENC_UTF8, memory, ptr, too_small)
+  -> (0, ERR_RANGE)
+```
+
+These are ordinary WPSI errors, not Wasm traps.
 
 ## 6. Polling semantics
 

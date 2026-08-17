@@ -5,12 +5,12 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_preopen_get" (func $get (param i32) (result i32 i32 i32)))
+  (import "wpsi" "fs_preopen_get" (func $get (param i32) (result i32 i32)))
   (import "wpsi" "path_open_mem32" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
   (memory 1)
   (data (i32.const 0) "a\00b")
   (func (export "run") (result i32 i32)
     (local $dir i32) (local $name i32) (local $e i32)
-    (call $get (i32.const 0)) (local.set $e) (local.set $name) (local.set $dir)
+    (call $get (i32.const 0)) (local.set $e) (local.set $dir)
     (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 3) (i32.const 1) (i32.const 0) (i64.const 1))))
 (assert_return (invoke "run") (i32.const 0) (i32.const 12))

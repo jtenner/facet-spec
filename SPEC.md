@@ -59,7 +59,25 @@ No WPSI function implicitly selects memory 0.
 
 A guest MAY pass a WebAssembly GC array directly to a WPSI function. The implementation MUST NOT require the guest to copy that array through unrelated linear memory.
 
-### 3.5 Incremental implementation is allowed
+### 3.5 Caller-typed GC allocation results
+
+Most GC-array parameters use the abstract `(ref array)` type and are dynamically validated by the runtime.
+
+A small set of host-originated string functions instead allocate and return a new GC array. For those functions, the importing module declares a **concrete nullable array result type** such as:
+
+```wat
+(type $string16 (array (mut i16)))
+(import "wpsi" "args_read_array_i16"
+  (func (param i32 i32) (result (ref null $string16) i32)))
+```
+
+The function name fixes the required element storage class (`i8`, `i16`, or `i32`). The concrete array type is selected by the importing module. At instantiation the runtime MUST validate that the requested concrete result type is an array with the storage class named by the import. The element may be mutable or immutable.
+
+On success the host allocates exactly that concrete Wasm GC type and returns a non-null reference. On failure it returns `ref.null` and a nonzero `errno`.
+
+This is a narrow type-specialization rule for host allocation, not semantic overload resolution: the operation and storage class remain determined by the import name.
+
+### 3.6 Incremental implementation is allowed
 
 A runtime MAY implement only the WPSI profiles for WebAssembly features it supports. Missing imports fail through normal WebAssembly instantiation.
 
@@ -103,7 +121,6 @@ errno       = i32
 handle      = i32
 fd          = i32
 dir         = i32
-sysstr      = i32
 poll_handle = i32
 flags32     = i32
 flags64     = i64
@@ -313,42 +330,45 @@ UTF-32 values MUST be Unicode scalar values: surrogate values and values greater
 
 WPSI strings are length-delimited and are never implicitly NUL-terminated.
 
-## 9. System strings
+## 9. Host-originated strings
 
-Host-generated strings are represented by transient opaque `sysstr` handles.
+WPSI does not define a string resource handle. A host-originated string is identified by the operation that owns it: an argument index, environment-entry index, preopen index, directory iterator position, or symbolic-link path.
 
-Examples include arguments, environment names and values, preopen display names, directory entry names, and symbolic-link targets.
+For stable indexed sources, WPSI exposes three forms:
 
-A `sysstr` is released with `handle_close`.
+1. `*_len` returns the number of encoding units required;
+2. `*_read_mem32`, `*_read_mem64`, and `*_read_into_array_*` copy into caller-owned storage;
+3. `*_read_array_*` allocates and returns a caller-typed concrete GC array.
 
-### 9.1 Functions
+Linear-memory forms necessarily receive an explicit memory index, pointer, and capacity. GC `read_into` forms receive an existing `(ref array)`, element offset, and capacity. Allocating GC forms return `(ref null $caller_type, errno)` as described in section 3.5.
+
+Encoding-unit sizes are:
 
 ```text
-sysstr_len(string: i32, encoding: i32)
-  -> (units: i64, errno: i32)
-
-sysstr_read_mem32(string: i32, encoding: i32,
-                  memory: i32, pointer: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
-
-sysstr_read_mem64(string: i32, encoding: i32,
-                  memory: i32, pointer: i64, capacity_units: i64)
-  -> (units_written: i64, errno: i32)
-
-sysstr_read_array_i8(string: i32, encoding: i32,
-                     destination: ref array, offset: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
-
-sysstr_read_array_i16(string: i32, encoding: i32,
-                      destination: ref array, offset: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
-
-sysstr_read_array_i32(string: i32, encoding: i32,
-                      destination: ref array, offset: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
+UTF-8 / WTF-8 / RAW8 = 1 byte
+UTF-16 / WTF-16      = 2 bytes
+UTF-32                = 4 bytes
 ```
 
-`array_i8` accepts UTF-8, WTF-8, or RAW8; `array_i16` accepts UTF-16 or WTF-16; `array_i32` accepts UTF-32.
+A successful allocating function returns an array whose length exactly equals the encoded string length. Empty strings return a non-null zero-length array.
+
+For all allocating string functions:
+
+- an invalid source index returns `(null, ERR_RANGE)`;
+- an invalid encoding enum returns `(null, ERR_INVALID)`;
+- a valid encoding incompatible with the named array storage family returns `(null, ERR_TYPE)`;
+- a source value that cannot be represented losslessly returns `(null, ERR_ILLEGAL_SEQUENCE)`;
+- allocation failure returns `(null, ERR_NO_MEMORY)`.
+
+For caller-owned destinations, insufficient capacity returns `ERR_RANGE`, writes nothing, and leaves the source position unchanged when the source is stateful. No WPSI string-copy function appends a NUL terminator.
+
+Array encoding compatibility is:
+
+```text
+array_i8  -> UTF-8, WTF-8, RAW8
+array_i16 -> UTF-16, WTF-16
+array_i32 -> UTF-32
+```
 
 ## 10. Capabilities and scratch storage
 
@@ -469,17 +489,68 @@ WPSI 0.1 reports `abi_version() == 1`.
 
 ## 13. Arguments and environment
 
+Argument and environment ordering MUST remain stable for the lifetime of the instance.
+
 ```text
 args_count() -> (count: i32, errno: i32)
-args_get(index: i32) -> (string: i32, errno: i32)
+args_len(index: i32, encoding: i32)
+  -> (units: i64, errno: i32)
 
-env_count() -> (count: i32, errno: i32)
-env_get(index: i32) -> (name: i32, value: i32, errno: i32)
+args_read_mem32(index: i32, encoding: i32,
+                memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+args_read_mem64(index: i32, encoding: i32,
+                memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, errno: i32)
+
+args_read_into_array_i8(index: i32, encoding: i32,
+                        destination: ref array, offset: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+args_read_into_array_i16(...) -> (units_written: i64, errno: i32)
+args_read_into_array_i32(...) -> (units_written: i64, errno: i32)
+
+args_read_array_i8(index: i32, encoding: i32)
+  -> (value: ref null $caller_i8_array, errno: i32)
+args_read_array_i16(index: i32, encoding: i32)
+  -> (value: ref null $caller_i16_array, errno: i32)
+args_read_array_i32(index: i32, encoding: i32)
+  -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
-Returned strings are `sysstr` handles.
+Environment entries use a scalar field selector:
 
-Argument and environment ordering MUST remain stable for the lifetime of the instance.
+```text
+ENV_NAME  = 0
+ENV_VALUE = 1
+```
+
+```text
+env_count() -> (count: i32, errno: i32)
+env_len(index: i32, field: i32, encoding: i32)
+  -> (units: i64, errno: i32)
+
+env_read_mem32(index: i32, field: i32, encoding: i32,
+               memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+env_read_mem64(index: i32, field: i32, encoding: i32,
+               memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, errno: i32)
+
+env_read_into_array_i8(index: i32, field: i32, encoding: i32,
+                       destination: ref array, offset: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+env_read_into_array_i16(...) -> (units_written: i64, errno: i32)
+env_read_into_array_i32(...) -> (units_written: i64, errno: i32)
+
+env_read_array_i8(index: i32, field: i32, encoding: i32)
+  -> (value: ref null $caller_i8_array, errno: i32)
+env_read_array_i16(index: i32, field: i32, encoding: i32)
+  -> (value: ref null $caller_i16_array, errno: i32)
+env_read_array_i32(index: i32, field: i32, encoding: i32)
+  -> (value: ref null $caller_i32_array, errno: i32)
+```
+
+An unknown environment field selector returns `ERR_INVALID`.
 
 ## 14. Clocks
 
@@ -539,14 +610,32 @@ fs_scratch_usage()
   -> (bytes_used: i64, object_count: i64, errno: i32)
 
 fs_preopen_count() -> (count: i32, errno: i32)
+fs_preopen_get(index: i32) -> (directory: i32, errno: i32)
 
-fs_preopen_get(index: i32)
-  -> (directory: i32, display_name: i32, errno: i32)
+fs_preopen_name_len(index: i32, encoding: i32)
+  -> (units: i64, errno: i32)
+fs_preopen_name_read_mem32(index: i32, encoding: i32,
+                           memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+fs_preopen_name_read_mem64(index: i32, encoding: i32,
+                           memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, errno: i32)
+fs_preopen_name_read_into_array_i8(index: i32, encoding: i32,
+                                   destination: ref array, offset: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+fs_preopen_name_read_into_array_i16(...) -> (units_written: i64, errno: i32)
+fs_preopen_name_read_into_array_i32(...) -> (units_written: i64, errno: i32)
+fs_preopen_name_read_array_i8(index: i32, encoding: i32)
+  -> (value: ref null $caller_i8_array, errno: i32)
+fs_preopen_name_read_array_i16(index: i32, encoding: i32)
+  -> (value: ref null $caller_i16_array, errno: i32)
+fs_preopen_name_read_array_i32(index: i32, encoding: i32)
+  -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
 `UINT64_MAX` means a quota dimension is not declared.
 
-`display_name` is a `sysstr`.
+Preopen ordering and display names MUST remain stable for the lifetime of the instance.
 
 ## 17. Descriptor metadata
 
@@ -948,22 +1037,40 @@ path_rename_array_i32(...) -> (errno: i32)
 dir_iter_open(directory: i32)
   -> (iterator: i32, errno: i32)
 
-dir_iter_next(iterator: i32)
-  -> (name: i32,
-      file_type: i32,
-      inode: i64,
-      done: i32,
-      errno: i32)
+dir_iter_next_len(iterator: i32, encoding: i32)
+  -> (units: i64, file_type: i32, inode: i64, done: i32, errno: i32)
 
-dir_iter_rewind(iterator: i32)
-  -> (errno: i32)
+dir_iter_next_mem32(iterator: i32, encoding: i32,
+                    memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
+dir_iter_next_mem64(iterator: i32, encoding: i32,
+                    memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
+
+dir_iter_next_into_array_i8(iterator: i32, encoding: i32,
+                            destination: ref array, offset: i32, capacity_units: i32)
+  -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
+dir_iter_next_into_array_i16(...) -> same-dir-result
+dir_iter_next_into_array_i32(...) -> same-dir-result
+
+dir_iter_next_array_i8(iterator: i32, encoding: i32)
+  -> (name: ref null $caller_i8_array,
+      file_type: i32, inode: i64, done: i32, errno: i32)
+dir_iter_next_array_i16(iterator: i32, encoding: i32) -> same-allocated-dir-result
+dir_iter_next_array_i32(iterator: i32, encoding: i32) -> same-allocated-dir-result
+
+dir_iter_rewind(iterator: i32) -> (errno: i32)
 ```
 
-`name` is a `sysstr`.
+The iterator itself identifies the pending directory entry; WPSI does not allocate a separate name resource.
 
-When `done == 1`, `name`, `file_type`, and `inode` are zero.
+`dir_iter_next_len` peeks and snapshots the next entry without consuming it. Repeated length queries observe the same pending entry. Any successful `dir_iter_next_mem*`, `dir_iter_next_into_array_*`, or `dir_iter_next_array_*` call consumes that entry and advances the iterator.
 
-The iterator is released with `handle_close`.
+If caller-owned capacity is insufficient, the operation returns `ERR_RANGE`, performs no write, and does not advance. The caller may query `dir_iter_next_len` and retry.
+
+At end of iteration, `done == 1`, scalar metadata is zero, and allocating forms return `ref.null` with `ERR_OK`.
+
+`dir_iter_rewind` discards any pending snapshot and resets the iterator. The iterator is released with `handle_close`.
 
 ## 29. Hard links
 
@@ -1024,23 +1131,63 @@ path_symlink_array_i32(...) -> (errno: i32)
 
 ## 31. Read symbolic link
 
+`path_readlink_*` never creates an intermediate string resource.
+
+Linear-memory forms accept both the input path and output destination:
+
 ```text
+path_readlink_len_mem32(directory: i32,
+                        path_memory: i32, path_pointer: i32,
+                        path_length: i32, path_encoding: i32,
+                        target_encoding: i32)
+  -> (units: i64, errno: i32)
+
 path_readlink_mem32(directory: i32,
-                    memory: i32, pointer: i32, length: i32, encoding: i32)
-  -> (target: i32, errno: i32)
+                    path_memory: i32, path_pointer: i32,
+                    path_length: i32, path_encoding: i32,
+                    target_memory: i32, target_pointer: i32,
+                    target_capacity_units: i32, target_encoding: i32)
+  -> (units_written: i64, errno: i32)
+
+path_readlink_len_mem64(directory: i32,
+                        path_memory: i32, path_pointer: i64,
+                        path_length: i64, path_encoding: i32,
+                        target_encoding: i32)
+  -> (units: i64, errno: i32)
 
 path_readlink_mem64(directory: i32,
-                    memory: i32, pointer: i64, length: i64, encoding: i32)
-  -> (target: i32, errno: i32)
-
-path_readlink_array_i8(directory: i32, path: ref array,
-                       offset: i32, length: i32, encoding: i32)
-  -> (target: i32, errno: i32)
-path_readlink_array_i16(...) -> (target: i32, errno: i32)
-path_readlink_array_i32(...) -> (target: i32, errno: i32)
+                    path_memory: i32, path_pointer: i64,
+                    path_length: i64, path_encoding: i32,
+                    target_memory: i32, target_pointer: i64,
+                    target_capacity_units: i64, target_encoding: i32)
+  -> (units_written: i64, errno: i32)
 ```
 
-`target` is a `sysstr`.
+GC forms use the same element-storage family for the input path and output target. This avoids an input/output representation cross-product:
+
+```text
+path_readlink_len_array_i8(directory: i32, path: ref array,
+                           offset: i32, length: i32, path_encoding: i32,
+                           target_encoding: i32)
+  -> (units: i64, errno: i32)
+
+path_readlink_into_array_i8(directory: i32, path: ref array,
+                            path_offset: i32, path_length: i32, path_encoding: i32,
+                            destination: ref array, destination_offset: i32,
+                            target_capacity_units: i32, target_encoding: i32)
+  -> (units_written: i64, errno: i32)
+
+path_readlink_array_i8(directory: i32, path: ref array,
+                       offset: i32, length: i32, path_encoding: i32,
+                       target_encoding: i32)
+  -> (target: ref null $caller_i8_array, errno: i32)
+```
+
+Equivalent `array_i16` and `array_i32` functions are defined.
+
+For an allocating GC readlink, `target_encoding` MUST be compatible with the named array storage family. Caller-owned reads require enough capacity for the complete target; insufficient capacity returns `ERR_RANGE` without modifying the destination.
+
+The returned target is the stored symbolic-link text and is not recursively resolved.
 
 ## 32. Networking constants
 
@@ -1292,7 +1439,7 @@ A conforming implementation MUST:
 1. validate all guest handles before use;
 2. validate memory indexes and address widths;
 3. bounds-check ranges with overflow-safe arithmetic;
-4. validate GC array kind, dynamic element type, and destination mutability;
+4. validate GC array kind, dynamic element type, destination mutability, and caller-selected concrete allocation result types;
 5. validate text according to the declared encoding;
 6. prevent filesystem escape beyond directory capability authority;
 7. keep private scratch storage isolated from unrelated host files;
@@ -1316,7 +1463,7 @@ GC array<i64>  -> *_array_i64
 GC array<v128> -> *_array_v128
 ```
 
-UTF-16 and UTF-32 strings SHOULD remain in their native representation when the corresponding WPSI function exists; conversion through UTF-8 is not required.
+UTF-16 and UTF-32 strings SHOULD remain in their native representation when the corresponding WPSI function exists; conversion through UTF-8 is not required. GC-oriented languages SHOULD prefer allocating `*_read_array_*` functions when they want a fresh string and `*_read_into_array_*` when they already own reusable storage.
 
 ## 43. Explicit omissions from 0.1
 

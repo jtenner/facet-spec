@@ -33,7 +33,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Multi-memory by construction.** Every linear-memory operation takes an explicit memory index.
 - **Memory32 and Memory64.** Pointer width is part of the import name and signature.
 - **WebAssembly GC arrays are valid I/O buffers.** Numeric arrays expose a normative logical byte view while implementations remain free to optimize contiguous native representations.
-- **UTF-8, UTF-16, and UTF-32.** Text does not have to round-trip through UTF-8.
+- **UTF-8, UTF-16, and UTF-32.** Text does not have to round-trip through UTF-8; host-originated strings can write directly into linear memory or GC arrays, or allocate caller-typed GC arrays.
 - **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
 - **Private scratch filesystem.** Filesystem-enabled instances always have writable private storage even when no host directory is mounted.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.

@@ -39,3 +39,4 @@ All notable specification changes will be recorded here.
 - Async buffer ownership and cancellation semantics.
 - Profile-specific version negotiation.
 - Reconsideration of the path encoding parameter shape.
+- Removed `sysstr` string resources in favor of source-specific length/copy APIs, caller-owned GC `read_into` APIs, and caller-typed allocating GC string results.

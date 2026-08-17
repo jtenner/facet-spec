@@ -19,10 +19,96 @@
       "path": "spec/tests/adversarial/stale-handle-after-reallocation.wast",
       "profiles": [
         "core",
-        "args-env",
+        "poll",
         "adversarial"
       ],
       "purpose": "A closed numeric handle never aliases a subsequently allocated resource.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-array-encoding-mismatch",
+      "path": "spec/tests/args-env/args-read-array-encoding-mismatch.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "A valid encoding incompatible with the allocated array storage family returns null and ERR_TYPE.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-array-i16",
+      "path": "spec/tests/args-env/args-read-array-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text"
+      ],
+      "purpose": "The host can allocate the caller's concrete array<i16> result type.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-array-i8",
+      "path": "spec/tests/args-env/args-read-array-i8.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text"
+      ],
+      "purpose": "The host can allocate the caller's concrete array<i8> result type for an argument.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-array-oob-null",
+      "path": "spec/tests/args-env/args-read-array-oob-null.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "adversarial"
+      ],
+      "purpose": "An out-of-range allocating argument read returns null and ERR_RANGE.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-insufficient-capacity",
+      "path": "spec/tests/args-env/args-read-insufficient-capacity.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env",
+        "text",
+        "adversarial"
+      ],
+      "purpose": "A too-small string destination returns ERR_RANGE and remains unmodified.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-into-array-i16",
+      "path": "spec/tests/args-env/args-read-into-array-i16.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text"
+      ],
+      "purpose": "UTF-16 arguments can be copied directly into an existing mutable array<i16>.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-mem32-utf8",
+      "path": "spec/tests/args-env/args-read-mem32-utf8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "args-env",
+        "text"
+      ],
+      "purpose": "Arguments copy directly into caller-owned Memory32 without an intermediate string handle.",
       "kind": "wast"
     },
     {
@@ -36,102 +122,37 @@
       "kind": "wast"
     },
     {
+      "id": "args-env/env-read-array-name",
+      "path": "spec/tests/args-env/env-read-array-name.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text"
+      ],
+      "purpose": "Environment names are selected directly by index and field without string handles.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/env-read-array-value",
+      "path": "spec/tests/args-env/env-read-array-value.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env",
+        "text"
+      ],
+      "purpose": "Environment values can be allocated directly as caller-typed GC arrays.",
+      "kind": "wast"
+    },
+    {
       "id": "args-env/out-of-range-zeroes",
       "path": "spec/tests/args-env/out-of-range-zeroes.wast",
       "profiles": [
         "core",
         "args-env"
       ],
-      "purpose": "Out-of-range indexes return zero handles and ERR_RANGE.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-array-i16",
-      "path": "spec/tests/args-env/sysstr-array-i16.wast",
-      "profiles": [
-        "core",
-        "gc-array",
-        "args-env"
-      ],
-      "purpose": "sysstr_read_array_i16 writes a UTF-16 surrogate pair directly into a packed GC array.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-array-i32",
-      "path": "spec/tests/args-env/sysstr-array-i32.wast",
-      "profiles": [
-        "core",
-        "gc-array",
-        "args-env"
-      ],
-      "purpose": "sysstr_read_array_i32 writes the exact UTF-32 scalar into a GC array.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-array-i8",
-      "path": "spec/tests/args-env/sysstr-array-i8.wast",
-      "profiles": [
-        "core",
-        "gc-array",
-        "args-env"
-      ],
-      "purpose": "sysstr_read_array_i8 writes UTF-8 directly into a packed GC byte array and preserves sentinels.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-closed-handle-atomic",
-      "path": "spec/tests/args-env/sysstr-closed-handle-atomic.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "args-env",
-        "adversarial"
-      ],
-      "purpose": "Reading a closed sysstr returns ERR_BAD_HANDLE, zero units, and leaves destination bytes untouched.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-utf16",
-      "path": "spec/tests/args-env/sysstr-utf16.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "args-env"
-      ],
-      "purpose": "UTF-16 encodes a non-BMP scalar as the expected surrogate pair.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-utf32",
-      "path": "spec/tests/args-env/sysstr-utf32.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "args-env"
-      ],
-      "purpose": "UTF-32 exposes the exact Unicode scalar value.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-utf8",
-      "path": "spec/tests/args-env/sysstr-utf8.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "args-env"
-      ],
-      "purpose": "UTF-8 sysstr length and bytes are exact and not NUL-terminated.",
-      "kind": "wast"
-    },
-    {
-      "id": "args-env/sysstr-zero-capacity",
-      "path": "spec/tests/args-env/sysstr-zero-capacity.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "args-env"
-      ],
-      "purpose": "A zero-capacity sysstr read succeeds and preserves the destination sentinel.",
+      "purpose": "Out-of-range argument and environment indexes return zero lengths and ERR_RANGE.",
       "kind": "wast"
     },
     {
@@ -191,16 +212,6 @@
         "core"
       ],
       "purpose": "WPSI 0.1 reports ABI version 1.",
-      "kind": "wast"
-    },
-    {
-      "id": "core/double-close-sysstr",
-      "path": "spec/tests/core/double-close-sysstr.wast",
-      "profiles": [
-        "core",
-        "args-env"
-      ],
-      "purpose": "Closing a handle twice reports ERR_BAD_HANDLE instead of aliasing another resource.",
       "kind": "wast"
     },
     {
@@ -288,10 +299,11 @@
       "path": "spec/tests/filesystem/dir-iterate-rewind.wast",
       "profiles": [
         "core",
-        "memory32",
-        "filesystem"
+        "gc-array",
+        "filesystem",
+        "text"
       ],
-      "purpose": "Directory iteration visits each scratch entry once, reports regular-file types, and rewinds deterministically.",
+      "purpose": "Directory iteration uses the iterator as the stable name source and rewind resets pending state.",
       "kind": "wast"
     },
     {
@@ -521,7 +533,7 @@
         "memory32",
         "filesystem"
       ],
-      "purpose": "Multiple preopens are returned in manifest order.",
+      "purpose": "Multiple preopens and their source-specific display names remain in manifest order.",
       "kind": "wast"
     },
     {
@@ -532,7 +544,7 @@
         "memory32",
         "filesystem"
       ],
-      "purpose": "The WASI-compatible root manifest creates one preopen whose display name is `/`.",
+      "purpose": "The WASI-compatible root manifest exposes one preopen whose display name can be read directly as `/`.",
       "kind": "wast"
     },
     {
@@ -1223,7 +1235,7 @@
         "filesystem",
         "links"
       ],
-      "purpose": "A symbolic-link target round-trips through a sysstr without reinterpretation.",
+      "purpose": "A symbolic-link target round-trips directly into caller-owned linear memory.",
       "kind": "wast"
     },
     {

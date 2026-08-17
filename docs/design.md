@@ -6,7 +6,7 @@ This document is informative. `SPEC.md` is normative.
 
 WPSI is deliberately smaller than a component model.
 
-The system boundary already has a strong type system available: Core WebAssembly. For the operations WPSI targets, ordinary imports provide enough structure without introducing another interface language or canonical lowering format.
+The system boundary already has a strong type system available: Core WebAssembly. For the operations WPSI targets, ordinary imports provide enough structure without introducing another interface language or canonical lowering format. Host-allocated GC string results are a narrow exception where import instantiation also validates the caller-selected concrete array result type.
 
 A minimal interface also makes runtime adoption easier. An embedder can implement WPSI using the same host-function machinery it already uses for other Core Wasm imports.
 
@@ -80,11 +80,17 @@ A portable system interface should not require every language to convert its nat
 
 WPSI supports UTF-8, UTF-16, and UTF-32 directly. WTF-8/WTF-16 and raw 8-bit system strings exist for host namespaces that cannot be losslessly modeled as Unicode scalar text.
 
-## Why system-string handles?
+## Why no system-string handles?
 
-Some strings originate on the host before the guest has selected a destination representation. Arguments, environment entries, directory entry names, preopen labels, and symlink targets are examples.
+Strings such as arguments, environment values, preopen labels, directory-entry names, and symbolic-link targets already have a natural source identity. Creating another resource handle solely to move those strings adds allocation, lookup, lifetime, and close operations without adding authority.
 
-`sysstr` handles allow the guest to query a host-generated string and then copy it into Memory32, Memory64, `array<i8>`, `array<i16>`, or `array<i32>` without making one encoding globally privileged.
+WPSI therefore lets the source operation expose the string directly.
+
+Linear-memory callers query the encoded length when necessary and provide `(memory, pointer, capacity)` storage. GC callers may either provide an existing mutable array with `*_read_into_array_*` or use `*_read_array_*` to ask the runtime to allocate a fresh result.
+
+For allocating GC results, the concrete nullable array result type appears in the module's import signature. The runtime validates the requested storage class and allocates exactly that Wasm GC type. This lets a language receive its native `array<i8>`, `array<i16>`, or `array<i32>` representation without a temporary string resource or linear-memory lowering.
+
+This asymmetry is intentional: linear memory naturally uses caller-owned addresses, while Wasm GC can naturally return newly allocated references.
 
 ## Why a private scratch filesystem?
 
