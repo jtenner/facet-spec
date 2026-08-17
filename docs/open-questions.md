@@ -16,7 +16,6 @@ Questions:
 
 Current preference: keep handle encoding entirely runtime-private.
 
-
 ## 2. Scratch filesystem lifetime and persistence
 
 The draft requires private writable scratch storage and permits multiple backing strategies.
