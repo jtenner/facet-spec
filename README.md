@@ -37,16 +37,18 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
 - **Private scratch filesystem.** Filesystem-enabled instances always have writable private storage even when no host directory is mounted.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
+- **Compatibility-first behavior.** Error classes, path resolution, polling, and socket state semantics intentionally track WASI where the models overlap.
 
 ## Documents
 
-- [`SPEC.md`](SPEC.md) — normative WPSI 0.1 specification.
+- [`SPEC.md`](SPEC.md) — normative WPSI 0.1 ABI, representations, constants, and function signatures.
+- [`spec/behavior.md`](spec/behavior.md) — normative validation order, errors, path resolution, GC rules, system strings, polling, and networking semantics.
 - [`spec/imports.wat`](spec/imports.wat) — canonical Core Wasm import declarations.
 - [`spec/tests/README.md`](spec/tests/README.md) — normative conformance-suite and host-manifest contract.
 - [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable inventory of conformance tests and required profiles.
 - [`docs/design.md`](docs/design.md) — design rationale and non-goals.
 - [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — runtime implementation guidance, including GC array borrowing.
-- [`docs/open-questions.md`](docs/open-questions.md) — decisions to resolve before the 0.1 ABI is considered stable.
+- [`docs/open-questions.md`](docs/open-questions.md) — intentionally deferred decisions.
 - [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and specification-change process.
 - [`SECURITY.md`](SECURITY.md) — security model and vulnerability reporting guidance.
@@ -63,7 +65,7 @@ Static checks validate catalog generation, manifests, fixture paths, metadata, e
 
 WPSI 0.1 is a draft intended for implementation experiments, conformance tests, and API review. Function signatures are expected to stabilize before a 1.0 release.
 
-The planned first reference implementation is a Wago plugin, followed by a second independent runtime prototype before ABI stabilization.
+The planned first reference implementation is a **Wago plugin**, followed by a second independent runtime prototype before ABI stabilization.
 
 ## License
 
