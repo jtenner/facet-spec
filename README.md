@@ -36,6 +36,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Text width is explicit.** Textual import names select 8-bit, 16-bit, or 32-bit code units. A single `wtf` boolean selects strict Unicode or reversible surrogate-sentinel handling; there is no encoding enum.
 - **Natural host-to-guest strings.** Host-originated strings can write directly into linear memory or existing GC arrays, or allocate the caller's concrete GC array type.
 - **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
+- **Synchronous call lifetime.** WPSI never retains borrowed guest pointers or GC references after a host call returns; nonblocking I/O composes with `wpsi-poll` and external actor/task schedulers.
 - **No mandatory filesystem allocation.** Embedders may expose ordinary directory preopens as needed; `~` is the conventional optional guest-home/private-area name and has no special ABI semantics.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
 - **Compatibility-first behavior.** Error classes, path resolution, polling, and socket state semantics intentionally track WASI where the models overlap.

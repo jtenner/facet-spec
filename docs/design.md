@@ -120,11 +120,17 @@ Keeping the encoding private avoids constraining runtime handle tables and preve
 
 WPSI does not require host objects to become `externref` or GC references. A future extension can explore reference-typed resource handles independently without changing the existing ABI.
 
-## Why synchronous calls first?
+## Why are WPSI calls synchronous?
 
-WPSI 0.1 focuses on the smallest implementable system boundary. Synchronous calls also make scoped borrowing of moving-GC objects tractable: the runtime can root/pin or enter a no-move region for one host call and invalidate the backing view before return.
+WPSI deliberately makes synchronous call lifetime a core ABI invariant rather than defining futures or retained-buffer asynchronous host operations.
 
-Asynchronous host operations need an explicit ownership and lifetime model and are intentionally deferred.
+This keeps guest-storage ownership local and tractable. A runtime can root or pin a Wasm GC object, stabilize linear memory, perform one host operation, invalidate the borrowed view, and return. No guest pointer, GC reference, or borrowed backing address remains live in host code after the call boundary.
+
+Nonblocking I/O still composes with concurrency: an operation can return `ERR_AGAIN`, a scheduler can wait through `wpsi-poll`, run other work, and retry when the resource becomes ready.
+
+This model is intentionally friendly to actor-style, event-loop, green-thread, and multi-instance scheduling without standardizing any of those execution models. WPSI defines neither actors nor a scheduler; it only guarantees that each system call has a bounded synchronous dynamic extent.
+
+A future specification that introduces true asynchronous host calls would need a separate ownership model and would be an explicit extension to this invariant, not an implied part of WPSI 0.1.
 
 ## Why not require zero-copy?
 

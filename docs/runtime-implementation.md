@@ -25,6 +25,16 @@ wpsi-network
 wpsi-poll
 ```
 
+## Synchronous call boundary
+
+Treat the return from every WPSI host function as a hard lifetime boundary.
+
+No guest linear-memory view, GC reference, raw GC payload pointer, pin, root, no-move token, or other borrowed guest-storage state may remain owned by host work after the function returns. If an operating-system or runtime API requires an operation to outlive the call, copy the relevant guest data into host-owned storage or use a nonblocking operation that returns `ERR_AGAIN` and is retried after polling.
+
+Do not implement a WPSI import by starting background work that will later dereference a guest pointer or GC reference. The host may retain WPSI resource handles and host-owned metadata, but not borrowed guest storage.
+
+This restriction is per call, not per runtime. A runtime is free to execute multiple Wasm instances, actors, tasks, or scheduler contexts concurrently as long as each WPSI call obeys the same lifetime boundary.
+
 ## Linear-memory access
 
 For every `_mem32` or `_mem64` call:
@@ -279,5 +289,6 @@ Every representation family should test:
 - immutable destination arrays;
 - unaligned and partial-element GC byte ranges;
 - forced moving collection around host calls;
+- immediate memory growth/GC after return to catch retained guest borrows;
 - stale handles and close races;
 - capability and symlink escapes.

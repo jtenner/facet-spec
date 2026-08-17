@@ -81,6 +81,18 @@ This is a narrow type-specialization rule for host allocation, not semantic over
 
 A runtime MAY implement only the WPSI profiles for WebAssembly features it supports. Missing imports fail through normal WebAssembly instantiation.
 
+### 3.7 Synchronous host-call boundary
+
+Every WPSI host call is synchronous at the Core Wasm ABI boundary.
+
+An implementation MUST NOT retain a guest linear-memory pointer or slice, a Wasm GC reference, a raw GC backing pointer, or any other borrowed guest storage after the imported function returns. Any rooting, pinning, no-move region, no-GC region, or equivalent borrow scope established to service the call MUST end before return.
+
+The host MAY retain independent host-owned state or data copied from the guest, but that state MUST NOT depend on continued validity of borrowed guest storage.
+
+WPSI 0.1 defines no asynchronous host functions, futures, callbacks, actor primitives, or retained-buffer operations. Nonblocking resources report `ERR_AGAIN`, and `wpsi-poll` provides the portable readiness mechanism for schedulers that do not want to block an execution context.
+
+This rule does not prohibit concurrency outside the WPSI call boundary. A runtime or guest language MAY schedule multiple tasks, actors, instances, or execution contexts concurrently while each individual WPSI call remains synchronous.
+
 ## 4. Conformance profiles
 
 The initial profiles are:
@@ -299,7 +311,7 @@ All bit patterns are valid for the supported integer and `v128` buffer types.
 
 A runtime MUST keep the referenced object alive for the complete synchronous host call.
 
-A raw backing pointer or slice MUST NOT escape the collector scope in which its address is valid.
+A raw backing pointer, slice, or GC reference MUST NOT escape the dynamic extent of the WPSI call. The collector scope in which a backing address is valid MUST end before the imported function returns.
 
 Moving collectors MUST pin, enter an appropriate no-move/no-GC region, re-resolve addresses safely, or copy through implementation-private native storage as required.
 

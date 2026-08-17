@@ -38,6 +38,16 @@ No nonzero handle bit, range, subfield, ordering relation, or numeric pattern is
 
 Runtimes are free to choose any private handle encoding that preserves the observable WPSI rules. In particular, a stale or closed handle MUST return `ERR_BAD_HANDLE` and MUST NOT become authority over an unrelated live resource through internal slot reuse.
 
+### 1.2 Synchronous call lifetime
+
+Every WPSI imported function has a bounded synchronous lifetime. Guest storage borrowed by a call is valid only during that call.
+
+Before returning to the guest, the runtime MUST release every borrow of guest linear memory and every borrowed Wasm GC reference or backing view established for the operation. The runtime MUST NOT arrange for a callback, worker, kernel operation, future completion, or other later action to read from or write to borrowed guest storage after return.
+
+A runtime MAY copy guest data into host-owned storage or retain ordinary WPSI resource state when an operation requires it. Such retained state MUST be independent of the lifetime or location of the guest storage from which it was derived.
+
+Concurrency is outside this lifetime rule: multiple guest execution contexts may run concurrently, but each WPSI call still completes or returns `ERR_AGAIN` before its guest-storage borrows end. A scheduler can use `wpsi-poll` to wait for readiness and retry a nonblocking operation.
+
 ## 2. Error semantics
 
 WPSI keeps its own compact numeric error namespace. The numeric values in `SPEC.md` are normative WPSI values; they are **not** required to equal POSIX errno values or WASI enum ordinals.
@@ -474,7 +484,6 @@ errno       = ERR_OK
 This document intentionally does not settle:
 
 - profile-specific version negotiation;
-- asynchronous buffer ownership/lifetime semantics;
 
 Those topics remain listed in [`../docs/open-questions.md`](../docs/open-questions.md).
 

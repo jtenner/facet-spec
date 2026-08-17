@@ -19,6 +19,7 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Freeze nested GC scatter/gather as whole-child only; `first/count` select child arrays and per-child slices are outside WPSI 0.1.
 - [x] Define direct host-originated string transfer for linear memory, existing GC arrays, and caller-typed allocated GC arrays.
 - [x] Define polling snapshot/readiness semantics.
+- [x] Freeze WPSI 0.1 host calls as synchronous and forbid retaining borrowed guest storage across returns.
 - [x] Define synchronous socket state and error semantics using WASI as the compatibility baseline.
 - [x] Add a comprehensive WAST conformance suite and pinned syntax validation in CI.
 - [x] Validate `spec/imports.wat` directly with pinned current Core Wasm tooling in CI.
@@ -87,14 +88,13 @@ Before WPSI 1.0:
 
 ## Deferred / post-0.1 questions
 
-The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover async ownership and profile-specific version negotiation.
+The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. The remaining question is profile-specific version negotiation.
 
 ## Post-1.0 candidates
 
 Potential independent extensions include:
 
 - process spawning;
-- asynchronous operations with explicit buffer ownership;
 - threading/synchronization integrations;
 - reference-typed host resource handles;
 - HTTP/TLS profiles;
