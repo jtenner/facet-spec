@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/scripts/migrate_string_api.py"
       - ".github/scripts/fix_string_api_tests.py"
+      - ".github/scripts/fix_string_api_tests2.py"
       - ".github/workflows/string-api-migration.yml"
 
 permissions:
@@ -24,7 +25,8 @@ jobs:
         shell: bash
         run: |
           python3 .github/scripts/migrate_string_api.py || true
-          python3 .github/scripts/fix_string_api_tests.py
+          python3 .github/scripts/fix_string_api_tests.py || true
+          python3 .github/scripts/fix_string_api_tests2.py
 
       - name: Regenerate test catalog
         run: python3 spec/tests/tools/generate_suite.py
