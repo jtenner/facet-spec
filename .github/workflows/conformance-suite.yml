@@ -1,6 +1,7 @@
 name: WPSI conformance sources
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
