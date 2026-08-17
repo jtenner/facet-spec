@@ -4,7 +4,7 @@ WPSI is a specification for a sandbox-facing system ABI. Security properties are
 
 ## Security model
 
-A conforming implementation must treat all guest-provided values as untrusted, including handles, memory indexes, offsets, lengths, encodings, flags, GC references, and dynamic GC types.
+A conforming implementation must treat all guest-provided values as untrusted, including handles, memory indexes, offsets, lengths, `wtf` booleans, flags, GC references, and dynamic GC types.
 
 Implementations must validate:
 
@@ -12,7 +12,8 @@ Implementations must validate:
 - memory index existence and address width;
 - pointer-range arithmetic using overflow-safe checks;
 - GC reference kind, dynamic array element type, and mutability;
-- string encoding and path restrictions;
+- text well-formedness under the import's code-unit width and strict/WTF mode;
+- path restrictions, including embedded NUL and capability-boundary traversal;
 - requested rights against the parent capability;
 - filesystem traversal, including traversal through symbolic links;
 - network actions against host-granted network authority.
@@ -20,6 +21,8 @@ Implementations must validate:
 The private scratch filesystem must not imply access to arbitrary host files. Host filesystem paths and network access remain explicit capabilities.
 
 A borrowed GC backing view must never outlive the synchronous call or collector scope that makes its address stable.
+
+WTF mode must be reversible where it is used to preserve non-Unicode host units. Implementations must not silently replace unrepresentable values with U+FFFD or otherwise collapse distinct host names into the same guest-visible string.
 
 ## Reporting vulnerabilities
 
