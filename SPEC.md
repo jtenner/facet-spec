@@ -71,9 +71,9 @@ A small set of host-originated string functions instead allocate and return a ne
   (func (param i32 i32) (result (ref null $string16) i32)))
 ```
 
-The function name fixes the required element storage class (`i8`, `i16`, or `i32`). The concrete array type is selected by the importing module. At instantiation the runtime MUST validate that the requested concrete result type is an array with the storage class named by the import. The element may be mutable or immutable.
+The function name fixes the required element storage class (`i8`, `i16`, or `i32`). The concrete array type is selected by the importing module. At instantiation the runtime MUST validate that the requested concrete result type is an array with the storage class named by the import. The element may be mutable or immutable. An incompatible concrete result type is an import-type mismatch and MUST fail instantiation; it is not a runtime `errno`.
 
-On success the host allocates exactly that concrete Wasm GC type and returns a non-null reference. On failure it returns `ref.null` and a nonzero `errno`.
+On success the host allocates exactly that concrete Wasm GC type and returns a non-null reference. On call failure it returns `ref.null` and a nonzero `errno`.
 
 This is a narrow type-specialization rule for host allocation, not semantic overload resolution: the operation and storage class remain determined by the import name.
 
@@ -307,28 +307,60 @@ Scatter/gather GC operations accept an outer `(ref array)` whose selected childr
 
 Read operations require mutable child arrays.
 
-## 8. Text encodings
+## 8. Text representations and WTF mode
+
+WPSI does not use a text-encoding enum.
+
+The import name identifies the physical text representation:
 
 ```text
-ENC_UTF8  = 1
-ENC_UTF16 = 2
-ENC_UTF32 = 3
-ENC_RAW8  = 4
-ENC_WTF8  = 5
-ENC_WTF16 = 6
+_i8  = 8-bit code units
+_i16 = 16-bit code units
+_i32 = 32-bit code points
 ```
 
-`ENC_UTF8`, `ENC_UTF16`, and `ENC_UTF32` represent valid Unicode text.
+Linear-memory text imports combine the memory address width and text width in the name, for example:
 
-Linear-memory UTF-16 and UTF-32 use little-endian code units.
+```text
+args_read_mem32_i8
+args_read_mem64_i16
+path_open_mem32_i32
+```
 
-UTF-32 values MUST be Unicode scalar values: surrogate values and values greater than `0x10ffff` are invalid.
+GC-array text imports use the existing `array_i8`, `array_i16`, and `array_i32` families.
 
-`ENC_RAW8` is an uninterpreted 8-bit operating-system string representation.
+Every textual operation receives:
 
-`ENC_WTF8` and `ENC_WTF16` allow surrogate preservation where required by a host platform.
+```text
+wtf: i32
+```
 
-WPSI strings are length-delimited and are never implicitly NUL-terminated.
+`wtf` is a boolean:
+
+```text
+0 = strict Unicode
+1 = WTF / surrogate-sentinel mode
+```
+
+Any other value returns `ERR_INVALID`.
+
+With `wtf == 0`:
+
+- `_i8` is well-formed UTF-8;
+- `_i16` is well-formed UTF-16;
+- `_i32` contains Unicode scalar values only.
+
+With `wtf == 1`, surrogate code points in `0xd800..0xdfff` are permitted as reversible sentinel values:
+
+- `_i8` uses WTF-8;
+- `_i16` uses WTF-16 code units;
+- `_i32` stores the code-point values directly, including surrogate sentinels.
+
+WPSI MUST NOT silently replace an unrepresentable host unit with U+FFFD. Strict mode returns `ERR_ILLEGAL_SEQUENCE`; WTF mode preserves such values through surrogate sentinels when the host namespace can be represented that way.
+
+On byte-string host namespaces, invalid UTF-8 bytes `0x80..0xff` SHOULD be mapped reversibly to `U+DC80..U+DCFF`. On UTF-16 host namespaces, unpaired surrogate code units are preserved directly. A host that still cannot represent a requested WTF sequence returns `ERR_ILLEGAL_SEQUENCE`.
+
+Linear-memory `_i16` and `_i32` values are little-endian. WPSI strings are length-delimited and are never implicitly NUL-terminated.
 
 ## 9. Host-originated strings
 
@@ -336,39 +368,24 @@ WPSI does not define a string resource handle. A host-originated string is ident
 
 For stable indexed sources, WPSI exposes three forms:
 
-1. `*_len` returns the number of encoding units required;
-2. `*_read_mem32`, `*_read_mem64`, and `*_read_into_array_*` copy into caller-owned storage;
-3. `*_read_array_*` allocates and returns a caller-typed concrete GC array.
+1. `*_len_i8`, `*_len_i16`, and `*_len_i32` return the required code-unit count;
+2. `*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy into caller-owned storage;
+3. `*_read_array_i*` allocates and returns a caller-typed concrete GC array.
+
+The representation suffix selects the code-unit width. `wtf` selects strict Unicode or surrogate-sentinel semantics. There is no second encoding selector.
 
 Linear-memory forms necessarily receive an explicit memory index, pointer, and capacity. GC `read_into` forms receive an existing `(ref array)`, element offset, and capacity. Allocating GC forms return `(ref null $caller_type, errno)` as described in section 3.5.
 
-Encoding-unit sizes are:
-
-```text
-UTF-8 / WTF-8 / RAW8 = 1 byte
-UTF-16 / WTF-16      = 2 bytes
-UTF-32                = 4 bytes
-```
-
-A successful allocating function returns an array whose length exactly equals the encoded string length. Empty strings return a non-null zero-length array.
+A successful allocating function returns an array whose length exactly equals the represented string length. Empty strings return a non-null zero-length array.
 
 For all allocating string functions:
 
 - an invalid source index returns `(null, ERR_RANGE)`;
-- an invalid encoding enum returns `(null, ERR_INVALID)`;
-- a valid encoding incompatible with the named array storage family returns `(null, ERR_TYPE)`;
-- a source value that cannot be represented losslessly returns `(null, ERR_ILLEGAL_SEQUENCE)`;
+- an invalid `wtf` value returns `(null, ERR_INVALID)`;
+- a source value that cannot be represented losslessly under the requested mode returns `(null, ERR_ILLEGAL_SEQUENCE)`;
 - allocation failure returns `(null, ERR_NO_MEMORY)`.
 
-For caller-owned destinations, insufficient capacity returns `ERR_RANGE`, writes nothing, and leaves the source position unchanged when the source is stateful. No WPSI string-copy function appends a NUL terminator.
-
-Array encoding compatibility is:
-
-```text
-array_i8  -> UTF-8, WTF-8, RAW8
-array_i16 -> UTF-16, WTF-16
-array_i32 -> UTF-32
-```
+For caller-owned destinations, insufficient capacity returns `ERR_RANGE`, writes nothing, and leaves the source position unchanged when the source is stateful. A wrong GC destination storage class returns `ERR_TYPE`. No WPSI string-copy function appends a NUL terminator.
 
 ## 10. Capabilities and scratch storage
 
@@ -493,27 +510,34 @@ Argument and environment ordering MUST remain stable for the lifetime of the ins
 
 ```text
 args_count() -> (count: i32, errno: i32)
-args_len(index: i32, encoding: i32)
-  -> (units: i64, errno: i32)
 
-args_read_mem32(index: i32, encoding: i32,
-                memory: i32, pointer: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
-args_read_mem64(index: i32, encoding: i32,
-                memory: i32, pointer: i64, capacity_units: i64)
-  -> (units_written: i64, errno: i32)
+args_len_i8(index: i32, wtf: i32)  -> (units: i64, errno: i32)
+args_len_i16(index: i32, wtf: i32) -> (units: i64, errno: i32)
+args_len_i32(index: i32, wtf: i32) -> (units: i64, errno: i32)
 
-args_read_into_array_i8(index: i32, encoding: i32,
+args_read_mem32_i8(index: i32, wtf: i32,
+                   memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+args_read_mem32_i16(...) -> (units_written: i64, errno: i32)
+args_read_mem32_i32(...) -> (units_written: i64, errno: i32)
+
+args_read_mem64_i8(index: i32, wtf: i32,
+                   memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, errno: i32)
+args_read_mem64_i16(...) -> (units_written: i64, errno: i32)
+args_read_mem64_i32(...) -> (units_written: i64, errno: i32)
+
+args_read_into_array_i8(index: i32, wtf: i32,
                         destination: ref array, offset: i32, capacity_units: i32)
   -> (units_written: i64, errno: i32)
 args_read_into_array_i16(...) -> (units_written: i64, errno: i32)
 args_read_into_array_i32(...) -> (units_written: i64, errno: i32)
 
-args_read_array_i8(index: i32, encoding: i32)
+args_read_array_i8(index: i32, wtf: i32)
   -> (value: ref null $caller_i8_array, errno: i32)
-args_read_array_i16(index: i32, encoding: i32)
+args_read_array_i16(index: i32, wtf: i32)
   -> (value: ref null $caller_i16_array, errno: i32)
-args_read_array_i32(index: i32, encoding: i32)
+args_read_array_i32(index: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
@@ -526,27 +550,34 @@ ENV_VALUE = 1
 
 ```text
 env_count() -> (count: i32, errno: i32)
-env_len(index: i32, field: i32, encoding: i32)
-  -> (units: i64, errno: i32)
 
-env_read_mem32(index: i32, field: i32, encoding: i32,
-               memory: i32, pointer: i32, capacity_units: i32)
-  -> (units_written: i64, errno: i32)
-env_read_mem64(index: i32, field: i32, encoding: i32,
-               memory: i32, pointer: i64, capacity_units: i64)
-  -> (units_written: i64, errno: i32)
+env_len_i8(index: i32, field: i32, wtf: i32)  -> (units: i64, errno: i32)
+env_len_i16(index: i32, field: i32, wtf: i32) -> (units: i64, errno: i32)
+env_len_i32(index: i32, field: i32, wtf: i32) -> (units: i64, errno: i32)
 
-env_read_into_array_i8(index: i32, field: i32, encoding: i32,
+env_read_mem32_i8(index: i32, field: i32, wtf: i32,
+                  memory: i32, pointer: i32, capacity_units: i32)
+  -> (units_written: i64, errno: i32)
+env_read_mem32_i16(...) -> (units_written: i64, errno: i32)
+env_read_mem32_i32(...) -> (units_written: i64, errno: i32)
+
+env_read_mem64_i8(index: i32, field: i32, wtf: i32,
+                  memory: i32, pointer: i64, capacity_units: i64)
+  -> (units_written: i64, errno: i32)
+env_read_mem64_i16(...) -> (units_written: i64, errno: i32)
+env_read_mem64_i32(...) -> (units_written: i64, errno: i32)
+
+env_read_into_array_i8(index: i32, field: i32, wtf: i32,
                        destination: ref array, offset: i32, capacity_units: i32)
   -> (units_written: i64, errno: i32)
 env_read_into_array_i16(...) -> (units_written: i64, errno: i32)
 env_read_into_array_i32(...) -> (units_written: i64, errno: i32)
 
-env_read_array_i8(index: i32, field: i32, encoding: i32)
+env_read_array_i8(index: i32, field: i32, wtf: i32)
   -> (value: ref null $caller_i8_array, errno: i32)
-env_read_array_i16(index: i32, field: i32, encoding: i32)
+env_read_array_i16(index: i32, field: i32, wtf: i32)
   -> (value: ref null $caller_i16_array, errno: i32)
-env_read_array_i32(index: i32, field: i32, encoding: i32)
+env_read_array_i32(index: i32, field: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
@@ -612,24 +643,33 @@ fs_scratch_usage()
 fs_preopen_count() -> (count: i32, errno: i32)
 fs_preopen_get(index: i32) -> (directory: i32, errno: i32)
 
-fs_preopen_name_len(index: i32, encoding: i32)
-  -> (units: i64, errno: i32)
-fs_preopen_name_read_mem32(index: i32, encoding: i32,
-                           memory: i32, pointer: i32, capacity_units: i32)
+fs_preopen_name_len_i8(index: i32, wtf: i32)  -> (units: i64, errno: i32)
+fs_preopen_name_len_i16(index: i32, wtf: i32) -> (units: i64, errno: i32)
+fs_preopen_name_len_i32(index: i32, wtf: i32) -> (units: i64, errno: i32)
+
+fs_preopen_name_read_mem32_i8(index: i32, wtf: i32,
+                              memory: i32, pointer: i32, capacity_units: i32)
   -> (units_written: i64, errno: i32)
-fs_preopen_name_read_mem64(index: i32, encoding: i32,
-                           memory: i32, pointer: i64, capacity_units: i64)
+fs_preopen_name_read_mem32_i16(...) -> (units_written: i64, errno: i32)
+fs_preopen_name_read_mem32_i32(...) -> (units_written: i64, errno: i32)
+
+fs_preopen_name_read_mem64_i8(index: i32, wtf: i32,
+                              memory: i32, pointer: i64, capacity_units: i64)
   -> (units_written: i64, errno: i32)
-fs_preopen_name_read_into_array_i8(index: i32, encoding: i32,
+fs_preopen_name_read_mem64_i16(...) -> (units_written: i64, errno: i32)
+fs_preopen_name_read_mem64_i32(...) -> (units_written: i64, errno: i32)
+
+fs_preopen_name_read_into_array_i8(index: i32, wtf: i32,
                                    destination: ref array, offset: i32, capacity_units: i32)
   -> (units_written: i64, errno: i32)
 fs_preopen_name_read_into_array_i16(...) -> (units_written: i64, errno: i32)
 fs_preopen_name_read_into_array_i32(...) -> (units_written: i64, errno: i32)
-fs_preopen_name_read_array_i8(index: i32, encoding: i32)
+
+fs_preopen_name_read_array_i8(index: i32, wtf: i32)
   -> (value: ref null $caller_i8_array, errno: i32)
-fs_preopen_name_read_array_i16(index: i32, encoding: i32)
+fs_preopen_name_read_array_i16(index: i32, wtf: i32)
   -> (value: ref null $caller_i16_array, errno: i32)
-fs_preopen_name_read_array_i32(index: i32, encoding: i32)
+fs_preopen_name_read_array_i32(index: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
@@ -876,78 +916,73 @@ fd_datasync(fd: i32)
 
 All path operations are relative to a directory capability. WPSI has no implicit process-wide host current working directory.
 
-For linear-memory path functions, `pointer` is a byte address while `length` is measured in encoding units.
+Path import names identify both the storage representation and code-unit width.
 
-Encoding unit sizes are:
-
-```text
-UTF-8/WTF-8/RAW8 = 1 byte
-UTF-16/WTF-16    = 2 bytes
-UTF-32            = 4 bytes
-```
-
-For GC path functions:
+Linear-memory path families are:
 
 ```text
-array_i8  -> UTF-8, WTF-8, or RAW8
-array_i16 -> UTF-16 or WTF-16
-array_i32 -> UTF-32
+*_mem32_i8   *_mem32_i16   *_mem32_i32
+*_mem64_i8   *_mem64_i16   *_mem64_i32
 ```
 
-GC path offsets and lengths are measured in array elements/code units, not raw bytes.
+GC path families are:
 
-Paths containing embedded NUL MUST be rejected when the host filesystem cannot represent them.
+```text
+*_array_i8   *_array_i16   *_array_i32
+```
+
+Every path representation receives a `wtf: i32` boolean as defined in section 8. There is no path encoding enum.
+
+For linear memory, `pointer` is a byte address while `length` and capacities are measured in code units. `_i16` and `_i32` values are little-endian. For GC arrays, offsets and lengths are measured in array elements/code units.
+
+The logical directory separator is `/`. Embedded NUL is invalid in every WPSI filesystem path and returns `ERR_INVALID`.
 
 An implementation MUST prevent path or symlink traversal from escaping the authority represented by the directory handle.
 
 ## 24. Path open
 
+For each `T` in `i8`, `i16`, and `i32`:
+
 ```text
-path_open_mem32(directory: i32,
-                memory: i32, pointer: i32, length: i32, encoding: i32,
-                open_flags: i32, requested_rights: i64)
+path_open_mem32_T(directory: i32,
+                  memory: i32, pointer: i32, length: i32, wtf: i32,
+                  open_flags: i32, requested_rights: i64)
   -> (fd: i32, errno: i32)
 
-path_open_mem64(directory: i32,
-                memory: i32, pointer: i64, length: i64, encoding: i32,
-                open_flags: i32, requested_rights: i64)
+path_open_mem64_T(directory: i32,
+                  memory: i32, pointer: i64, length: i64, wtf: i32,
+                  open_flags: i32, requested_rights: i64)
   -> (fd: i32, errno: i32)
 
-path_open_array_i8(directory: i32, path: ref array,
-                   offset: i32, length: i32, encoding: i32,
-                   open_flags: i32, requested_rights: i64)
-  -> (fd: i32, errno: i32)
-path_open_array_i16(directory: i32, path: ref array,
-                    offset: i32, length: i32, encoding: i32,
-                    open_flags: i32, requested_rights: i64)
-  -> (fd: i32, errno: i32)
-path_open_array_i32(directory: i32, path: ref array,
-                    offset: i32, length: i32, encoding: i32,
-                    open_flags: i32, requested_rights: i64)
+path_open_array_T(directory: i32, path: ref array,
+                  offset: i32, length: i32, wtf: i32,
+                  open_flags: i32, requested_rights: i64)
   -> (fd: i32, errno: i32)
 ```
+
+`T` is part of the actual import name; for example `path_open_mem32_i16`.
 
 ## 25. Path stat
 
 Each `path_stat_*` function returns the same stat tuple as `fd_stat`.
 
+For each `T` in `i8`, `i16`, and `i32`:
+
 ```text
-path_stat_mem32(directory: i32,
-                memory: i32, pointer: i32, length: i32,
-                encoding: i32, flags: i32)
+path_stat_mem32_T(directory: i32,
+                  memory: i32, pointer: i32, length: i32,
+                  wtf: i32, flags: i32)
   -> stat-result
 
-path_stat_mem64(directory: i32,
-                memory: i32, pointer: i64, length: i64,
-                encoding: i32, flags: i32)
+path_stat_mem64_T(directory: i32,
+                  memory: i32, pointer: i64, length: i64,
+                  wtf: i32, flags: i32)
   -> stat-result
 
-path_stat_array_i8(directory: i32, path: ref array,
-                   offset: i32, length: i32,
-                   encoding: i32, flags: i32)
+path_stat_array_T(directory: i32, path: ref array,
+                  offset: i32, length: i32,
+                  wtf: i32, flags: i32)
   -> stat-result
-path_stat_array_i16(...) -> stat-result
-path_stat_array_i32(...) -> stat-result
 ```
 
 `stat-result` is:
@@ -967,68 +1002,66 @@ path_stat_array_i32(...) -> stat-result
 
 ## 26. Create and remove paths
 
-```text
-path_create_dir_mem32(directory: i32,
-                      memory: i32, pointer: i32, length: i32, encoding: i32)
-  -> (errno: i32)
-path_create_dir_mem64(directory: i32,
-                      memory: i32, pointer: i64, length: i64, encoding: i32)
-  -> (errno: i32)
-path_create_dir_array_i8(directory: i32, path: ref array,
-                         offset: i32, length: i32, encoding: i32)
-  -> (errno: i32)
-path_create_dir_array_i16(...) -> (errno: i32)
-path_create_dir_array_i32(...) -> (errno: i32)
+For each `T` in `i8`, `i16`, and `i32`:
 
-path_remove_mem32(directory: i32,
-                  memory: i32, pointer: i32, length: i32, encoding: i32,
-                  remove_flags: i32)
+```text
+path_create_dir_mem32_T(directory: i32,
+                        memory: i32, pointer: i32, length: i32, wtf: i32)
   -> (errno: i32)
-path_remove_mem64(directory: i32,
-                  memory: i32, pointer: i64, length: i64, encoding: i32,
-                  remove_flags: i32)
+path_create_dir_mem64_T(directory: i32,
+                        memory: i32, pointer: i64, length: i64, wtf: i32)
   -> (errno: i32)
-path_remove_array_i8(directory: i32, path: ref array,
-                     offset: i32, length: i32, encoding: i32,
-                     remove_flags: i32)
+path_create_dir_array_T(directory: i32, path: ref array,
+                        offset: i32, length: i32, wtf: i32)
   -> (errno: i32)
-path_remove_array_i16(...) -> (errno: i32)
-path_remove_array_i32(...) -> (errno: i32)
+
+path_remove_mem32_T(directory: i32,
+                    memory: i32, pointer: i32, length: i32, wtf: i32,
+                    remove_flags: i32)
+  -> (errno: i32)
+path_remove_mem64_T(directory: i32,
+                    memory: i32, pointer: i64, length: i64, wtf: i32,
+                    remove_flags: i32)
+  -> (errno: i32)
+path_remove_array_T(directory: i32, path: ref array,
+                    offset: i32, length: i32, wtf: i32,
+                    remove_flags: i32)
+  -> (errno: i32)
 ```
 
 ## 27. Rename
 
-Each rename variant uses the same representation family for both paths to avoid a representation cross-product.
+Rename uses the same code-unit width for both paths to avoid a width cross-product. The source and destination may independently choose strict or WTF mode.
+
+For each `T` in `i8`, `i16`, and `i32`:
 
 ```text
-path_rename_mem32(source_directory: i32,
-                  source_memory: i32, source_pointer: i32,
-                  source_length: i32, source_encoding: i32,
-                  destination_directory: i32,
-                  destination_memory: i32, destination_pointer: i32,
-                  destination_length: i32, destination_encoding: i32,
-                  flags: i32)
+path_rename_mem32_T(source_directory: i32,
+                    source_memory: i32, source_pointer: i32,
+                    source_length: i32, source_wtf: i32,
+                    destination_directory: i32,
+                    destination_memory: i32, destination_pointer: i32,
+                    destination_length: i32, destination_wtf: i32,
+                    flags: i32)
   -> (errno: i32)
 
-path_rename_mem64(source_directory: i32,
-                  source_memory: i32, source_pointer: i64,
-                  source_length: i64, source_encoding: i32,
-                  destination_directory: i32,
-                  destination_memory: i32, destination_pointer: i64,
-                  destination_length: i64, destination_encoding: i32,
-                  flags: i32)
+path_rename_mem64_T(source_directory: i32,
+                    source_memory: i32, source_pointer: i64,
+                    source_length: i64, source_wtf: i32,
+                    destination_directory: i32,
+                    destination_memory: i32, destination_pointer: i64,
+                    destination_length: i64, destination_wtf: i32,
+                    flags: i32)
   -> (errno: i32)
 
-path_rename_array_i8(source_directory: i32,
-                     source: ref array, source_offset: i32,
-                     source_length: i32, source_encoding: i32,
-                     destination_directory: i32,
-                     destination: ref array, destination_offset: i32,
-                     destination_length: i32, destination_encoding: i32,
-                     flags: i32)
+path_rename_array_T(source_directory: i32,
+                    source: ref array, source_offset: i32,
+                    source_length: i32, source_wtf: i32,
+                    destination_directory: i32,
+                    destination: ref array, destination_offset: i32,
+                    destination_length: i32, destination_wtf: i32,
+                    flags: i32)
   -> (errno: i32)
-path_rename_array_i16(...) -> (errno: i32)
-path_rename_array_i32(...) -> (errno: i32)
 ```
 
 ## 28. Directory iteration
@@ -1036,37 +1069,40 @@ path_rename_array_i32(...) -> (errno: i32)
 ```text
 dir_iter_open(directory: i32)
   -> (iterator: i32, errno: i32)
+```
 
-dir_iter_next_len(iterator: i32, encoding: i32)
+For each `T` in `i8`, `i16`, and `i32`:
+
+```text
+dir_iter_next_len_T(iterator: i32, wtf: i32)
   -> (units: i64, file_type: i32, inode: i64, done: i32, errno: i32)
 
-dir_iter_next_mem32(iterator: i32, encoding: i32,
-                    memory: i32, pointer: i32, capacity_units: i32)
-  -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
-dir_iter_next_mem64(iterator: i32, encoding: i32,
-                    memory: i32, pointer: i64, capacity_units: i64)
+dir_iter_next_mem32_T(iterator: i32, wtf: i32,
+                      memory: i32, pointer: i32, capacity_units: i32)
   -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
 
-dir_iter_next_into_array_i8(iterator: i32, encoding: i32,
-                            destination: ref array, offset: i32, capacity_units: i32)
+dir_iter_next_mem64_T(iterator: i32, wtf: i32,
+                      memory: i32, pointer: i64, capacity_units: i64)
   -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
-dir_iter_next_into_array_i16(...) -> same-dir-result
-dir_iter_next_into_array_i32(...) -> same-dir-result
 
-dir_iter_next_array_i8(iterator: i32, encoding: i32)
-  -> (name: ref null $caller_i8_array,
+dir_iter_next_into_array_T(iterator: i32, wtf: i32,
+                           destination: ref array, offset: i32, capacity_units: i32)
+  -> (units_written: i64, file_type: i32, inode: i64, done: i32, errno: i32)
+
+dir_iter_next_array_T(iterator: i32, wtf: i32)
+  -> (name: ref null $caller_T_array,
       file_type: i32, inode: i64, done: i32, errno: i32)
-dir_iter_next_array_i16(iterator: i32, encoding: i32) -> same-allocated-dir-result
-dir_iter_next_array_i32(iterator: i32, encoding: i32) -> same-allocated-dir-result
+```
 
+```text
 dir_iter_rewind(iterator: i32) -> (errno: i32)
 ```
 
 The iterator itself identifies the pending directory entry; WPSI does not allocate a separate name resource.
 
-`dir_iter_next_len` peeks and snapshots the next entry without consuming it. Repeated length queries observe the same pending entry. Any successful `dir_iter_next_mem*`, `dir_iter_next_into_array_*`, or `dir_iter_next_array_*` call consumes that entry and advances the iterator.
+`dir_iter_next_len_T` peeks and snapshots the next entry without consuming it. Repeated length queries observe the same pending entry. Any successful read or allocating next call consumes that entry and advances the iterator.
 
-If caller-owned capacity is insufficient, the operation returns `ERR_RANGE`, performs no write, and does not advance. The caller may query `dir_iter_next_len` and retry.
+If caller-owned capacity is insufficient, the operation returns `ERR_RANGE`, performs no write, and does not advance. The caller may query the matching length function and retry.
 
 At end of iteration, `done == 1`, scalar metadata is zero, and allocating forms return `ref.null` with `ERR_OK`.
 
@@ -1074,118 +1110,88 @@ At end of iteration, `done == 1`, scalar metadata is zero, and allocating forms 
 
 ## 29. Hard links
 
-The following functions belong to `wpsi-links`:
-
-```text
-path_link_mem32(source_directory: i32,
-                source_memory: i32, source_pointer: i32,
-                source_length: i32, source_encoding: i32,
-                destination_directory: i32,
-                destination_memory: i32, destination_pointer: i32,
-                destination_length: i32, destination_encoding: i32,
-                flags: i32)
-  -> (errno: i32)
-
-path_link_mem64(source_directory: i32,
-                source_memory: i32, source_pointer: i64,
-                source_length: i64, source_encoding: i32,
-                destination_directory: i32,
-                destination_memory: i32, destination_pointer: i64,
-                destination_length: i64, destination_encoding: i32,
-                flags: i32)
-  -> (errno: i32)
-
-path_link_array_i8(...)  -> (errno: i32)
-path_link_array_i16(...) -> (errno: i32)
-path_link_array_i32(...) -> (errno: i32)
-```
-
-Array forms use the same argument shape as `path_rename_array_*`.
+Hard links use the same code-unit width for source and destination. For each `T` in `i8`, `i16`, and `i32`, `path_link_mem32_T`, `path_link_mem64_T`, and `path_link_array_T` use the same argument shapes as the corresponding `path_rename_*_T` functions.
 
 ## 30. Symbolic links
 
+The symlink target and destination use the same code-unit width but independent `wtf` flags.
+
+For each `T` in `i8`, `i16`, and `i32`:
+
 ```text
-path_symlink_mem32(target_memory: i32, target_pointer: i32,
-                   target_length: i32, target_encoding: i32,
-                   destination_directory: i32,
-                   destination_memory: i32, destination_pointer: i32,
-                   destination_length: i32, destination_encoding: i32)
+path_symlink_mem32_T(target_memory: i32, target_pointer: i32,
+                     target_length: i32, target_wtf: i32,
+                     destination_directory: i32,
+                     destination_memory: i32, destination_pointer: i32,
+                     destination_length: i32, destination_wtf: i32)
   -> (errno: i32)
 
-path_symlink_mem64(target_memory: i32, target_pointer: i64,
-                   target_length: i64, target_encoding: i32,
-                   destination_directory: i32,
-                   destination_memory: i32, destination_pointer: i64,
-                   destination_length: i64, destination_encoding: i32)
+path_symlink_mem64_T(target_memory: i32, target_pointer: i64,
+                     target_length: i64, target_wtf: i32,
+                     destination_directory: i32,
+                     destination_memory: i32, destination_pointer: i64,
+                     destination_length: i64, destination_wtf: i32)
   -> (errno: i32)
 
-path_symlink_array_i8(target: ref array, target_offset: i32,
-                      target_length: i32, target_encoding: i32,
-                      destination_directory: i32,
-                      destination: ref array, destination_offset: i32,
-                      destination_length: i32, destination_encoding: i32)
+path_symlink_array_T(target: ref array, target_offset: i32,
+                     target_length: i32, target_wtf: i32,
+                     destination_directory: i32,
+                     destination: ref array, destination_offset: i32,
+                     destination_length: i32, destination_wtf: i32)
   -> (errno: i32)
-path_symlink_array_i16(...) -> (errno: i32)
-path_symlink_array_i32(...) -> (errno: i32)
 ```
 
 ## 31. Read symbolic link
 
-`path_readlink_*` never creates an intermediate string resource.
+`path_readlink_*` never creates an intermediate string resource. The input path and output target use the same code-unit width to avoid a representation cross-product, but may independently choose strict or WTF mode.
 
-Linear-memory forms accept both the input path and output destination:
-
-```text
-path_readlink_len_mem32(directory: i32,
-                        path_memory: i32, path_pointer: i32,
-                        path_length: i32, path_encoding: i32,
-                        target_encoding: i32)
-  -> (units: i64, errno: i32)
-
-path_readlink_mem32(directory: i32,
-                    path_memory: i32, path_pointer: i32,
-                    path_length: i32, path_encoding: i32,
-                    target_memory: i32, target_pointer: i32,
-                    target_capacity_units: i32, target_encoding: i32)
-  -> (units_written: i64, errno: i32)
-
-path_readlink_len_mem64(directory: i32,
-                        path_memory: i32, path_pointer: i64,
-                        path_length: i64, path_encoding: i32,
-                        target_encoding: i32)
-  -> (units: i64, errno: i32)
-
-path_readlink_mem64(directory: i32,
-                    path_memory: i32, path_pointer: i64,
-                    path_length: i64, path_encoding: i32,
-                    target_memory: i32, target_pointer: i64,
-                    target_capacity_units: i64, target_encoding: i32)
-  -> (units_written: i64, errno: i32)
-```
-
-GC forms use the same element-storage family for the input path and output target. This avoids an input/output representation cross-product:
+For each `T` in `i8`, `i16`, and `i32`:
 
 ```text
-path_readlink_len_array_i8(directory: i32, path: ref array,
-                           offset: i32, length: i32, path_encoding: i32,
-                           target_encoding: i32)
+path_readlink_len_mem32_T(directory: i32,
+                          path_memory: i32, path_pointer: i32,
+                          path_length: i32, path_wtf: i32,
+                          target_wtf: i32)
   -> (units: i64, errno: i32)
 
-path_readlink_into_array_i8(directory: i32, path: ref array,
-                            path_offset: i32, path_length: i32, path_encoding: i32,
-                            destination: ref array, destination_offset: i32,
-                            target_capacity_units: i32, target_encoding: i32)
+path_readlink_mem32_T(directory: i32,
+                      path_memory: i32, path_pointer: i32,
+                      path_length: i32, path_wtf: i32,
+                      target_memory: i32, target_pointer: i32,
+                      target_capacity_units: i32, target_wtf: i32)
   -> (units_written: i64, errno: i32)
 
-path_readlink_array_i8(directory: i32, path: ref array,
-                       offset: i32, length: i32, path_encoding: i32,
-                       target_encoding: i32)
-  -> (target: ref null $caller_i8_array, errno: i32)
+path_readlink_len_mem64_T(directory: i32,
+                          path_memory: i32, path_pointer: i64,
+                          path_length: i64, path_wtf: i32,
+                          target_wtf: i32)
+  -> (units: i64, errno: i32)
+
+path_readlink_mem64_T(directory: i32,
+                      path_memory: i32, path_pointer: i64,
+                      path_length: i64, path_wtf: i32,
+                      target_memory: i32, target_pointer: i64,
+                      target_capacity_units: i64, target_wtf: i32)
+  -> (units_written: i64, errno: i32)
+
+path_readlink_len_array_T(directory: i32, path: ref array,
+                          offset: i32, length: i32, path_wtf: i32,
+                          target_wtf: i32)
+  -> (units: i64, errno: i32)
+
+path_readlink_into_array_T(directory: i32, path: ref array,
+                           path_offset: i32, path_length: i32, path_wtf: i32,
+                           destination: ref array, destination_offset: i32,
+                           target_capacity_units: i32, target_wtf: i32)
+  -> (units_written: i64, errno: i32)
+
+path_readlink_array_T(directory: i32, path: ref array,
+                      offset: i32, length: i32, path_wtf: i32,
+                      target_wtf: i32)
+  -> (target: ref null $caller_T_array, errno: i32)
 ```
 
-Equivalent `array_i16` and `array_i32` functions are defined.
-
-For an allocating GC readlink, `target_encoding` MUST be compatible with the named array storage family. Caller-owned reads require enough capacity for the complete target; insufficient capacity returns `ERR_RANGE` without modifying the destination.
+Caller-owned reads require enough capacity for the complete target; insufficient capacity returns `ERR_RANGE` without modifying the destination.
 
 The returned target is the stored symbolic-link text and is not recursively resolved.
 
@@ -1320,21 +1326,25 @@ socket_sendto_array_v128(...) -> (bytes_written: i64, errno: i32)
 
 ## 36. DNS
 
+DNS hostnames use the same text representation rule as other WPSI text: the import suffix chooses `i8`, `i16`, or `i32`, and `wtf` selects strict Unicode or surrogate-sentinel mode.
+
+For each `T` in `i8`, `i16`, and `i32`:
+
 ```text
-dns_resolve_mem32(memory: i32, pointer: i32, length: i32,
-                  encoding: i32, family: i32, flags: i32)
+dns_resolve_mem32_T(memory: i32, pointer: i32, length: i32,
+                    wtf: i32, family: i32, flags: i32)
   -> (resolver: i32, errno: i32)
 
-dns_resolve_mem64(memory: i32, pointer: i64, length: i64,
-                  encoding: i32, family: i32, flags: i32)
+dns_resolve_mem64_T(memory: i32, pointer: i64, length: i64,
+                    wtf: i32, family: i32, flags: i32)
   -> (resolver: i32, errno: i32)
 
-dns_resolve_array_i8(hostname: ref array, offset: i32, length: i32,
-                     encoding: i32, family: i32, flags: i32)
+dns_resolve_array_T(hostname: ref array, offset: i32, length: i32,
+                    wtf: i32, family: i32, flags: i32)
   -> (resolver: i32, errno: i32)
-dns_resolve_array_i16(...) -> (resolver: i32, errno: i32)
-dns_resolve_array_i32(...) -> (resolver: i32, errno: i32)
+```
 
+```text
 dns_next(resolver: i32)
   -> (family: i32,
       address_hi: i64,

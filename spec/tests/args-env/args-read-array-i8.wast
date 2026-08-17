@@ -9,7 +9,7 @@
   (import "wpsi" "args_read_array_i8" (func $read (param i32 i32) (result (ref null $s) i32)))
   (func (export "run") (result i32)
     (local $s (ref null $s)) (local $e i32)
-    (call $read (i32.const 0) (i32.const 1)) (local.set $e) (local.set $s)
+    (call $read (i32.const 0) (i32.const 0)) (local.set $e) (local.set $s)
     (if (result i32) (ref.is_null (local.get $s))
       (then (i32.const 1))
       (else

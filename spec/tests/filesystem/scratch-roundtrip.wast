@@ -7,7 +7,7 @@
 (module
 
   (import "wpsi" "fs_scratch" (func $scratch (result i32 i32)))
-  (import "wpsi" "path_open_mem32" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
   (import "wpsi" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
   (import "wpsi" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
   (import "wpsi" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
@@ -23,7 +23,7 @@
     (local $dir i32) (local $fd i32) (local $e i32) (local $n i64) (local $off i64)
     (call $scratch) (local.set $e) (local.set $dir)
     (if (local.get $e) (then (return (local.get $e))))
-    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 13) (i32.const 1) (i32.const 5) (i64.const 63)) (local.set $e) (local.set $fd)
+    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 13) (i32.const 0) (i32.const 5) (i64.const 63)) (local.set $e) (local.set $fd)
     (if (local.get $e) (then (return (local.get $e))))
     (call $write (local.get $fd) (i32.const 0) (i32.const 32) (i32.const 5)) (local.set $e) (local.set $n)
     (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 5))) (then (return (i32.const 101))))

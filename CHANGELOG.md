@@ -12,7 +12,7 @@ All notable specification changes will be recorded here.
 - Explicit Wasm GC `array<i8>`, `array<i16>`, `array<i32>`, `array<i64>`, and `array<v128>` raw-buffer families.
 - Normative logical byte view for numeric GC arrays, including partial-element byte ranges.
 - Multi-memory-aware linear buffer and iovec representations.
-- UTF-8, UTF-16, UTF-32, WTF-8, WTF-16, and raw 8-bit system string encodings.
+- UTF-8, UTF-16, 32-bit code-point text, and WTF surrogate-sentinel semantics.
 - Opaque resource handles and capability-oriented filesystem/network access.
 - Automatic private scratch filesystem for filesystem-enabled instances.
 - Filesystem, links, sockets, DNS, clocks, randomness, and polling function families.
@@ -21,6 +21,9 @@ All notable specification changes will be recorded here.
 - Normative `spec/behavior.md` defining validation precedence, error normalization, path and symlink resolution, settled GC-array behavior, `sysstr` conversion, polling, and networking state semantics.
 
 ### Decided
+
+- Text APIs no longer use an `ENC_*` selector. Code-unit width is encoded in the import name (`i8`, `i16`, or `i32`) and a single `wtf` boolean selects strict Unicode versus reversible surrogate-sentinel semantics. The old `RAW8` mode is removed; non-Unicode host units are represented through WTF sentinels when lossless conversion is possible.
+- Linear-memory textual imports now include both memory width and code-unit width, for example `path_open_mem32_i16` and `args_read_mem64_i8`.
 
 - GC raw-buffer byte offsets and lengths are `i64`. The existing normative signatures remain unchanged; runtimes bounds-check these values against the actual GC array byte length.
 - Validation failures use a deterministic order: scalar arguments, handles, resource state/authority, guest representation, ranges, text, namespace resolution, host operation, then host-error normalization.

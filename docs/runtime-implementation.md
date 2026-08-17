@@ -39,6 +39,21 @@ For every `_mem32` or `_mem64` call:
 
 Memory 0 must not receive special treatment.
 
+## Text representation
+
+Text width is part of the WPSI import name. A runtime should dispatch `*_i8`, `*_i16`, and `*_i32` directly to the corresponding code-unit reader/writer rather than decoding an encoding enum on every call.
+
+The `wtf` argument is a strict boolean. Validate it before touching guest buffers or host namespaces.
+
+```text
+wtf = 0 -> strict Unicode scalar text
+wtf = 1 -> permit surrogate sentinel values
+```
+
+On byte-oriented host namespaces, a practical reversible mapping for invalid UTF-8 bytes is the surrogate-escape range `U+DC80..U+DCFF`. On UTF-16 hosts, preserve unpaired surrogate code units directly. Never substitute U+FFFD when WPSI requires lossless transfer; return `ERR_ILLEGAL_SEQUENCE` if the selected mode cannot represent the host value.
+
+For linear memory, `_i16` and `_i32` code units are little-endian. The pointer remains a byte address while lengths/capacities are code-unit counts.
+
 ## GC array access
 
 A useful internal runtime primitive is:

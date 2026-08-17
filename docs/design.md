@@ -78,7 +78,7 @@ The initial raw-buffer set intentionally excludes `f32` and `f64`. They provide 
 
 A portable system interface should not require every language to convert its native text representation to UTF-8 merely to cross the host boundary.
 
-WPSI supports UTF-8, UTF-16, and UTF-32 directly. WTF-8/WTF-16 and raw 8-bit system strings exist for host namespaces that cannot be losslessly modeled as Unicode scalar text.
+WPSI supports 8-bit, 16-bit, and 32-bit text representations directly. The representation width is part of the import name rather than an encoding enum. A single `wtf` boolean selects strict Unicode or surrogate-sentinel mode, so host namespaces with non-Unicode units can be preserved without a separate raw-string encoding value.
 
 ## Why no system-string handles?
 
@@ -86,7 +86,7 @@ Strings such as arguments, environment values, preopen labels, directory-entry n
 
 WPSI therefore lets the source operation expose the string directly.
 
-Linear-memory callers query the encoded length when necessary and provide `(memory, pointer, capacity)` storage. GC callers may either provide an existing mutable array with `*_read_into_array_*` or use `*_read_array_*` to ask the runtime to allocate a fresh result.
+Linear-memory callers query the width-specific code-unit length when necessary and provide `(memory, pointer, capacity)` storage. GC callers may either provide an existing mutable array with `*_read_into_array_*` or use `*_read_array_*` to ask the runtime to allocate a fresh result.
 
 For allocating GC results, the concrete nullable array result type appears in the module's import signature. The runtime validates the requested storage class and allocates exactly that Wasm GC type. This lets a language receive its native `array<i8>`, `array<i16>`, or `array<i32>` representation without a temporary string resource or linear-memory lowering.
 
@@ -132,3 +132,17 @@ When adding a new operation, ask:
 6. Can a runtime that does not support the relevant Wasm feature simply omit the import?
 
 If the answer to those questions stays simple, the operation likely fits WPSI.
+
+
+## Why a WTF boolean instead of an encoding enum?
+
+The code-unit width changes the physical ABI and therefore belongs in the import name. UTF versus WTF semantics do not change the Core Wasm signature, so they are represented by one boolean.
+
+This keeps the rule simple:
+
+```text
+physical representation -> import name
+strict vs sentinel text  -> wtf boolean
+```
+
+`wtf = 0` requires Unicode scalar text. `wtf = 1` permits surrogate values as reversible sentinels. WPSI does not need an `ENC_*` namespace or a separate raw-8 string mode.

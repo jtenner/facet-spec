@@ -15,7 +15,7 @@
     (local $name (ref null $s)) (local $type i32) (local $inode i64) (local $done i32)
     (call $get (i32.const 0)) (local.set $e) (local.set $dir)
     (call $open (local.get $dir)) (local.set $e) (local.set $iter)
-    (call $next (local.get $iter) (i32.const 1))
+    (call $next (local.get $iter) (i32.const 0))
       (local.set $e) (local.set $done) (local.set $inode) (local.set $type) (local.set $name)
     (if (i32.eqz (local.get $e)) (then (local.set $e (call $rewind (local.get $iter)))))
     (local.get $e))

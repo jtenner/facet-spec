@@ -16,15 +16,8 @@ Questions:
 
 Current preference: keep handle encoding entirely runtime-private.
 
-## 2. Path encoding parameter
 
-Path representation families carry an encoding parameter rather than multiplying import names by UTF encoding.
-
-Question: is this the right dividing line between representation naming and semantic options?
-
-Current preference: yes; the Core Wasm signature is unchanged by the encoding enum.
-
-## 3. Scratch filesystem lifetime and persistence
+## 2. Scratch filesystem lifetime and persistence
 
 The draft requires private writable scratch storage and permits multiple backing strategies.
 
@@ -36,7 +29,7 @@ Questions:
 
 Current preference: lifetime is tied to the WPSI instance unless the embedder explicitly supplies a persistent private implementation.
 
-## 4. Scatter/gather nested GC arrays
+## 3. Scatter/gather nested GC arrays
 
 The current GC `readv/writev` form uses an outer array of child-array references and consumes complete logical byte views for selected children.
 
@@ -48,7 +41,7 @@ Questions:
 
 Current preference: keep 0.1 simple and benchmark real language lowering before adding descriptors.
 
-## 5. Async extension
+## 4. Async extension
 
 Asynchronous host operations are deliberately omitted because they require retained buffer ownership/lifetime semantics.
 
@@ -60,7 +53,7 @@ Before adding async operations, define:
 - resource ownership on dropped futures/continuations;
 - whether async operations use handles, callbacks, stack switching, or another Core Wasm mechanism.
 
-## 6. Profile versioning
+## 5. Profile versioning
 
 The draft uses one `abi_version()` value and import presence as feature detection.
 

@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "dns_resolve_mem32" (func $resolve (param i32 i32 i32 i32 i32 i32) (result i32 i32)))
+  (import "wpsi" "dns_resolve_mem32_i8" (func $resolve (param i32 i32 i32 i32 i32 i32) (result i32 i32)))
   (import "wpsi" "dns_next" (func $next (param i32) (result i32 i64 i64 i32 i32 i32)))
   (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
   (memory 1)
@@ -13,7 +13,7 @@
   (func (export "run") (result i32)
     (local $r i32) (local $e i32) (local $family i32) (local $hi i64) (local $lo i64)
     (local $scope i32) (local $done i32) (local $i i32)
-    (call $resolve (i32.const 0) (i32.const 0) (i32.const 9) (i32.const 1) (i32.const 0) (i32.const 0)) (local.set $e) (local.set $r)
+    (call $resolve (i32.const 0) (i32.const 0) (i32.const 9) (i32.const 0) (i32.const 0) (i32.const 0)) (local.set $e) (local.set $r)
     (if (local.get $e) (then (return (local.get $e))))
     (block $finished
       (loop $again

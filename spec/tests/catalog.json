@@ -26,19 +26,6 @@
       "kind": "wast"
     },
     {
-      "id": "args-env/args-read-array-encoding-mismatch",
-      "path": "spec/tests/args-env/args-read-array-encoding-mismatch.wast",
-      "profiles": [
-        "core",
-        "gc-array",
-        "args-env",
-        "text",
-        "adversarial"
-      ],
-      "purpose": "A valid encoding incompatible with the allocated array storage family returns null and ERR_TYPE.",
-      "kind": "wast"
-    },
-    {
       "id": "args-env/args-read-array-i16",
       "path": "spec/tests/args-env/args-read-array-i16.wast",
       "profiles": [
@@ -60,6 +47,17 @@
         "text"
       ],
       "purpose": "The host can allocate the caller's concrete array<i8> result type for an argument.",
+      "kind": "wast"
+    },
+    {
+      "id": "args-env/args-read-array-invalid-wtf",
+      "path": "spec/tests/args-env/args-read-array-invalid-wtf.wast",
+      "profiles": [
+        "core",
+        "gc-array",
+        "args-env"
+      ],
+      "purpose": "Allocating string reads reject non-boolean WTF selectors with null and ERR_INVALID.",
       "kind": "wast"
     },
     {
@@ -467,18 +465,6 @@
       "kind": "wast"
     },
     {
-      "id": "filesystem/path-raw8",
-      "path": "spec/tests/filesystem/path-raw8.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "filesystem",
-        "text"
-      ],
-      "purpose": "ENC_RAW8 accepts an uninterpreted ASCII path without Unicode conversion.",
-      "kind": "wast"
-    },
-    {
       "id": "filesystem/path-stat",
       "path": "spec/tests/filesystem/path-stat.wast",
       "profiles": [
@@ -523,6 +509,18 @@
         "text"
       ],
       "purpose": "A UTF-8 path opens a Unicode-named fixture without UTF-8 canonicalization.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/path-wtf8",
+      "path": "spec/tests/filesystem/path-wtf8.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem",
+        "text"
+      ],
+      "purpose": "WTF mode is a boolean text mode and accepts ordinary UTF-8 as a valid subset.",
       "kind": "wast"
     },
     {

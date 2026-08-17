@@ -13,7 +13,7 @@
     (local $a (ref $a)) (local $dir i32) (local $name i32) (local $fd i32) (local $e i32)
     (local.set $a (array.new_fixed $a 8 (i32.const 99) (i32.const 97) (i32.const 102) (i32.const 233) (i32.const 46) (i32.const 116) (i32.const 120) (i32.const 116)))
     (call $get (i32.const 0)) (local.set $e) (local.set $dir)
-        (call $open (local.get $dir) (local.get $a) (i32.const 0) (i32.const 8) (i32.const 2) (i32.const 0) (i64.const 17)) (local.set $e) (local.set $fd)
+        (call $open (local.get $dir) (local.get $a) (i32.const 0) (i32.const 8) (i32.const 0) (i32.const 0) (i64.const 17)) (local.set $e) (local.set $fd)
     (if (i32.eqz (local.get $e)) (then (drop (call $close (local.get $fd)))))
     (drop (call $close (local.get $dir)))
     (local.get $e)))

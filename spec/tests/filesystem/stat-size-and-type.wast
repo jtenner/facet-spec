@@ -6,7 +6,7 @@
 
 (module
   (import "wpsi" "fs_scratch" (func $scratch (result i32 i32)))
-  (import "wpsi" "path_open_mem32" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
   (import "wpsi" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
   (import "wpsi" "fd_stat" (func $stat (param i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
   (memory 1)
@@ -16,7 +16,7 @@
     (local $type i32) (local $flags i32) (local $size i64)
     (local $as i64) (local $ans i32) (local $ms i64) (local $mns i32) (local $cs i64) (local $cns i32)
     (call $scratch) (local.set $e) (local.set $dir)
-    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 8) (i32.const 1) (i32.const 5) (i64.const 63)) (local.set $e) (local.set $fd)
+    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 8) (i32.const 0) (i32.const 5) (i64.const 63)) (local.set $e) (local.set $fd)
     (call $write (local.get $fd) (i32.const 0) (i32.const 32) (i32.const 5)) (local.set $e) (local.set $n)
     (call $stat (local.get $fd))
     (local.set $e) (local.set $cns) (local.set $cs) (local.set $mns) (local.set $ms)

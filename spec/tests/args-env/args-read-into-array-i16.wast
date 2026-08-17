@@ -10,7 +10,7 @@
   (func (export "run") (result i32)
     (local $a (ref $a)) (local $n i64) (local $e i32)
     (local.set $a (array.new_default $a (i32.const 5)))
-    (call $read (i32.const 0) (i32.const 2) (local.get $a) (i32.const 0) (i32.const 5))
+    (call $read (i32.const 0) (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5))
     (local.set $e) (local.set $n)
     (i32.or (local.get $e)
       (i32.or (i64.ne (local.get $n) (i64.const 5))
