@@ -2,6 +2,8 @@
 
 This file tracks decisions that should be resolved before declaring the 0.1 ABI stable.
 
+Resolved questions are removed from this file and recorded in the design rationale or normative specification.
+
 ## 1. Canonical error namespace
 
 The current draft defines its own compact errno namespace.
@@ -24,25 +26,7 @@ Questions:
 
 Current preference: keep handle encoding entirely runtime-private.
 
-## 3. GC raw-buffer range width
-
-Raw GC array functions currently use `i64` byte offsets and lengths even though Core Wasm GC array lengths are currently bounded by `i32` indexing semantics.
-
-Advantages:
-
-- one uniform raw-buffer signature family;
-- future-proof arithmetic;
-- totals such as scatter/gather byte counts already use `i64`.
-
-Cost:
-
-- runtimes perform range checks that usually reduce to a smaller object bound.
-
-Question: keep `i64`, or use `i32` offsets/counts for GC arrays?
-
-Current preference: keep `i64` for raw byte ranges.
-
-## 4. Partial wide-array elements
+## 3. Partial wide-array elements
 
 The current logical-byte-view rule permits a read or write to begin and end inside `i16`, `i32`, `i64`, or `v128` elements.
 
@@ -55,7 +39,7 @@ Questions:
 
 Current preference: keep arbitrary byte ranges unless a second-runtime prototype exposes a serious implementation problem.
 
-## 5. Abstract `(ref array)` import parameters
+## 4. Abstract `(ref array)` import parameters
 
 GC imports use `(ref array)` and validate the dynamic element storage type based on the import name.
 
@@ -66,7 +50,7 @@ Questions:
 
 Current preference: keep `(ref array)` as the portable base ABI.
 
-## 6. Immutable source arrays
+## 5. Immutable source arrays
 
 Write/send operations may accept immutable arrays because the host only reads them. Read/receive/random-fill operations require mutable arrays.
 
@@ -74,7 +58,7 @@ Question: should this remain dynamic validation or should source/destination imp
 
 Current preference: dynamic validation is sufficient and avoids another naming dimension.
 
-## 7. System strings
+## 6. System strings
 
 `sysstr` exists so host-originated text is not forced into one guest encoding.
 
@@ -84,7 +68,7 @@ Questions:
 - Should there be direct bulk argument/environment fill operations for high-throughput startup?
 - How should hosts with non-Unicode path namespaces expose conversion failures?
 
-## 8. Path encoding parameter
+## 7. Path encoding parameter
 
 Path representation families carry an encoding parameter rather than multiplying import names by UTF encoding.
 
@@ -92,7 +76,7 @@ Question: is this the right dividing line between representation naming and sema
 
 Current preference: yes; the Core Wasm signature is unchanged by the encoding enum.
 
-## 9. Scratch filesystem lifetime and persistence
+## 8. Scratch filesystem lifetime and persistence
 
 The draft requires private writable scratch storage and permits multiple backing strategies.
 
@@ -104,7 +88,7 @@ Questions:
 
 Current preference: lifetime is tied to the WPSI instance unless the embedder explicitly supplies a persistent private implementation.
 
-## 10. Directory capability traversal
+## 9. Directory capability traversal
 
 The spec requires preventing path/symlink escape.
 
@@ -112,7 +96,7 @@ Question: should WPSI standardize detailed symlink-follow behavior for every pat
 
 This needs adversarial filesystem tests.
 
-## 11. Scatter/gather nested GC arrays
+## 10. Scatter/gather nested GC arrays
 
 The current GC `readv/writev` form uses an outer array of child-array references and consumes complete logical byte views for selected children.
 
@@ -124,7 +108,7 @@ Questions:
 
 Current preference: keep 0.1 simple and benchmark real language lowering before adding descriptors.
 
-## 12. Polling model
+## 11. Polling model
 
 Polling uses a resource handle instead of memory-resident event structures.
 
@@ -134,7 +118,7 @@ Questions:
 - Should a future bulk event read have Memory32/Memory64/GC variants?
 - How should cancellation interact with blocking host calls?
 
-## 13. Network capability vocabulary
+## 12. Network capability vocabulary
 
 WPSI states that networking is capability-controlled but does not standardize the embedder-side capability configuration format.
 
@@ -142,7 +126,7 @@ Question: should the ABI specify discoverable guest-visible network policy, or l
 
 Current preference: leave policy configuration outside the guest ABI; failed authority checks return `ERR_CAPABILITY`.
 
-## 14. Async extension
+## 13. Async extension
 
 Asynchronous host operations are deliberately omitted because they require retained buffer ownership/lifetime semantics.
 
@@ -154,7 +138,7 @@ Before adding async operations, define:
 - resource ownership on dropped futures/continuations;
 - whether async operations use handles, callbacks, stack switching, or another Core Wasm mechanism.
 
-## 15. Profile versioning
+## 14. Profile versioning
 
 The draft uses one `abi_version()` value and import presence as feature detection.
 
