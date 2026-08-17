@@ -18,7 +18,7 @@ Implementations must validate:
 - filesystem traversal, including traversal through symbolic links;
 - network actions against host-granted network authority.
 
-The private scratch filesystem must not imply access to arbitrary host files. Host filesystem paths and network access remain explicit capabilities.
+A preopen named `~` must not imply ambient access to the host user's home directory. Like every filesystem root, it grants only the directory authority explicitly supplied by the embedder. Host filesystem paths and network access remain explicit capabilities.
 
 A borrowed GC backing view must never outlive the synchronous call or collector scope that makes its address stable.
 

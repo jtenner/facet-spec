@@ -106,7 +106,7 @@ def resolve_fixture(manifest: Path, value: str) -> Path:
 
 
 def check_run(manifest: Path, operation: dict[str, Any]) -> None:
-    allowed = {"type", "args", "env", "root", "preopens", "scratch"}
+    allowed = {"type", "args", "env", "root", "preopens"}
     unknown = set(operation) - allowed
     if unknown:
         fail(f"unknown run fields in {manifest}: {sorted(unknown)}")
@@ -150,13 +150,6 @@ def check_run(manifest: Path, operation: dict[str, Any]) -> None:
         unknown_rights = set(rights) - VALID_RIGHTS
         if unknown_rights:
             fail(f"unknown preopen rights in {manifest}: {sorted(unknown_rights)}")
-    scratch = operation.get("scratch")
-    if scratch is not None:
-        if not isinstance(scratch, dict) or set(scratch) - {"byte_quota", "object_quota"}:
-            fail(f"invalid scratch object: {manifest}")
-        for key, value in scratch.items():
-            if not isinstance(value, int) or value < 0:
-                fail(f"scratch.{key} must be a nonnegative integer: {manifest}")
 
 
 def check_manifest(path: Path) -> None:

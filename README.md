@@ -2,7 +2,7 @@
 
 **WPSI** is a small, Core-WebAssembly-native system interface designed for modern WebAssembly runtimes.
 
-WPSI keeps the system ABI intentionally simple: ordinary imported functions from the `"wpsi"` module, explicit representation-specific function names, capability-oriented resource handles, first-class multi-memory support, Memory64 support, WebAssembly GC array buffers, 8/16/32-bit text representations with optional WTF sentinel preservation, and a private writable scratch filesystem for every filesystem-enabled instance.
+WPSI keeps the system ABI intentionally simple: ordinary imported functions from the `"wpsi"` module, explicit representation-specific function names, capability-oriented resource handles, first-class multi-memory support, Memory64 support, WebAssembly GC array buffers, 8/16/32-bit text representations with optional WTF sentinel preservation, and capability-oriented filesystem preopens, including an optional conventional `~` guest-home preopen.
 
 WPSI is an experimental specification. The current draft is **WPSI 0.1**.
 
@@ -36,7 +36,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Text width is explicit.** Textual import names select 8-bit, 16-bit, or 32-bit code units. A single `wtf` boolean selects strict Unicode or reversible surrogate-sentinel handling; there is no encoding enum.
 - **Natural host-to-guest strings.** Host-originated strings can write directly into linear memory or existing GC arrays, or allocate the caller's concrete GC array type.
 - **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
-- **Private scratch filesystem.** Filesystem-enabled instances always have writable private storage even when no host directory is mounted.
+- **No mandatory filesystem allocation.** Embedders may expose ordinary directory preopens as needed; `~` is the conventional optional guest-home/private-area name and has no special ABI semantics.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
 - **Compatibility-first behavior.** Error classes, path resolution, polling, and socket state semantics intentionally track WASI where the models overlap.
 
@@ -56,9 +56,9 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 
 ## Conformance suite
 
-The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, strict/WTF text handling, scratch storage, preopens, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
+The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, strict/WTF text handling, preopen conventions, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
 
-The suite deliberately mirrors `WebAssembly/wasi-testsuite` host-manifest conventions—same-basename JSON, `run`, `wait`, `read`, `connect`, `send`, `recv`, `root`, fixtures, and `.cleanup` artifacts—so existing runtime adapters can be extended instead of replaced. WPSI adds only the `preopens` and `scratch` provisioning needed for its own model.
+The suite deliberately mirrors `WebAssembly/wasi-testsuite` host-manifest conventions—same-basename JSON, `run`, `wait`, `read`, `connect`, `send`, `recv`, `root`, fixtures, and `.cleanup` artifacts—so existing runtime adapters can be extended instead of replaced. WPSI adds only the `preopens` provisioning needed for explicit multi-directory capability tests.
 
 Static checks validate catalog generation, manifests, fixture paths, metadata, exact WPSI import signatures, and source hygiene. CI also parses the canonical import module and every WAST script with a pinned `wasm-tools` release.
 

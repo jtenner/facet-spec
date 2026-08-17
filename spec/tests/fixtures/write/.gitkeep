@@ -1,0 +1,1 @@
+Writable preopen fixture template. Test runners must provide an isolated per-test view.

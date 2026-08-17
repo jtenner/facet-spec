@@ -82,10 +82,7 @@
   (import "wpsi" "random_fill_array_v128"
     (func $random_fill_array_v128 (param (ref array) i64 i64) (result i64 i32)))
 
-  ;; Filesystem roots
-  (import "wpsi" "fs_scratch" (func $fs_scratch (result i32 i32)))
-  (import "wpsi" "fs_scratch_limits" (func $fs_scratch_limits (result i64 i64 i32)))
-  (import "wpsi" "fs_scratch_usage" (func $fs_scratch_usage (result i64 i64 i32)))
+  ;; Filesystem preopens
   (import "wpsi" "fs_preopen_count" (func $fs_preopen_count (result i32 i32)))
   (import "wpsi" "fs_preopen_get" (func $fs_preopen_get (param i32) (result i32 i32)))
   (import "wpsi" "fs_preopen_name_len_i8" (func $fs_preopen_name_len_i8 (param i32 i32) (result i64 i32)))

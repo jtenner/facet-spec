@@ -251,15 +251,15 @@ Lookup must validate:
 - instance ownership;
 - open state.
 
-## Scratch filesystem
+## Optional `~` preopen
 
-The easiest implementation strategies are typically:
+There is no scratch-specific runtime subsystem in WPSI.
 
-- an in-memory filesystem;
-- a private host temporary directory inaccessible except through the WPSI capability table;
-- an overlay or virtual filesystem.
+If an embedder wants to provide a private or convenient guest home directory, expose it through the ordinary preopen table with the display name `~`. Do not allocate such storage when the embedding environment does not need it.
 
-The guest must not learn or depend on the host backing path.
+The backing implementation is ordinary filesystem policy: it may be a host directory, memory filesystem, temporary directory, overlay, persistent store, or another directory-capability implementation. The `~` name itself grants no rights and does not imply the host user's real home directory.
+
+A libc or language runtime that supports `~/path` should resolve the `~` preopen once and then issue normal handle-relative WPSI path operations.
 
 ## Testing recommendations
 

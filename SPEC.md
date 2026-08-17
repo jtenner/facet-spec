@@ -31,7 +31,7 @@ WPSI has four primary design goals:
 1. work naturally with WebAssembly multi-memory and Memory64;
 2. treat WebAssembly GC arrays as legitimate system-call buffers;
 3. support UTF-8, UTF-16, and UTF-32 without mandatory conversion through UTF-8;
-4. preserve capability-oriented sandboxing while giving filesystem-enabled instances private writable scratch storage by default.
+4. preserve capability-oriented sandboxing while exposing filesystem authority only through explicit directory capabilities and preopens.
 
 ## 2. Normative language
 
@@ -104,7 +104,7 @@ wpsi-poll
 
 `wpsi-gc-array` defines `_array_*` operations.
 
-`wpsi-filesystem` defines private scratch storage, preopens, descriptors, directory iteration, and path operations.
+`wpsi-filesystem` defines preopens, descriptors, directory iteration, and path operations.
 
 `wpsi-links` defines hard-link and symbolic-link operations.
 
@@ -389,7 +389,7 @@ For all allocating string functions:
 
 For caller-owned destinations, insufficient capacity returns `ERR_RANGE`, writes nothing, and leaves the source position unchanged when the source is stateful. A wrong GC destination storage class returns `ERR_TYPE`. No WPSI string-copy function appends a NUL terminator.
 
-## 10. Capabilities and scratch storage
+## 10. Capabilities and filesystem preopens
 
 WPSI resource handles represent authority.
 
@@ -397,19 +397,18 @@ Host filesystem and networking authority MUST be explicitly granted by the embed
 
 A child resource MUST NOT gain greater authority than the capability from which it was derived.
 
-A filesystem-enabled instance MUST have a private writable scratch filesystem even when no host directory has been granted.
+WPSI does not define a mandatory scratch filesystem, home filesystem, or other automatically allocated writable storage. A conforming filesystem implementation MAY expose no preopens at all.
 
-The scratch filesystem:
+Filesystem roots supplied by the embedder are ordinary directory capabilities enumerated through the preopen APIs. Their guest-visible display names do not create authority beyond the directory handle and rights that were explicitly granted.
 
-- begins logically empty;
-- is private unless explicitly shared by the embedder;
-- grants no authority over unrelated host paths;
-- MUST prevent escape into the host filesystem;
-- MAY be memory-backed, temp-directory-backed, overlay-backed, or otherwise virtualized;
-- MAY enforce host-configured quotas;
-- is destroyed or made unreachable when the instance is destroyed.
+An embedder MAY provide an ordinary preopen whose display name is exactly `~`. This is the conventional WPSI name for a guest home/private writable area when an environment wants to provide one, but the name has no special ABI behavior:
 
-A libc compatibility layer SHOULD normally map this capability to `/tmp`, but `/tmp` is not part of the WPSI ABI.
+- `~` does not implicitly refer to the host user's home directory;
+- it does not imply particular rights, quota, persistence, backing storage, or lifetime;
+- it may be omitted entirely in constrained environments;
+- if the embedder deliberately maps it to host storage, that authority exists only because the directory was explicitly preopened.
+
+The Core WPSI path ABI remains directory-handle-relative. It does not parse or expand `~` inside path operands. Higher-level bindings, libc implementations, and language runtimes MAY interpret `~/x` by locating a preopen whose display name is `~` and issuing the ordinary WPSI path operation relative to that directory handle with `x` as the relative path.
 
 ## 11. Rights and flags
 
@@ -631,17 +630,9 @@ random_fill_array_v128(destination: ref array, byte_offset: i64, byte_length: i6
   -> (bytes_written: i64, errno: i32)
 ```
 
-## 16. Filesystem roots
+## 16. Filesystem preopens
 
 ```text
-fs_scratch() -> (directory: i32, errno: i32)
-
-fs_scratch_limits()
-  -> (byte_quota: i64, object_quota: i64, errno: i32)
-
-fs_scratch_usage()
-  -> (bytes_used: i64, object_count: i64, errno: i32)
-
 fs_preopen_count() -> (count: i32, errno: i32)
 fs_preopen_get(index: i32) -> (directory: i32, errno: i32)
 
@@ -675,9 +666,9 @@ fs_preopen_name_read_array_i32(index: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
-`UINT64_MAX` means a quota dimension is not declared.
-
 Preopen ordering and display names MUST remain stable for the lifetime of the instance.
+
+A preopen named `~` is optional and is otherwise indistinguishable from any other preopen. Its absence does not make a filesystem implementation nonconforming.
 
 ## 17. Descriptor metadata
 

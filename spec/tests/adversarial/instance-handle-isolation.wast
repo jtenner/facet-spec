@@ -6,10 +6,10 @@
 ;; SPDX-License-Identifier: MIT
 
 (module $A
-  (import "wpsi" "fs_scratch" (func $scratch (result i32 i32)))
+  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
   (func (export "acquire-valid") (result i32)
     (local $h i32) (local $e i32)
-    (call $scratch) (local.set $e) (local.set $h)
+    (call $scratch (i32.const 0)) (local.set $e) (local.set $h)
     (i32.and (i32.eqz (local.get $e)) (i32.ne (local.get $h) (i32.const 0)))))
 (module $B
   (import "wpsi" "handle_close" (func $close (param i32) (result i32)))

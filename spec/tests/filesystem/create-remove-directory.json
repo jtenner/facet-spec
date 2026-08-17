@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "preopens": [
+        {
+          "host": "../fixtures/write",
+          "guest": "~",
+          "rights": [
+            "read",
+            "write",
+            "seek",
+            "tell",
+            "stat",
+            "set-size",
+            "sync",
+            "open",
+            "create",
+            "remove",
+            "rename",
+            "link",
+            "symlink",
+            "readlink",
+            "iterate"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

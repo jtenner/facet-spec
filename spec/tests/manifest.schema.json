@@ -89,20 +89,6 @@
         }
       }
     },
-    "scratch": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "byte_quota": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "object_quota": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
     "run": {
       "type": "object",
       "additionalProperties": false,
@@ -136,9 +122,6 @@
           "items": {
             "$ref": "#/$defs/preopen"
           }
-        },
-        "scratch": {
-          "$ref": "#/$defs/scratch"
         }
       }
     },

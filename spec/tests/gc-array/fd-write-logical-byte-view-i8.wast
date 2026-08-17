@@ -6,7 +6,7 @@
 
 (module
   (type $a (array i8))
-  (import "wpsi" "fs_scratch" (func $scratch (result i32 i32)))
+  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
   (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
   (import "wpsi" "fd_write_array_i8" (func $writea (param i32 (ref array) i64 i64) (result i64 i32)))
   (import "wpsi" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
@@ -16,7 +16,7 @@
   (func (export "run") (result i32)
     (local $a (ref $a)) (local $dir i32) (local $fd i32) (local $e i32) (local $n i64) (local $off i64)
     (local.set $a (array.new_fixed $a 4 (i32.const 17) (i32.const 34) (i32.const 51) (i32.const 68)))
-    (call $scratch) (local.set $e) (local.set $dir)
+    (call $scratch (i32.const 0)) (local.set $e) (local.set $dir)
     (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 11) (i32.const 0) (i32.const 5) (i64.const 63)) (local.set $e) (local.set $fd)
     (call $writea (local.get $fd) (local.get $a) (i64.const 0) (i64.const 4)) (local.set $e) (local.set $n)
     (call $seek (local.get $fd) (i64.const 0) (i32.const 0)) (local.set $e) (local.set $off)

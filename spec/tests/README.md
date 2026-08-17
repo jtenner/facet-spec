@@ -28,11 +28,11 @@ The following fields and operations retain their WASI meanings:
 - an empty guest environment unless `env` supplies entries;
 - external per-runtime skip and expected-failure files.
 
-WPSI adds only two host-provisioning extensions:
+WPSI adds one host-provisioning extension:
 
-- `preopens`, for more than one directory capability or explicit rights;
-- `scratch`, for deterministic scratch quotas. Scratch itself always exists and
-  is never mounted from a host directory.
+- `preopens`, for more than one directory capability, explicit guest display names, or explicit rights.
+
+A preopen may use the guest display name `~`; this is provisioned exactly like any other preopen.
 
 ## Discovery
 
@@ -49,8 +49,8 @@ manifest exists, the default is:
 }
 ```
 
-A runner must create a fresh test context, handle table, scratch filesystem,
-poll state, network namespace, argument vector, and environment for every test.
+A runner must create a fresh test context, handle table, poll state, network namespace,
+argument vector, and environment for every test.
 Each module instantiated by one WAST script receives a distinct WPSI instance
 context unless the test manifest explicitly requests host-mediated sharing.
 This prevents raw handles from crossing module-instance boundaries.
@@ -96,18 +96,25 @@ read write seek tell stat set-size sync
 open create remove rename link symlink readlink iterate
 ```
 
-## Scratch configuration
+A preopen that grants mutation rights MUST be backed by an isolated per-test view
+of its fixture directory. Runners MUST NOT mutate the checked-in fixture tree in
+place. A fresh run starts from the committed fixture contents; copying, overlay
+filesystems, temporary directories, or equivalent isolation are all acceptable.
+
+## Optional `~` preopen
+
+The conformance harness does not allocate scratch storage implicitly. Tests that need a private/writable guest home provision an ordinary preopen explicitly:
 
 ```json
 {
   "type": "run",
-  "scratch": {"byte_quota": 4096, "object_quota": 16}
+  "preopens": [
+    {"host": "../fixtures/root", "guest": "~", "rights": ["read", "write", "open", "create", "remove", "stat"]}
+  ]
 }
 ```
 
-Omitting `scratch` uses implementation policy. Supplying it makes the reported
-limits and quota behavior deterministic. A test manifest cannot replace scratch
-with a host directory.
+A test with no `root` and no `preopens` receives no filesystem roots. This keeps the harness aligned with WPSI's rule that writable storage is optional rather than automatically allocated.
 
 ## WAST execution
 
@@ -176,7 +183,7 @@ random/        bounds and mutation rules
 memory32/      Memory32 and multi-memory I/O
 memory64/      Memory64 I/O and overflow handling
 gc-array/      typed arrays, byte views, mutability, nested arrays
-filesystem/    scratch, descriptors, paths, rights, and preopens
+filesystem/    descriptors, paths, rights, preopens, and the optional `~` convention
 links/         hard links and symbolic links
 network/       sockets and DNS
 poll/          poll sets, timers, and readiness

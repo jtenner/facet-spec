@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_scratch" (func $scratch (result i32 i32)))
+  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
   (import "wpsi" "path_create_dir_mem32_i8" (func $mkdir (param i32 i32 i32 i32 i32) (result i32)))
   (import "wpsi" "path_remove_mem32_i8" (func $remove (param i32 i32 i32 i32 i32 i32) (result i32)))
   (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
@@ -13,7 +13,7 @@
   (data (i32.const 0) "dir")
   (func (export "run") (result i32 i32 i32)
     (local $dir i32) (local $e0 i32) (local $e1 i32) (local $e2 i32)
-    (call $scratch) (local.set $e0) (local.set $dir)
+    (call $scratch (i32.const 0)) (local.set $e0) (local.set $dir)
     (local.set $e0 (call $mkdir (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 3) (i32.const 0)))
     (local.set $e1 (call $remove (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 3) (i32.const 0) (i32.const 2)))
     (local.set $e2 (call $remove (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 3) (i32.const 0) (i32.const 2)))

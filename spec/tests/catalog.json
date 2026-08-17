@@ -546,6 +546,38 @@
       "kind": "wast"
     },
     {
+      "id": "filesystem/preopen-tilde-convention",
+      "path": "spec/tests/filesystem/preopen-tilde-convention.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "A `~` guest home is represented by an ordinary preopen display name.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/preopen-tilde-optional",
+      "path": "spec/tests/filesystem/preopen-tilde-optional.wast",
+      "profiles": [
+        "core",
+        "filesystem"
+      ],
+      "purpose": "A filesystem implementation is not required to provide any preopen, including `~`.",
+      "kind": "wast"
+    },
+    {
+      "id": "filesystem/preopen-tilde-roundtrip",
+      "path": "spec/tests/filesystem/preopen-tilde-roundtrip.wast",
+      "profiles": [
+        "core",
+        "memory32",
+        "filesystem"
+      ],
+      "purpose": "A writable `~` preopen uses ordinary file operations with no scratch-specific imports.",
+      "kind": "wast"
+    },
+    {
       "id": "filesystem/readonly-rights-no-escalation",
       "path": "spec/tests/filesystem/readonly-rights-no-escalation.wast",
       "profiles": [
@@ -555,37 +587,6 @@
         "capabilities"
       ],
       "purpose": "A read-only preopen cannot create a writable child descriptor.",
-      "kind": "wast"
-    },
-    {
-      "id": "filesystem/scratch-quota-reported",
-      "path": "spec/tests/filesystem/scratch-quota-reported.wast",
-      "profiles": [
-        "core",
-        "filesystem"
-      ],
-      "purpose": "Manifest-configured scratch quotas are reported exactly.",
-      "kind": "wast"
-    },
-    {
-      "id": "filesystem/scratch-roundtrip",
-      "path": "spec/tests/filesystem/scratch-roundtrip.wast",
-      "profiles": [
-        "core",
-        "memory32",
-        "filesystem"
-      ],
-      "purpose": "Scratch supports create, write, seek, read, and close without a host preopen.",
-      "kind": "wast"
-    },
-    {
-      "id": "filesystem/scratch-starts-empty",
-      "path": "spec/tests/filesystem/scratch-starts-empty.wast",
-      "profiles": [
-        "core",
-        "filesystem"
-      ],
-      "purpose": "Every test receives a fresh, logically empty scratch filesystem.",
       "kind": "wast"
     },
     {

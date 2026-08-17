@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "type": "run",
+      "preopens": [
+        {
+          "host": "../fixtures/root",
+          "guest": "~",
+          "rights": [
+            "read",
+            "stat",
+            "iterate"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "wait",
+      "exit_code": 0
+    }
+  ]
+}

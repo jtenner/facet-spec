@@ -148,6 +148,8 @@ A path beginning with `/` is forbidden and returns `ERR_PERMISSION`.
 
 There is no process-global host current working directory and no path operation may use an ambient host root.
 
+`~` is not special syntax in a raw WPSI path operand. If an embedder provides a preopen whose display name is `~`, a higher-level binding may resolve `~/x` by selecting that preopen and passing `x` as the relative path. Without that binding-level resolution, a `~` component is an ordinary filename component.
+
 ### 3.2 `.` and `..`
 
 `.` names the current directory component.
@@ -469,7 +471,6 @@ errno       = ERR_OK
 
 This document intentionally does not settle:
 
-- scratch filesystem persistence across embedder/runtime restarts;
 - per-child slicing for GC nested scatter/gather;
 - profile-specific version negotiation;
 - asynchronous buffer ownership/lifetime semantics;

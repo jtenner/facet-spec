@@ -14,7 +14,7 @@ All notable specification changes will be recorded here.
 - Multi-memory-aware linear buffer and iovec representations.
 - UTF-8, UTF-16, 32-bit code-point text, and WTF surrogate-sentinel semantics.
 - Opaque resource handles and capability-oriented filesystem/network access.
-- Automatic private scratch filesystem for filesystem-enabled instances.
+- Conventional optional `~` preopen for embedders that want to expose a guest-home/private writable area using ordinary directory-capability semantics.
 - Filesystem, links, sockets, DNS, clocks, randomness, and polling function families.
 - Canonical WAT import declarations and runtime implementation guidance.
 - Comprehensive initial conformance suite with 143 focused WAST tests, WASI-compatible host manifests, deterministic fixtures, generated catalog metadata, exact import-signature validation, and pinned `wasm-tools` parsing in CI.
@@ -26,6 +26,7 @@ All notable specification changes will be recorded here.
 - Validation failures use a deterministic order: scalar arguments, handles, resource state/authority, guest representation, ranges, text, namespace resolution, host operation, then host-error normalization.
 - Error meanings follow WASI/POSIX categories where practical while keeping WPSI's own numeric namespace.
 - Resource handle encoding is entirely runtime-private. Only `0` has a standardized numeric meaning; guests may not interpret nonzero handle bits or ranges, and stale handles may never alias unrelated live resources.
+- Scratch-specific ABI functions and quota provisioning were removed. WPSI allocates no mandatory writable filesystem; `~` is only a conventional optional preopen display name and all storage semantics come from ordinary directory capabilities.
 - Filesystem path resolution uses the WASI capability-beneath model: relative paths only, no temporary escape through `..`, and no absolute/rooted symlink escape.
 - Wide GC arrays retain arbitrary partial-element byte ranges; GC inputs use `(ref array)` with dynamic storage validation; immutable source arrays are allowed.
 - Host-originated strings use source-specific length/copy APIs rather than string resource handles. GC callers may provide an existing array or request allocation of the concrete nullable array type declared by the import signature.
@@ -37,7 +38,6 @@ All notable specification changes will be recorded here.
 
 ### Deferred
 
-- Scratch persistence across runtime/embedder restarts.
 - Per-child slicing for nested GC scatter/gather.
 - Async buffer ownership and cancellation semantics.
 - Profile-specific version negotiation.

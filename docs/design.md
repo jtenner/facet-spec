@@ -92,15 +92,15 @@ For allocating GC results, the concrete nullable array result type appears in th
 
 This asymmetry is intentional: linear memory naturally uses caller-owned addresses, while Wasm GC can naturally return newly allocated references.
 
-## Why a private scratch filesystem?
+## Why is `~` an ordinary preopen instead of a special scratch API?
 
-Capability security and useful filesystem semantics are not contradictory.
+WPSI already has the primitive it needs: directory capabilities and preopens. A second resource class for temporary or private storage would add imports, quota APIs, lifetime rules, and implementation machinery without adding new authority semantics.
 
-A WPSI filesystem implementation gives each instance authority over a private scratch namespace. That namespace contains no ambient authority over the host filesystem.
+An embedder that wants to give a guest a convenient writable home can therefore expose a normal preopen with the display name `~`. Higher-level bindings may map `~/foo` to that directory handle plus the relative path `foo`.
 
-Real host directories remain explicit preopened capabilities.
+Nothing about the name is magical. The preopen may be temporary, persistent, memory-backed, host-directory-backed, read-only, writable, quota-limited, or absent, according to the authority and policy the embedder explicitly supplies. In particular, `~` never means the host user's home directory unless the embedder deliberately grants that directory as a capability.
 
-This lets ordinary programs create temporary files without requiring the embedder to mount a real host directory simply to provide writable storage.
+This keeps constrained runtimes free from allocating storage they do not need and keeps all filesystem authority on one mechanism.
 
 ## Why opaque i32 resource handles?
 
