@@ -74,6 +74,14 @@ WPSI's logical byte view also makes partial-element I/O well-defined. A byte ran
 
 The initial raw-buffer set intentionally excludes `f32` and `f64`. They provide little systems-I/O benefit over same-width integer storage and would require additional care around floating-point representation and NaN payload expectations.
 
+## Why are nested GC scatter/gather buffers whole-child only?
+
+The outer GC array already provides a simple scatter/gather list: each selected child is one complete buffer. Adding an offset and length for every child would require another portable descriptor representation, such as GC structs or parallel arrays, and would substantially complicate an operation that is primarily an optimization.
+
+WPSI 0.1 therefore keeps nested `readv/writev` structural: `first` and `count` choose child arrays, and each child contributes its entire logical byte view. The ordinary single-array I/O functions already provide `byte_offset` and `byte_length` when a caller needs a slice of one array.
+
+A future extension may add sliced scatter/gather under new import names if real compiler/runtime workloads demonstrate that the additional ABI surface is worthwhile.
+
 ## Why UTF-16 and UTF-32?
 
 A portable system interface should not require every language to convert its native text representation to UTF-8 merely to cross the host boundary.

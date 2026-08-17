@@ -309,6 +309,10 @@ Scatter/gather GC operations accept an outer `(ref array)` whose selected childr
 
 Read operations require mutable child arrays.
 
+For WPSI 0.1, nested GC scatter/gather is deliberately **whole-child only**. `first` and `count` select a contiguous range of child arrays in the outer array. Every selected child contributes its complete logical byte view, from byte offset zero through the child's full logical byte length.
+
+There are no per-child offset, length, slice, or descriptor values in the WPSI 0.1 nested-array ABI. Partial access to one GC array uses the ordinary single-array functions that already take `byte_offset` and `byte_length`.
+
 ## 8. Text representations and WTF mode
 
 WPSI does not use a text-encoding enum.
@@ -885,6 +889,14 @@ fd_writev_array_i64(fd: i32, buffers: ref array, first: i32, count: i32)
 fd_writev_array_v128(fd: i32, buffers: ref array, first: i32, count: i32)
   -> (bytes_written: i64, errno: i32)
 ```
+
+`first` and `count` are unsigned child indexes/counts. The selected range MUST fit entirely within the outer array or the operation returns `ERR_RANGE` without performing I/O.
+
+Each selected child participates using its complete logical byte view. WPSI 0.1 does not define per-child slices for nested GC scatter/gather.
+
+Before performing host I/O, the runtime MUST validate the complete selected child range, including non-null child references, dynamic element storage type, and destination mutability for reads. A validation failure MUST NOT partially consume the stream or modify an earlier child.
+
+Normal stream short-transfer rules still apply. A successful short read or write MAY stop partway through the logical byte view of the final child reached by the transfer; later children are untouched.
 
 ## 22. Positioning and persistence
 

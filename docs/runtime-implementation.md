@@ -225,6 +225,8 @@ Do not treat reference-bearing arrays as raw byte buffers. Their slots may conta
 
 Nested scatter/gather arrays are different: the outer array contains references and is traversed structurally, while each child is validated as one of the allowed pointer-free numeric array types.
 
+For WPSI 0.1, validate the entire `first..first+count` child range before beginning host I/O, then expose each selected child's complete logical byte view in sequence. Do not invent or infer per-child slices. A short host transfer may finish inside the final child reached; bytes outside the transferred prefix remain untouched.
+
 ## GC barriers
 
 Raw writes into pointer-free arrays require no reference write barrier.

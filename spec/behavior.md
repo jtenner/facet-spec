@@ -196,7 +196,9 @@ The following rules are fixed for WPSI 0.1:
 4. Source arrays used by write/send operations MAY be immutable.
 5. Destination arrays used by read/receive/random-fill operations MUST be mutable.
 6. Dynamic kind, storage-type, or destination-mutability mismatch returns `ERR_TYPE`.
-7. These rules specify observable values only and do not require contiguous physical GC storage.
+7. Nested GC `readv/writev` uses complete selected child arrays only. `first` and `count` select children; WPSI 0.1 has no per-child slice descriptors.
+8. Every selected nested child MUST be validated before host I/O begins, so a later invalid child cannot cause partial I/O through earlier children.
+9. These rules specify observable values only and do not require contiguous physical GC storage.
 
 ## 5. Text and host-originated string transfer
 
@@ -471,7 +473,6 @@ errno       = ERR_OK
 
 This document intentionally does not settle:
 
-- per-child slicing for GC nested scatter/gather;
 - profile-specific version negotiation;
 - asynchronous buffer ownership/lifetime semantics;
 

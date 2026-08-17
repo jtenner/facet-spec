@@ -16,6 +16,7 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Define WASI-compatible error semantics and host-error normalization.
 - [x] Define WASI-style capability-beneath path and symlink resolution.
 - [x] Freeze WPSI 0.1 GC raw-buffer behavior: `i64` byte ranges, partial wide elements, abstract `(ref array)`, and immutable sources.
+- [x] Freeze nested GC scatter/gather as whole-child only; `first/count` select child arrays and per-child slices are outside WPSI 0.1.
 - [x] Define direct host-originated string transfer for linear memory, existing GC arrays, and caller-typed allocated GC arrays.
 - [x] Define polling snapshot/readiness semantics.
 - [x] Define synchronous socket state and error semantics using WASI as the compatibility baseline.
@@ -86,7 +87,7 @@ Before WPSI 1.0:
 
 ## Deferred / post-0.1 questions
 
-The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
+The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover async ownership and profile-specific version negotiation.
 
 ## Post-1.0 candidates
 
