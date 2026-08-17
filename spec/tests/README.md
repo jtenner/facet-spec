@@ -87,7 +87,7 @@ For multiple preopens:
 
 Preopen order is normative for a test: `fs_preopen_get(0)` corresponds to the
 first entry. `host` paths are relative to the manifest. `guest` is the value
-returned as the preopen display name; it is not ambient path authority.
+returned by the preopen-name APIs; it is not ambient path authority.
 
 Supported manifest right names are:
 
@@ -118,6 +118,16 @@ results. The manifest describes only host provisioning and interactions.
 A module exporting `_start` may also be launched by the `run` operation for
 process- and networking-style tests. Such tests use `wait`, `read`, `connect`,
 `send`, and `recv` exactly as the WASI testsuite does.
+
+## Text tests
+
+Text representation is selected by the WPSI import name: `i8`, `i16`, or `i32`.
+Textual calls use a boolean `wtf` argument where `0` means strict Unicode and
+`1` enables reversible surrogate-sentinel semantics. Tests should use exact
+`ERR_INVALID` behavior for non-boolean `wtf` values and `ERR_ILLEGAL_SEQUENCE`
+when strict mode cannot represent the source without loss.
+
+There is no `ENC_*` selector or raw-string encoding mode in WPSI 0.1.
 
 ## Profiles and unsupported tests
 
@@ -160,7 +170,7 @@ failure, even if the guest supplied invalid data.
 
 ```text
 core/          version, stdio, process, handle lifecycle
-args-env/      arguments, environment, and sysstr encoding
+args-env/      arguments, environment, text widths, and WTF behavior
 clocks/        system and monotonic clocks
 random/        bounds and mutation rules
 memory32/      Memory32 and multi-memory I/O
@@ -201,5 +211,6 @@ python3 spec/tests/tools/check_suite.py
 When `wasm-tools` is installed, also run:
 
 ```bash
+wasm-tools parse spec/imports.wat -o /tmp/wpsi-imports.wasm
 python3 spec/tests/tools/parse_wast.py --wasm-tools wasm-tools
 ```
