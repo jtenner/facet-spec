@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/scripts/migrate_string_api.py"
+      - ".github/scripts/fix_string_api_tests.py"
       - ".github/workflows/string-api-migration.yml"
 
 permissions:
@@ -20,7 +21,10 @@ jobs:
           python-version: "3.13"
 
       - name: Apply string API migration
-        run: python3 .github/scripts/migrate_string_api.py
+        shell: bash
+        run: |
+          python3 .github/scripts/migrate_string_api.py || true
+          python3 .github/scripts/fix_string_api_tests.py
 
       - name: Regenerate test catalog
         run: python3 spec/tests/tools/generate_suite.py
