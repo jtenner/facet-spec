@@ -20,7 +20,19 @@ jobs:
           python-version: "3.13"
 
       - name: Apply text model migration
-        run: python3 .github/scripts/migrate_wtf_text_model.py
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/migrate_wtf_text_model.py')
+          s = p.read_text()
+          old = '        needle = f"(call {local}"\n'
+          new = '        needle = f"(call {local} "\n'
+          if old not in s:
+              raise SystemExit('migration call matcher patch target missing')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          python3 .github/scripts/migrate_wtf_text_model.py
 
       - name: Regenerate test catalog
         run: python3 spec/tests/tools/generate_suite.py
