@@ -7,18 +7,19 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Define the flat `wpsi` import namespace.
 - [x] Define explicit Memory32, Memory64, and GC-array representation families.
 - [x] Define multi-memory addressing.
-- [x] Define UTF-8, UTF-16, and UTF-32 text representations.
+- [x] Define 8-bit, 16-bit, and 32-bit text representation families.
+- [x] Define strict Unicode versus WTF surrogate-sentinel semantics with a single boolean.
 - [x] Define private scratch filesystem semantics.
 - [x] Define canonical WAT import signatures.
 - [x] Define deterministic validation and error precedence.
 - [x] Define WASI-compatible error semantics and host-error normalization.
 - [x] Define WASI-style capability-beneath path and symlink resolution.
 - [x] Freeze WPSI 0.1 GC raw-buffer behavior: `i64` byte ranges, partial wide elements, abstract `(ref array)`, and immutable sources.
-- [x] Define system-string conversion and capacity semantics.
+- [x] Define direct host-originated string transfer for linear memory, existing GC arrays, and caller-typed allocated GC arrays.
 - [x] Define polling snapshot/readiness semantics.
 - [x] Define synchronous socket state and error semantics using WASI as the compatibility baseline.
 - [x] Add a comprehensive WAST conformance suite and pinned syntax validation in CI.
-- [ ] Validate `spec/imports.wat` directly with current Core Wasm tooling in CI.
+- [x] Validate `spec/imports.wat` directly with pinned current Core Wasm tooling in CI.
 - [ ] Add a machine-readable function/signature manifest independent of the test catalog.
 - [ ] Resolve or explicitly defer the remaining questions in `docs/open-questions.md` before declaring the ABI stable.
 
@@ -49,6 +50,8 @@ The plugin should use [`spec/behavior.md`](spec/behavior.md) as the behavioral c
 
 A Wago implementation should add a scoped internal GC-array byte-borrow primitive rather than exposing collector backing addresses as persistent public API.
 
+For textual imports, Wago should dispatch directly from the import-name representation (`i8`, `i16`, or `i32`) and treat `wtf` as a strict boolean semantic option rather than an encoding negotiation layer.
+
 ## Phase 2 — Conformance execution
 
 The source conformance suite now exists. The remaining work is to execute it against real implementations.
@@ -73,7 +76,7 @@ The goal is to discover assumptions accidentally inherited from Wago before stab
 Before WPSI 1.0:
 
 - freeze error-number semantics;
-- freeze encoding semantics;
+- freeze text/WTF semantics;
 - freeze all core/filesystem import signatures;
 - document extension/versioning rules;
 - require two independent runtime implementations for stable profiles;
@@ -82,7 +85,7 @@ Before WPSI 1.0:
 
 ## Deferred / post-0.1 questions
 
-The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They include handle encoding, path-encoding API shape, scratch persistence, per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
+The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover handle encoding, scratch persistence, per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
 
 ## Post-1.0 candidates
 
