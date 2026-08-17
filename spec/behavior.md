@@ -15,7 +15,7 @@ WPSI functions MUST validate guest-controlled inputs in the following order unle
 1. **Scalar form.** Validate booleans such as `wtf`, enum values, flag masks, reserved bits, mutually incompatible scalar options, numeric domains such as port ranges, and other scalar-only constraints.
 2. **Resource handles.** Validate handles in parameter order. A zero, stale, closed, unknown, or wrong-resource-kind handle fails with `ERR_BAD_HANDLE`.
 3. **Resource state and authority.** Validate socket/file state, descriptor rights, and embedder-granted capabilities before accessing guest buffers or host namespaces.
-4. **Guest representation.** Resolve the selected linear memory or GC reference and validate the expected address width, GC array kind, dynamic element storage type, destination mutability, and any caller-selected concrete GC allocation result type.
+4. **Guest representation.** Resolve the selected linear memory or GC reference and validate the expected address width, GC array kind, dynamic element storage type, and destination mutability.
 5. **Ranges.** Validate indexes, offsets, lengths, descriptor tables, and all checked arithmetic. Overflow MUST be detected before address arithmetic or host calls.
 6. **Text.** Validate the code-unit representation selected by the import name and apply strict or WTF text semantics where the operation requires text.
 7. **Namespace resolution.** Resolve filesystem paths, symbolic links, DNS names, and similar namespace-dependent inputs subject to the operation's capability boundary.
@@ -63,7 +63,7 @@ The intended semantics deliberately track WASI/POSIX categories where possible:
 | `ERR_OVERFLOW` | Arithmetic result or host result cannot be represented in the required WPSI value type. |
 | `ERR_ILLEGAL_SEQUENCE` | Text cannot be represented or decoded losslessly in the selected code-unit representation and WTF mode. |
 | `ERR_FAULT` | Guest linear-memory selection or byte address range is invalid or out of bounds. |
-| `ERR_TYPE` | Guest representation has the wrong physical type, such as Memory64 passed to a `_mem32` operation, wrong GC element storage, immutable GC storage used as a destination, . |
+| `ERR_TYPE` | Guest representation has the wrong physical type, such as Memory64 passed to a `_mem32` operation, wrong GC element storage, or immutable GC storage used as a destination. |
 | `ERR_QUOTA` | An explicit WPSI/host quota was exceeded. |
 | `ERR_CANCELED` | Operation was canceled by a supported host mechanism. WPSI 0.1 does not otherwise require cancellation support. |
 | `ERR_ADDRESS_IN_USE` | Socket address or ephemeral port is already in use. |
@@ -466,7 +466,6 @@ This document intentionally does not settle:
 - per-child slicing for GC nested scatter/gather;
 - profile-specific version negotiation;
 - asynchronous buffer ownership/lifetime semantics;
-- whether path encoding should ever move from an ordinary enum parameter into representation-specific import names.
 
 Those topics remain listed in [`../docs/open-questions.md`](../docs/open-questions.md).
 

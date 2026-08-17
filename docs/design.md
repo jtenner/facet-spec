@@ -133,7 +133,6 @@ When adding a new operation, ask:
 
 If the answer to those questions stays simple, the operation likely fits WPSI.
 
-
 ## Why a WTF boolean instead of an encoding enum?
 
 The code-unit width changes the physical ABI and therefore belongs in the import name. UTF versus WTF semantics do not change the Core Wasm signature, so they are represented by one boolean.
