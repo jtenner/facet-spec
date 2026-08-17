@@ -1,17 +1,5 @@
 # WPSI 0.1 Open Questions
 
-This file tracks decisions intentionally deferred while WPSI 0.1 is implemented and tested.
+There are currently **no unresolved WPSI 0.1 ABI design questions** tracked by this document.
 
-Resolved questions are removed from this file and recorded in the normative specification, [`spec/behavior.md`](../spec/behavior.md), or the design rationale.
-
-## 1. Profile versioning
-
-The draft uses one `abi_version()` value and import presence as feature detection.
-
-Questions:
-
-- Do profiles need independent versions?
-- Should there be a compact scalar feature-query API?
-- Is normal missing-import failure enough for most tooling?
-
-Current preference: keep import presence authoritative and add explicit profile versioning only if real runtime negotiation requires it.
+The decisions that were previously deferred have been resolved in the normative specification, [`spec/behavior.md`](../spec/behavior.md), or [`docs/design.md`](design.md). New implementation experience may still motivate future specification changes, but those should be proposed as explicit extensions or revisions rather than treated as implicit 0.1 negotiation points.

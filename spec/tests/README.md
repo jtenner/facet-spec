@@ -143,7 +143,9 @@ Required WPSI functions are inferred from imports. A runner may report a test as
 Wasm feature. Unsupported is distinct from pass, fail, and expected-fail.
 
 The catalog in [`catalog.json`](catalog.json) provides human-readable profile
-metadata but does not override the imports.
+metadata but does not override the imports. There are no profile-version fields
+or separate feature-query results in the conformance contract: import presence
+and Core Wasm type matching are authoritative.
 
 ## Harness-driven tests
 

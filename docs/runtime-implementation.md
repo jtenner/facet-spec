@@ -25,6 +25,8 @@ wpsi-network
 wpsi-poll
 ```
 
+Do not build a second profile-version or feature-negotiation registry for WPSI. Register the imports the runtime implements and let ordinary Core Wasm import/type matching decide whether a module can instantiate. `abi_version()` is the only global ABI generation number; profile labels are implementation/conformance groupings, not independently versioned runtime objects.
+
 ## Synchronous call boundary
 
 Treat the return from every WPSI host function as a hard lifetime boundary.

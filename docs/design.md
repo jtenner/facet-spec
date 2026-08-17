@@ -36,6 +36,16 @@ This has a few useful properties:
 - runtimes can adopt GC and Memory64 support independently;
 - no linker extension is required.
 
+## Why no profile versions or feature-query API?
+
+Core Wasm linking already answers the feature question precisely: a module declares the imports it requires, including their exact function types, and instantiation succeeds only when the runtime can provide them.
+
+Adding `filesystem_version()`, `gc_array_version()`, profile manifests, or a scalar feature-query API would duplicate that mechanism and create a second source of truth that could disagree with the imports actually needed by the program.
+
+WPSI therefore keeps one coarse `abi_version()` for the overall ABI generation and treats import presence plus type compatibility as authoritative for optional capability support. Profile names remain useful for documentation, implementation planning, and conformance reporting, but they are not independently negotiated runtime entities.
+
+Additive evolution can introduce new imports without disturbing existing modules. A genuinely incompatible form of one operation should normally receive a new import name; only an incompatible change to the overall WPSI ABI generation requires incrementing `abi_version()`.
+
 ## Why an explicit memory index?
 
 A pointer without a memory identity is insufficient once a module has multiple linear memories.

@@ -521,6 +521,16 @@ stdio_stderr() -> (fd: i32, errno: i32)
 
 WPSI 0.1 reports `abi_version() == 1`.
 
+### 12.1 Versioning and feature detection
+
+`abi_version()` versions the overall WPSI ABI generation. WPSI profiles do not have independent version numbers, and WPSI 0.1 defines no scalar feature-query or profile-query API.
+
+Support for a WPSI operation is determined by normal Core WebAssembly linking. The presence of the requested import together with exact Core Wasm type compatibility is authoritative. A module SHOULD import the operations and representation families it actually requires; a runtime MAY expose any conforming subset.
+
+Profile names such as `wpsi-filesystem`, `wpsi-gc-array`, and `wpsi-network` are documentation and conformance groupings only. They are not a second runtime negotiation namespace.
+
+An additive capability introduced under the same ABI generation SHOULD use a new import and does not by itself require an `abi_version()` increment. An incompatible replacement for one operation SHOULD normally use a new import name so old and new operations can coexist. A change that makes the overall WPSI ABI generation incompatibly different MUST increment `abi_version()`.
+
 ## 13. Arguments and environment
 
 Argument and environment ordering MUST remain stable for the lifetime of the instance.

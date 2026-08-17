@@ -20,11 +20,12 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Define direct host-originated string transfer for linear memory, existing GC arrays, and caller-typed allocated GC arrays.
 - [x] Define polling snapshot/readiness semantics.
 - [x] Freeze WPSI 0.1 host calls as synchronous and forbid retaining borrowed guest storage across returns.
+- [x] Define one global ABI version and make import/type matching authoritative for feature detection; profiles are not independently versioned.
 - [x] Define synchronous socket state and error semantics using WASI as the compatibility baseline.
 - [x] Add a comprehensive WAST conformance suite and pinned syntax validation in CI.
 - [x] Validate `spec/imports.wat` directly with pinned current Core Wasm tooling in CI.
 - [ ] Add a machine-readable function/signature manifest independent of the test catalog.
-- [ ] Resolve or explicitly defer the remaining questions in `docs/open-questions.md` before declaring the ABI stable.
+- [x] Resolve the WPSI 0.1 ABI questions tracked in `docs/open-questions.md`.
 
 ## Phase 1 — Wago reference implementation
 
@@ -86,9 +87,9 @@ Before WPSI 1.0:
 - require cross-runtime conformance for GC logical byte views;
 - decide whether networking and links are 1.0 core profiles or remain extensions.
 
-## Deferred / post-0.1 questions
+## Open ABI questions
 
-The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. The remaining question is profile-specific version negotiation.
+There are currently no unresolved WPSI 0.1 ABI design questions. Implementation work and the second-runtime prototype may still expose issues that require explicit specification changes before 1.0.
 
 ## Post-1.0 candidates
 

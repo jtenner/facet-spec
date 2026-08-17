@@ -479,13 +479,11 @@ done        = 1
 errno       = ERR_OK
 ```
 
-## 8. Deferred decisions
+## 8. Version and feature compatibility
 
-This document intentionally does not settle:
+WPSI 0.1 has one global ABI version and no independently versioned profiles. Import presence and Core Wasm type matching are the authoritative feature-detection mechanism.
 
-- profile-specific version negotiation;
-
-Those topics remain listed in [`../docs/open-questions.md`](../docs/open-questions.md).
+A runtime MUST NOT require a guest-visible profile manifest, profile-version negotiation step, or scalar feature-query call in addition to normal Core Wasm linking. Profile labels are descriptive groupings for documentation and conformance only.
 
 ## 9. Compatibility references
 

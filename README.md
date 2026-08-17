@@ -39,6 +39,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Synchronous call lifetime.** WPSI never retains borrowed guest pointers or GC references after a host call returns; nonblocking I/O composes with `wpsi-poll` and external actor/task schedulers.
 - **No mandatory filesystem allocation.** Embedders may expose ordinary directory preopens as needed; `~` is the conventional optional guest-home/private-area name and has no special ABI semantics.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
+- **Import-driven feature detection.** WPSI has one global ABI version; optional support is determined by ordinary import presence and Core Wasm type matching, not profile-version or feature-query APIs.
 - **Compatibility-first behavior.** Error classes, path resolution, polling, and socket state semantics intentionally track WASI where the models overlap.
 
 ## Documents
@@ -50,7 +51,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable inventory of conformance tests and required profiles.
 - [`docs/design.md`](docs/design.md) — design rationale and non-goals.
 - [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — runtime implementation guidance, including GC array borrowing.
-- [`docs/open-questions.md`](docs/open-questions.md) — intentionally deferred decisions.
+- [`docs/open-questions.md`](docs/open-questions.md) — WPSI 0.1 open-question status; currently no unresolved ABI design questions.
 - [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and specification-change process.
 - [`SECURITY.md`](SECURITY.md) — security model and vulnerability reporting guidance.

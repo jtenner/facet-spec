@@ -31,13 +31,10 @@ All notable specification changes will be recorded here.
 - Wide GC arrays retain arbitrary partial-element byte ranges; GC inputs use `(ref array)` with dynamic storage validation; immutable source arrays are allowed.
 - Nested GC `readv/writev` is whole-child only in WPSI 0.1. `first/count` select complete child arrays; per-child slice descriptors are intentionally omitted.
 - WPSI 0.1 host calls are synchronously bounded: implementations may not retain guest linear-memory views, GC references, or other borrowed guest storage after return. Nonblocking I/O uses `ERR_AGAIN` plus `wpsi-poll`; concurrency and actor/task scheduling remain outside the ABI.
+- WPSI uses one global `abi_version()` and no independently versioned profiles or feature-query API. Import presence and exact Core Wasm type matching are authoritative for optional feature support.
 - Host-originated strings use source-specific length/copy APIs rather than string resource handles. GC callers may provide an existing array or request allocation of the concrete nullable array type declared by the import signature.
 - Text APIs no longer use an `ENC_*` selector. Code-unit width is encoded in the import name (`i8`, `i16`, or `i32`) and a single `wtf` boolean selects strict Unicode versus reversible surrogate-sentinel semantics.
 - Linear-memory textual imports include both memory address width and code-unit width, for example `path_open_mem32_i16` and `args_read_mem64_i8`.
 - The old raw-8 string mode is removed. Non-Unicode host units are represented through WTF surrogate sentinels when lossless conversion is possible; WPSI does not silently substitute U+FFFD.
 - Polling is level-triggered and snapshot-based; I/O errors/hangups are readiness events rather than poll-operation failures.
 - Networking follows WASI-style socket state/error semantics adapted to synchronous WPSI calls; network authority remains embedder/instantiation policy rather than a guest-visible policy API.
-
-### Deferred
-
-- Profile-specific version negotiation.
