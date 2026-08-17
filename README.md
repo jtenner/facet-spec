@@ -2,7 +2,7 @@
 
 **WPSI** is a small, Core-WebAssembly-native system interface designed for modern WebAssembly runtimes.
 
-WPSI keeps the system ABI intentionally simple: ordinary imported functions from the `"wpsi"` module, explicit representation-specific function names, capability-oriented resource handles, first-class multi-memory support, Memory64 support, WebAssembly GC array buffers, UTF-8/UTF-16/UTF-32 text, and a private writable scratch filesystem for every filesystem-enabled instance.
+WPSI keeps the system ABI intentionally simple: ordinary imported functions from the `"wpsi"` module, explicit representation-specific function names, capability-oriented resource handles, first-class multi-memory support, Memory64 support, WebAssembly GC array buffers, 8/16/32-bit text representations with optional WTF sentinel preservation, and a private writable scratch filesystem for every filesystem-enabled instance.
 
 WPSI is an experimental specification. The current draft is **WPSI 0.1**.
 
@@ -33,7 +33,8 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 - **Multi-memory by construction.** Every linear-memory operation takes an explicit memory index.
 - **Memory32 and Memory64.** Pointer width is part of the import name and signature.
 - **WebAssembly GC arrays are valid I/O buffers.** Numeric arrays expose a normative logical byte view while implementations remain free to optimize contiguous native representations.
-- **UTF-8, UTF-16, and UTF-32.** Text does not have to round-trip through UTF-8; host-originated strings can write directly into linear memory or GC arrays, or allocate caller-typed GC arrays.
+- **Text width is explicit.** Textual import names select 8-bit, 16-bit, or 32-bit code units. A single `wtf` boolean selects strict Unicode or reversible surrogate-sentinel handling; there is no encoding enum.
+- **Natural host-to-guest strings.** Host-originated strings can write directly into linear memory or existing GC arrays, or allocate the caller's concrete GC array type.
 - **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
 - **Private scratch filesystem.** Filesystem-enabled instances always have writable private storage even when no host directory is mounted.
 - **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
@@ -42,7 +43,7 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 ## Documents
 
 - [`SPEC.md`](SPEC.md) — normative WPSI 0.1 ABI, representations, constants, and function signatures.
-- [`spec/behavior.md`](spec/behavior.md) — normative validation order, errors, path resolution, GC rules, system strings, polling, and networking semantics.
+- [`spec/behavior.md`](spec/behavior.md) — normative validation order, errors, text transfer, path resolution, GC rules, polling, and networking semantics.
 - [`spec/imports.wat`](spec/imports.wat) — canonical Core Wasm import declarations.
 - [`spec/tests/README.md`](spec/tests/README.md) — normative conformance-suite and host-manifest contract.
 - [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable inventory of conformance tests and required profiles.
@@ -55,11 +56,11 @@ No polymorphic import resolver, canonical ABI, component model, or implicit memo
 
 ## Conformance suite
 
-The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, text encodings, scratch storage, preopens, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
+The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, strict/WTF text handling, scratch storage, preopens, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
 
 The suite deliberately mirrors `WebAssembly/wasi-testsuite` host-manifest conventions—same-basename JSON, `run`, `wait`, `read`, `connect`, `send`, `recv`, `root`, fixtures, and `.cleanup` artifacts—so existing runtime adapters can be extended instead of replaced. WPSI adds only the `preopens` and `scratch` provisioning needed for its own model.
 
-Static checks validate catalog generation, manifests, fixture paths, metadata, exact WPSI import signatures, and source hygiene. CI additionally parses every script with a pinned `wasm-tools` release.
+Static checks validate catalog generation, manifests, fixture paths, metadata, exact WPSI import signatures, and source hygiene. CI also parses the canonical import module and every WAST script with a pinned `wasm-tools` release.
 
 ## Status
 
