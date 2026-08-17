@@ -1,5 +1,6 @@
 name: WPSI conformance sources
 
+# Keep the canonical ABI, behavior contract, and source conformance suite in lockstep.
 on:
   workflow_dispatch:
   push:
