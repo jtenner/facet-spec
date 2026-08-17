@@ -4,19 +4,7 @@ This file tracks decisions intentionally deferred while WPSI 0.1 is implemented 
 
 Resolved questions are removed from this file and recorded in the normative specification, [`spec/behavior.md`](../spec/behavior.md), or the design rationale.
 
-## 1. Handle encoding guarantees
-
-The spec requires stale-handle safety but leaves encoding private.
-
-Questions:
-
-- Is that enough for interoperable language bindings?
-- Should WPSI reserve any handle ranges or bits?
-- Should duplicated/shared handles be added before 1.0?
-
-Current preference: keep handle encoding entirely runtime-private.
-
-## 2. Scratch filesystem lifetime and persistence
+## 1. Scratch filesystem lifetime and persistence
 
 The draft requires private writable scratch storage and permits multiple backing strategies.
 
@@ -28,7 +16,7 @@ Questions:
 
 Current preference: lifetime is tied to the WPSI instance unless the embedder explicitly supplies a persistent private implementation.
 
-## 3. Scatter/gather nested GC arrays
+## 2. Scatter/gather nested GC arrays
 
 The current GC `readv/writev` form uses an outer array of child-array references and consumes complete logical byte views for selected children.
 
@@ -40,7 +28,7 @@ Questions:
 
 Current preference: keep 0.1 simple and benchmark real language lowering before adding descriptors.
 
-## 4. Async extension
+## 3. Async extension
 
 Asynchronous host operations are deliberately omitted because they require retained buffer ownership/lifetime semantics.
 
@@ -52,7 +40,7 @@ Before adding async operations, define:
 - resource ownership on dropped futures/continuations;
 - whether async operations use handles, callbacks, stack switching, or another Core Wasm mechanism.
 
-## 5. Profile versioning
+## 4. Profile versioning
 
 The draft uses one `abi_version()` value and import presence as feature detection.
 

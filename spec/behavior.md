@@ -30,6 +30,14 @@ No guest-visible mutation or externally visible host side effect may occur befor
 
 This order exists to make failures reproducible across runtimes and to prevent host behavior from accidentally deciding which of several invalid guest inputs is reported first.
 
+### 1.1 Opaque handle values
+
+A WPSI resource handle is an instance-local opaque `i32` token. Only the value `0` has defined bit-level meaning: it is always invalid.
+
+No nonzero handle bit, range, subfield, ordering relation, or numeric pattern is portable WPSI information. A guest MUST NOT inspect a handle to infer its resource kind, table position, generation, authority, age, or implementation strategy.
+
+Runtimes are free to choose any private handle encoding that preserves the observable WPSI rules. In particular, a stale or closed handle MUST return `ERR_BAD_HANDLE` and MUST NOT become authority over an unrelated live resource through internal slot reuse.
+
 ## 2. Error semantics
 
 WPSI keeps its own compact numeric error namespace. The numeric values in `SPEC.md` are normative WPSI values; they are **not** required to equal POSIX errno values or WASI enum ordinals.
@@ -462,7 +470,6 @@ errno       = ERR_OK
 This document intentionally does not settle:
 
 - scratch filesystem persistence across embedder/runtime restarts;
-- handle bit layout or reserved handle ranges;
 - per-child slicing for GC nested scatter/gather;
 - profile-specific version negotiation;
 - asynchronous buffer ownership/lifetime semantics;

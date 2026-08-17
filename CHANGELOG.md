@@ -25,6 +25,7 @@ All notable specification changes will be recorded here.
 - GC raw-buffer byte offsets and lengths are `i64`; runtimes bounds-check them against the actual GC array byte length.
 - Validation failures use a deterministic order: scalar arguments, handles, resource state/authority, guest representation, ranges, text, namespace resolution, host operation, then host-error normalization.
 - Error meanings follow WASI/POSIX categories where practical while keeping WPSI's own numeric namespace.
+- Resource handle encoding is entirely runtime-private. Only `0` has a standardized numeric meaning; guests may not interpret nonzero handle bits or ranges, and stale handles may never alias unrelated live resources.
 - Filesystem path resolution uses the WASI capability-beneath model: relative paths only, no temporary escape through `..`, and no absolute/rooted symlink escape.
 - Wide GC arrays retain arbitrary partial-element byte ranges; GC inputs use `(ref array)` with dynamic storage validation; immutable source arrays are allowed.
 - Host-originated strings use source-specific length/copy APIs rather than string resource handles. GC callers may provide an existing array or request allocation of the concrete nullable array type declared by the import signature.
@@ -37,7 +38,6 @@ All notable specification changes will be recorded here.
 ### Deferred
 
 - Scratch persistence across runtime/embedder restarts.
-- Handle bit layout and reserved ranges.
 - Per-child slicing for nested GC scatter/gather.
 - Async buffer ownership and cancellation semantics.
 - Profile-specific version negotiation.

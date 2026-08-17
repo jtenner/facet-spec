@@ -106,6 +106,10 @@ This lets ordinary programs create temporary files without requiring the embedde
 
 Opaque numeric handles are simple, portable across current engines, and keep resource authority under embedder control.
 
+`Opaque` is intentional and complete: WPSI assigns no meaning to the bits of a nonzero handle. There are no standardized resource-kind tags, reserved ranges, table-index fields, generation fields, or ordering guarantees. A runtime may use generation counters, monotonically increasing IDs, randomized values, delayed reuse, or another representation as long as stale handles cannot alias unrelated live resources.
+
+Keeping the encoding private avoids constraining runtime handle tables and prevents language bindings from accidentally depending on one implementation's bookkeeping. Bindings need only preserve the `i32` token and pass it back to WPSI.
+
 WPSI does not require host objects to become `externref` or GC references. A future extension can explore reference-typed resource handles independently without changing the existing ABI.
 
 ## Why synchronous calls first?

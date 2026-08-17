@@ -12,6 +12,7 @@ WPSI is currently an experimental 0.1 draft.
 - [x] Define private scratch filesystem semantics.
 - [x] Define canonical WAT import signatures.
 - [x] Define deterministic validation and error precedence.
+- [x] Keep resource-handle encoding entirely runtime-private while requiring stale-handle safety.
 - [x] Define WASI-compatible error semantics and host-error normalization.
 - [x] Define WASI-style capability-beneath path and symlink resolution.
 - [x] Freeze WPSI 0.1 GC raw-buffer behavior: `i64` byte ranges, partial wide elements, abstract `(ref array)`, and immutable sources.
@@ -85,7 +86,7 @@ Before WPSI 1.0:
 
 ## Deferred / post-0.1 questions
 
-The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover handle encoding, scratch persistence, per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
+The remaining questions in `docs/open-questions.md` are intentionally not blockers for beginning the Wago implementation. They cover scratch persistence, per-child GC scatter/gather slicing, async ownership, and profile-specific version negotiation.
 
 ## Post-1.0 candidates
 

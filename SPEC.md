@@ -136,7 +136,9 @@ Handle `0` is always invalid.
 
 Handles are instance-local and unforgeable in the semantic sense: an implementation MUST validate a handle before dereferencing the resource it names.
 
-An implementation MUST prevent a stale closed handle from accidentally gaining authority over an unrelated resource solely through unchecked slot reuse. Generation counters, monotonic IDs, delayed reuse, or equivalent mechanisms are acceptable.
+Except for the reserved invalid value `0`, the numeric bits of a handle have no WPSI-defined meaning. WPSI does not reserve handle ranges, expose table indexes or generation fields, encode resource kinds in handle bits, or otherwise standardize a handle layout. Guests MUST treat every nonzero handle as an opaque token and MUST NOT derive authority, resource kind, lifetime, or runtime state from its numeric value.
+
+An implementation MUST prevent a stale closed handle from accidentally gaining authority over an unrelated resource solely through unchecked slot reuse. A previously closed handle value MUST NOT later identify an unrelated live resource in the same WPSI instance. Generation counters, monotonic IDs, randomized tokens, delayed reuse, or equivalent mechanisms are acceptable implementation strategies, and their encoding remains entirely runtime-private.
 
 ### 5.2 Error convention
 
