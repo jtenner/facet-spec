@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # One-shot migration from the old WPSI project branding to Facet.
+# This branch executes the full validated branding migration once.
 from __future__ import annotations
 
 from pathlib import Path
