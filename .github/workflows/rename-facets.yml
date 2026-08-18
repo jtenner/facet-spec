@@ -48,10 +48,8 @@ jobs:
       - name: Parse every WAST source
         run: python3 spec/tests/tools/parse_wast.py
 
-      - name: Remove migration machinery
-        run: |
-          rm .github/scripts/rename_to_facets.py
-          rm .github/workflows/rename-facets.yml
+      - name: Remove migration script
+        run: rm .github/scripts/rename_to_facets.py
 
       - name: Commit facet namespace
         shell: bash
