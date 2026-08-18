@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/fd_pwrite_array_i8
+;; Facet conformance test: imports/fd_pwrite_array_i8
 ;; Purpose: Exact Core signature for facet.fd_pwrite_array_i8.
 ;; Required profiles: gc-array
 ;;

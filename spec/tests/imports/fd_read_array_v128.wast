@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/fd_read_array_v128
+;; Facet conformance test: imports/fd_read_array_v128
 ;; Purpose: Exact Core signature for facet.fd_read_array_v128.
 ;; Required profiles: gc-array
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-insufficient-capacity
+;; Facet conformance test: args-env/args-read-insufficient-capacity
 ;; Purpose: A too-small string destination returns ERR_RANGE and remains unmodified.
 ;; Required profiles: core, memory32, args-env, text, adversarial
 ;;

@@ -1,16 +1,16 @@
-# WPSI Conformance Test Suite
+# Facet Conformance Test Suite
 
 **Status:** Draft  
 **Manifest version:** 1  
-**Applies to:** WPSI 0.1
+**Applies to:** Facet 0.1
 
-This directory contains the normative WPSI conformance tests.
+This directory contains the normative Facet conformance tests.
 
 A test is a standard WebAssembly Script (`.wast`) file.
 
 A test can also have a same-basename JSON manifest when it needs external setup or interaction.
 
-The manifest model follows `WebAssembly/wasi-testsuite` conventions where those conventions can express the required setup without weakening the WPSI contract.
+The manifest model follows `WebAssembly/wasi-testsuite` conventions where those conventions can express the required setup without weakening the Facet contract.
 
 ## Authoring goal
 
@@ -33,7 +33,7 @@ The following fields and operations keep their WASI meanings:
 - an empty guest environment unless `env` supplies entries;
 - external per-runtime skip and expected-failure files.
 
-WPSI adds one host-provisioning extension:
+Facet adds one host-provisioning extension:
 
 - `preopens`, for explicit multiple directory capabilities, guest display names, and rights.
 
@@ -67,7 +67,7 @@ The fresh context includes:
 - an argument vector;
 - an environment.
 
-Each module instantiated by one WAST script receives a distinct WPSI instance context unless the manifest explicitly requests runtime-mediated sharing.
+Each module instantiated by one WAST script receives a distinct Facet instance context unless the manifest explicitly requests runtime-mediated sharing.
 
 This rule prevents raw handles from crossing module-instance boundaries.
 
@@ -77,7 +77,7 @@ Delete them again after execution.
 
 Generated `wast2json` output MUST go to a build directory.
 
-Source-side JSON is always WPSI harness metadata.
+Source-side JSON is always Facet harness metadata.
 
 ## `run`
 
@@ -157,13 +157,13 @@ Example:
 
 A test with no `root` and no `preopens` receives no filesystem roots.
 
-This matches the WPSI rule that writable storage is optional.
+This matches the Facet rule that writable storage is optional.
 
 ## WAST execution
 
 Evaluate each WAST script in source order.
 
-Resolve WPSI imports from module `"facet"`.
+Resolve Facet imports from module `"facet"`.
 
 WAST assertions are the source of truth for guest-visible results.
 
@@ -175,7 +175,7 @@ These tests use `wait`, `read`, `connect`, `send`, and `recv` with the same mean
 
 ## Text tests
 
-The WPSI import name selects text width: `i8`, `i16`, or `i32`.
+The Facet import name selects text width: `i8`, `i16`, or `i32`.
 
 Text functions use the boolean `wtf` argument.
 
@@ -187,15 +187,15 @@ A non-boolean `wtf` value must produce the exact `ERR_INVALID` behavior defined 
 
 Strict mode must produce `ERR_ILLEGAL_SEQUENCE` when the source cannot be represented without loss.
 
-WPSI 0.1 has no `ENC_*` selector.
+Facet 0.1 has no `ENC_*` selector.
 
-WPSI 0.1 has no raw-string encoding mode.
+Facet 0.1 has no raw-string encoding mode.
 
 ## Profiles and unsupported tests
 
-Infer required WPSI functions from the imports in the test.
+Infer required Facet functions from the imports in the test.
 
-A runner may report a test as `unsupported` only when the runner lacks a required WPSI representation family or Core WebAssembly feature.
+A runner may report a test as `unsupported` only when the runner lacks a required Facet representation family or Core WebAssembly feature.
 
 `unsupported` is distinct from:
 
@@ -243,8 +243,8 @@ The runner MUST also verify that the selected ports are available before launch.
 Reports must distinguish these result classes:
 
 1. malformed or invalid Core WebAssembly;
-2. WPSI import or link failure;
-3. WPSI runtime `errno` mismatch;
+2. Facet import or link failure;
+3. Facet runtime `errno` mismatch;
 4. guest trap;
 5. runtime crash or timeout;
 6. unsupported feature.
@@ -290,7 +290,7 @@ A new test MUST:
 - close resources that it acquires unless lifecycle is the behavior under test;
 - avoid wall-clock timing assumptions when a property assertion is sufficient;
 - avoid public-network dependencies;
-- use exact error codes only when the WPSI specification fixes them;
+- use exact error codes only when the Facet specification fixes them;
 - be added to `catalog.json` by the generator.
 
 The current catalog contains **143** focused tests.

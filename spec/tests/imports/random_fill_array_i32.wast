@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/random_fill_array_i32
+;; Facet conformance test: imports/random_fill_array_i32
 ;; Purpose: Exact Core signature for facet.random_fill_array_i32.
 ;; Required profiles: gc-array
 ;;

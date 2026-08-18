@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory32/iovec-invalid-second-atomic
+;; Facet conformance test: memory32/iovec-invalid-second-atomic
 ;; Purpose: All iovecs are validated before writev performs a partial write.
 ;; Required profiles: core, memory32, multi-memory, filesystem, adversarial
 ;;

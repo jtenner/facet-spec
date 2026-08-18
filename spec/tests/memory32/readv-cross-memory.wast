@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory32/readv-cross-memory
+;; Facet conformance test: memory32/readv-cross-memory
 ;; Purpose: Memory32 readv scatters bytes across memories in iovec order.
 ;; Required profiles: core, memory32, multi-memory, filesystem
 ;;

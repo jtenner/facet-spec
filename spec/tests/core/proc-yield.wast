@@ -1,4 +1,4 @@
-;; WPSI conformance test: core/proc-yield
+;; Facet conformance test: core/proc-yield
 ;; Purpose: A cooperative yield succeeds without changing guest-visible state.
 ;; Required profiles: core
 ;;

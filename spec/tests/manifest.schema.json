@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jtenner/wpsi/blob/main/spec/tests/manifest.schema.json",
-  "title": "WPSI test manifest",
+  "$id": "https://github.com/jtenner/facet/blob/main/spec/tests/manifest.schema.json",
+  "title": "Facet test manifest",
   "type": "object",
   "additionalProperties": false,
   "properties": {

@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/fd-rights-requested-subset
+;; Facet conformance test: filesystem/fd-rights-requested-subset
 ;; Purpose: An opened descriptor receives exactly the requested rights and no ambient parent rights.
 ;; Required profiles: core, memory32, filesystem, capabilities
 ;;

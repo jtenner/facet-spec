@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/next-exhausted
+;; Facet conformance test: poll/next-exhausted
 ;; Purpose: poll_next reports done after an empty wait result.
 ;; Required profiles: core, poll
 ;;

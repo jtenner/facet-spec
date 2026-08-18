@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-into-array-i16
+;; Facet conformance test: args-env/args-read-into-array-i16
 ;; Purpose: UTF-16 arguments can be copied directly into an existing mutable array<i16>.
 ;; Required profiles: core, gc-array, args-env, text
 ;;

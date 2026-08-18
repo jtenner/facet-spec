@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/empty-zero-deadline
+;; Facet conformance test: poll/empty-zero-deadline
 ;; Purpose: An empty poll set with an expired deadline returns no events and succeeds.
 ;; Required profiles: core, poll
 ;;

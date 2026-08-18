@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory64/random-fill
+;; Facet conformance test: memory64/random-fill
 ;; Purpose: Memory64 uses i64 addresses while preserving adjacent bytes.
 ;; Required profiles: core, memory64
 ;;

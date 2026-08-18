@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/range-overflow-atomic
+;; Facet conformance test: gc-array/range-overflow-atomic
 ;; Purpose: GC logical-byte range overflow is rejected atomically.
 ;; Required profiles: core, gc-array, adversarial
 ;;

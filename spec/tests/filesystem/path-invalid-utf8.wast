@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-invalid-utf8
+;; Facet conformance test: filesystem/path-invalid-utf8
 ;; Purpose: Overlong UTF-8 is rejected as an illegal sequence.
 ;; Required profiles: core, memory32, filesystem, text, adversarial
 ;;

@@ -1,6 +1,6 @@
-# WPSI 0.1 Open Questions
+# Facet 0.1 Open Questions
 
-There are currently **no unresolved WPSI 0.1 ABI design questions** in this document.
+There are currently **no unresolved Facet 0.1 ABI design questions** in this document.
 
 Previously deferred decisions are now recorded in:
 
@@ -14,4 +14,4 @@ A second runtime can also expose assumptions that are not portable.
 
 Propose each new change as an explicit extension or revision.
 
-Do not treat an unresolved implementation difference as an implicit WPSI 0.1 negotiation mechanism.
+Do not treat an unresolved implementation difference as an implicit Facet 0.1 negotiation mechanism.

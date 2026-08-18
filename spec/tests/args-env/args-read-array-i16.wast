@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-array-i16
+;; Facet conformance test: args-env/args-read-array-i16
 ;; Purpose: The host can allocate the caller's concrete array<i16> result type.
 ;; Required profiles: core, gc-array, args-env, text
 ;;

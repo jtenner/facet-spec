@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/random-fill-v128
+;; Facet conformance test: gc-array/random-fill-v128
 ;; Purpose: array<v128> exposes 16-byte elements and preserves nonselected elements.
 ;; Required profiles: core, gc-array, simd
 ;;

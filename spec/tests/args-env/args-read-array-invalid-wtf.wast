@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-array-invalid-wtf
+;; Facet conformance test: args-env/args-read-array-invalid-wtf
 ;; Purpose: Allocating string reads reject non-boolean WTF selectors with null and ERR_INVALID.
 ;; Required profiles: core, gc-array, args-env
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: random/mem32-oob-atomic
+;; Facet conformance test: random/mem32-oob-atomic
 ;; Purpose: An out-of-bounds fill is rejected atomically and returns zero bytes written.
 ;; Required profiles: core, memory32, adversarial
 ;;

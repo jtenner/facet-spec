@@ -1,5 +1,5 @@
-;; WPSI conformance test: network/udp-echo
-;; Purpose: The WASI-compatible connect/send/recv harness can drive WPSI datagram receive and reply operations.
+;; Facet conformance test: network/udp-echo
+;; Purpose: The WASI-compatible connect/send/recv harness can drive Facet datagram receive and reply operations.
 ;; Required profiles: core, memory32, network
 ;; Test kind: harness
 ;;

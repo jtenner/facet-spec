@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/fd-write-logical-byte-view-v128
+;; Facet conformance test: gc-array/fd-write-logical-byte-view-v128
 ;; Purpose: fd_write_array_v128 exposes the same 16 bytes as v128.store.
 ;; Required profiles: core, memory32, gc-array, simd, filesystem
 ;;

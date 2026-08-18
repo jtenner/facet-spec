@@ -1,6 +1,6 @@
 # Security
 
-WPSI is a system ABI that faces untrusted guest input.
+Facet is a system ABI that faces untrusted guest input.
 
 Security rules are part of the interface contract.
 
@@ -23,7 +23,7 @@ This includes:
 
 The runtime MUST validate resource handles before use.
 
-The runtime MUST verify that a resource belongs to the current WPSI instance.
+The runtime MUST verify that a resource belongs to the current Facet instance.
 
 The runtime MUST validate each memory index.
 
@@ -83,7 +83,7 @@ If private reporting is not available, contact the repository owner privately be
 
 A useful report should include:
 
-- the affected WPSI function or rule;
+- the affected Facet function or rule;
 - the affected runtime or implementation;
 - a minimal Wasm reproducer when practical;
 - the boundary that the issue crosses, if any;
@@ -98,6 +98,6 @@ Relevant boundaries include:
 - GC-domain boundaries;
 - external system boundaries.
 
-WPSI is a draft specification.
+Facet is a draft specification.
 
 An ambiguity that causes independent runtimes to enforce different security boundaries is also a security-relevant specification bug.

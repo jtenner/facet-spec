@@ -1,6 +1,6 @@
 # Examples
 
-These small WAT modules show the main WPSI representation forms.
+These small WAT modules show the main Facet representation forms.
 
 ## Memory32 write
 
@@ -16,4 +16,4 @@ The index is explicit even though this example uses only one memory.
 
 The guest does not need a linear-memory adapter for this operation.
 
-Each example imports only the WPSI functions that it uses.
+Each example imports only the Facet functions that it uses.

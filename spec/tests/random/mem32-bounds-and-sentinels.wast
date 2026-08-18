@@ -1,4 +1,4 @@
-;; WPSI conformance test: random/mem32-bounds-and-sentinels
+;; Facet conformance test: random/mem32-bounds-and-sentinels
 ;; Purpose: Random fill mutates exactly the requested range and preserves adjacent bytes.
 ;; Required profiles: core, memory32
 ;;

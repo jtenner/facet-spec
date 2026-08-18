@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/exclusive-create
+;; Facet conformance test: filesystem/exclusive-create
 ;; Purpose: OPEN_EXCLUSIVE rejects an existing path and returns a zero descriptor.
 ;; Required profiles: core, memory32, filesystem
 ;;

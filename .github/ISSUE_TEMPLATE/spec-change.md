@@ -1,6 +1,6 @@
 ---
 name: Specification change
-about: Propose a normative WPSI addition or change
+about: Propose a normative Facet addition or change
 title: "spec: "
 labels: specification
 ---

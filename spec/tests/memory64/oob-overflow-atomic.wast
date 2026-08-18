@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory64/oob-overflow-atomic
+;; Facet conformance test: memory64/oob-overflow-atomic
 ;; Purpose: Unsigned pointer-plus-length overflow is rejected before mutation.
 ;; Required profiles: core, memory64, adversarial
 ;;

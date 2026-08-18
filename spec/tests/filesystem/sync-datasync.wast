@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/sync-datasync
+;; Facet conformance test: filesystem/sync-datasync
 ;; Purpose: fd_sync and fd_datasync succeed for a writable scratch file with sync rights.
 ;; Required profiles: core, memory32, filesystem
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: network/socket-bind-ephemeral
+;; Facet conformance test: network/socket-bind-ephemeral
 ;; Purpose: Binding UDP to port zero assigns a nonzero local port.
 ;; Required profiles: core, network
 ;;

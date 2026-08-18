@@ -1,5 +1,5 @@
-;; WPSI conformance test: core/abi-version
-;; Purpose: WPSI 0.1 reports ABI version 1.
+;; Facet conformance test: core/abi-version
+;; Purpose: Facet 0.1 reports ABI version 1.
 ;; Required profiles: core
 ;;
 ;; SPDX-License-Identifier: MIT

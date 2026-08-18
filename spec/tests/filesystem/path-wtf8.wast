@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-wtf8
+;; Facet conformance test: filesystem/path-wtf8
 ;; Purpose: WTF mode is a boolean text mode and accepts ordinary UTF-8 as a valid subset.
 ;; Required profiles: core, memory32, filesystem, text
 ;;

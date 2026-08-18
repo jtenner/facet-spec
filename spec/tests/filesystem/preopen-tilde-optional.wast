@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/preopen-tilde-optional
+;; Facet conformance test: filesystem/preopen-tilde-optional
 ;; Purpose: A filesystem implementation is not required to provide any preopen, including `~`.
 ;; Required profiles: core, filesystem
 ;;

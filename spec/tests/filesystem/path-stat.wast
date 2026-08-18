@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-stat
+;; Facet conformance test: filesystem/path-stat
 ;; Purpose: path_stat reports the exact type and size without opening the file.
 ;; Required profiles: core, memory32, filesystem
 ;;

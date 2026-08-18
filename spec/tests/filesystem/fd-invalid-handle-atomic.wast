@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/fd-invalid-handle-atomic
+;; Facet conformance test: filesystem/fd-invalid-handle-atomic
 ;; Purpose: fd_read validates an invalid descriptor before touching the destination buffer.
 ;; Required profiles: core, memory32, filesystem, adversarial
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory64/wrong-memory-width
+;; Facet conformance test: memory64/wrong-memory-width
 ;; Purpose: A Memory64 operation rejects a Memory32 memory with ERR_TYPE.
 ;; Required profiles: core, memory64, adversarial
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/env-read-array-value
+;; Facet conformance test: args-env/env-read-array-value
 ;; Purpose: Environment values can be allocated directly as caller-typed GC arrays.
 ;; Required profiles: core, gc-array, args-env, text
 ;;

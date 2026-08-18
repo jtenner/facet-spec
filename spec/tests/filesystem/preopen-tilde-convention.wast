@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/preopen-tilde-convention
+;; Facet conformance test: filesystem/preopen-tilde-convention
 ;; Purpose: A `~` guest home is represented by an ordinary preopen display name.
 ;; Required profiles: core, memory32, filesystem
 ;;

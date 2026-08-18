@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/socket_sendto_array_v128
+;; Facet conformance test: imports/socket_sendto_array_v128
 ;; Purpose: Exact Core signature for facet.socket_sendto_array_v128.
 ;; Required profiles: gc-array
 ;;

@@ -1,4 +1,4 @@
-# WPSI 0.1 — WebAssembly Portable System Interface
+# Facet 0.1 — Portable System Interface for Core WebAssembly
 
 **Status:** Draft  
 **Version:** 0.1  
@@ -6,19 +6,19 @@
 
 ## 1. Overview
 
-WPSI is a low-level system interface for Core WebAssembly modules.
+Facet is a low-level system interface for Core WebAssembly modules.
 
-The WebAssembly module that calls WPSI is the **guest**.
+The WebAssembly module that calls Facet is the **guest**.
 
-The software that implements WPSI imports is the **runtime**.
+The software that implements Facet imports is the **runtime**.
 
 The software that creates the guest instance and grants authority is the **embedder**.
 
 See [`docs/terminology.md`](docs/terminology.md) for the full project glossary.
 
-WPSI uses ordinary Core WebAssembly imported functions.
+Facet uses ordinary Core WebAssembly imported functions.
 
-WPSI does not require:
+Facet does not require:
 
 - an interface-definition language;
 - a canonical lowering layer;
@@ -45,9 +45,9 @@ Each form has one fixed Core WebAssembly signature.
 
 The guest chooses a form by importing its name.
 
-WPSI does not choose a representation dynamically at call time.
+Facet does not choose a representation dynamically at call time.
 
-WPSI has four primary design goals:
+Facet has four primary design goals:
 
 1. support WebAssembly multi-memory and Memory64 directly;
 2. let supported WebAssembly GC arrays act as system-operation buffers;
@@ -64,9 +64,9 @@ An editorial change MUST NOT weaken or strengthen a normative rule.
 
 ### 3.1 Core WebAssembly is the ABI
 
-WPSI function signatures use Core WebAssembly types directly.
+Facet function signatures use Core WebAssembly types directly.
 
-There is no canonical ABI between the guest and WPSI.
+There is no canonical ABI between the guest and Facet.
 
 ### 3.2 Representation-specific names
 
@@ -78,11 +78,11 @@ If a semantic option does not change the Core WebAssembly representation, it SHO
 
 Every operation that accesses linear memory receives an explicit `memory_index`.
 
-No WPSI function implicitly selects memory 0.
+No Facet function implicitly selects memory 0.
 
 ### 3.4 GC arrays are first-class buffers
 
-A guest MAY pass a supported WebAssembly GC array directly to a WPSI function.
+A guest MAY pass a supported WebAssembly GC array directly to a Facet function.
 
 The runtime MUST NOT require the guest to copy that array through unrelated linear memory.
 
@@ -130,13 +130,13 @@ It does not create general type-directed import overload resolution.
 
 ### 3.6 Incremental implementation is allowed
 
-A runtime MAY implement only the WPSI profiles for WebAssembly features that it supports.
+A runtime MAY implement only the Facet profiles for WebAssembly features that it supports.
 
 A missing required import causes normal WebAssembly instantiation failure.
 
 ### 3.7 Synchronous call boundary
 
-Every WPSI imported function is synchronous at the Core WebAssembly ABI boundary.
+Every Facet imported function is synchronous at the Core WebAssembly ABI boundary.
 
 The runtime MUST NOT retain borrowed guest storage after the imported function returns.
 
@@ -160,48 +160,48 @@ The runtime MAY also retain data that it copied from the guest into independent 
 
 Retained state MUST NOT depend on the continued validity or location of borrowed guest storage.
 
-WPSI 0.1 defines no asynchronous host functions, futures, callbacks, actor primitives, or retained-buffer operations.
+Facet 0.1 defines no asynchronous host functions, futures, callbacks, actor primitives, or retained-buffer operations.
 
 A nonblocking resource reports `ERR_AGAIN` when it cannot make progress immediately.
 
-`wpsi-poll` provides the readiness mechanism for a scheduler that does not want to block an execution context.
+`facet-poll` provides the readiness mechanism for a scheduler that does not want to block an execution context.
 
-WPSI does not prohibit concurrency outside one imported call.
+Facet does not prohibit concurrency outside one imported call.
 
 A runtime or guest language MAY schedule multiple tasks, actors, instances, or execution contexts concurrently.
 
-Each individual WPSI call remains synchronous.
+Each individual Facet call remains synchronous.
 
 ## 4. Conformance profiles
 
 The initial profiles are:
 
 ```text
-wpsi-core
-wpsi-memory32
-wpsi-memory64
-wpsi-gc-array
-wpsi-filesystem
-wpsi-links
-wpsi-network
-wpsi-poll
+facet-core
+facet-memory32
+facet-memory64
+facet-gc-array
+facet-filesystem
+facet-links
+facet-network
+facet-poll
 ```
 
-`wpsi-core` defines scalar operations, handles, process information, clocks, arguments, environment strings, and random scalar values.
+`facet-core` defines scalar operations, handles, process information, clocks, arguments, environment strings, and random scalar values.
 
-`wpsi-memory32` defines `_mem32` buffer operations.
+`facet-memory32` defines `_mem32` buffer operations.
 
-`wpsi-memory64` defines `_mem64` buffer operations.
+`facet-memory64` defines `_mem64` buffer operations.
 
-`wpsi-gc-array` defines `_array_*` operations.
+`facet-gc-array` defines `_array_*` operations.
 
-`wpsi-filesystem` defines preopens, descriptors, directory iteration, and path operations.
+`facet-filesystem` defines preopens, descriptors, directory iteration, and path operations.
 
-`wpsi-links` defines hard-link and symbolic-link operations.
+`facet-links` defines hard-link and symbolic-link operations.
 
-`wpsi-network` defines sockets and DNS.
+`facet-network` defines sockets and DNS.
 
-`wpsi-poll` defines multi-resource polling.
+`facet-poll` defines multi-resource polling.
 
 Profile names are documentation and conformance groupings.
 
@@ -225,17 +225,17 @@ These aliases are documentation only.
 
 ### 5.1 Handles
 
-All WPSI resources use opaque nonzero `i32` handles.
+All Facet resources use opaque nonzero `i32` handles.
 
 Handle `0` is always invalid.
 
-A handle belongs to one WPSI instance.
+A handle belongs to one Facet instance.
 
 The runtime MUST validate a handle before it uses the resource identified by that handle.
 
-Only the value `0` has a WPSI-defined numeric meaning.
+Only the value `0` has a Facet-defined numeric meaning.
 
-WPSI does not define:
+Facet does not define:
 
 - handle ranges;
 - table indexes inside handle bits;
@@ -247,7 +247,7 @@ The guest MUST treat every nonzero handle as an opaque token.
 
 The guest MUST NOT derive authority, resource kind, lifetime, or runtime state from a handle value.
 
-A closed handle MUST NOT later identify an unrelated live resource in the same WPSI instance.
+A closed handle MUST NOT later identify an unrelated live resource in the same Facet instance.
 
 The runtime MUST therefore protect against unchecked slot reuse.
 
@@ -403,7 +403,7 @@ A destination-mutability mismatch returns `ERR_TYPE`.
 
 ### 7.1 Normative logical byte view
 
-WPSI defines a logical byte view for supported numeric arrays.
+Facet defines a logical byte view for supported numeric arrays.
 
 The logical byte view defines observable behavior.
 
@@ -471,7 +471,7 @@ Each selected child MUST be a non-null reference to an array with the element ty
 
 For a read operation, each selected child MUST be mutable.
 
-WPSI 0.1 uses whole-child scatter/gather.
+Facet 0.1 uses whole-child scatter/gather.
 
 `first` and `count` select a contiguous range of child arrays.
 
@@ -479,7 +479,7 @@ Each selected child contributes its complete logical byte view.
 
 The selected view starts at byte offset zero and ends at the full logical byte length of that child.
 
-WPSI 0.1 does not define a per-child offset, length, slice, or descriptor.
+Facet 0.1 does not define a per-child offset, length, slice, or descriptor.
 
 Use an ordinary single-array function when one array requires a byte slice.
 
@@ -487,7 +487,7 @@ Those single-array functions already take `byte_offset` and `byte_length`.
 
 ## 8. Text representations and WTF mode
 
-WPSI does not use a text-encoding enum.
+Facet does not use a text-encoding enum.
 
 The import name identifies the physical text representation:
 
@@ -538,7 +538,7 @@ In WTF mode:
 - `_i16` uses WTF-16 code units;
 - `_i32` stores code-point values directly, including surrogate sentinels.
 
-WPSI MUST NOT silently replace an unrepresentable external unit with U+FFFD.
+Facet MUST NOT silently replace an unrepresentable external unit with U+FFFD.
 
 Strict mode returns `ERR_ILLEGAL_SEQUENCE` when lossless representation is impossible.
 
@@ -552,13 +552,13 @@ If the selected WTF representation still cannot represent the external value, th
 
 Linear-memory `_i16` and `_i32` values use little-endian byte order.
 
-WPSI strings are length-delimited.
+Facet strings are length-delimited.
 
-WPSI strings are not implicitly NUL-terminated.
+Facet strings are not implicitly NUL-terminated.
 
 ## 9. Host-originated strings
 
-WPSI does not define a string resource handle.
+Facet does not define a string resource handle.
 
 A string is identified by the operation that owns the source.
 
@@ -572,7 +572,7 @@ Directory iteration uses iterator state instead of a string resource.
 
 A symbolic-link target is identified by a path operation instead of a string resource.
 
-For stable indexed sources, WPSI exposes three forms:
+For stable indexed sources, Facet exposes three forms:
 
 1. `*_len_i8`, `*_len_i16`, and `*_len_i32` return the required code-unit count;
 2. `*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy into guest-owned storage;
@@ -609,11 +609,11 @@ If the source is stateful, the function MUST NOT advance the source when capacit
 
 A wrong GC destination storage class returns `ERR_TYPE`.
 
-No WPSI string-copy function appends a NUL terminator.
+No Facet string-copy function appends a NUL terminator.
 
 ## 10. Capabilities and filesystem preopens
 
-WPSI resource handles represent authority.
+Facet resource handles represent authority.
 
 The embedder MUST grant filesystem authority explicitly.
 
@@ -621,11 +621,11 @@ The embedder MUST grant network authority explicitly.
 
 A derived resource MUST NOT have more authority than the capability from which it was derived.
 
-WPSI does not define a mandatory scratch filesystem.
+Facet does not define a mandatory scratch filesystem.
 
-WPSI does not define a mandatory home filesystem.
+Facet does not define a mandatory home filesystem.
 
-WPSI does not allocate any other writable storage automatically.
+Facet does not allocate any other writable storage automatically.
 
 A conforming filesystem implementation MAY expose no preopens.
 
@@ -655,15 +655,15 @@ In particular:
 
 If the embedder maps `~` to external storage, the directory has only the authority that the embedder explicitly granted.
 
-The Core WPSI path ABI remains directory-handle-relative.
+The Core Facet path ABI remains directory-handle-relative.
 
-Raw WPSI path operands do not parse or expand `~`.
+Raw Facet path operands do not parse or expand `~`.
 
 A higher-level binding, libc implementation, or language runtime MAY interpret `~/x` as a convenience syntax.
 
 Such a layer can locate the preopen whose display name is `~`.
 
-It can then issue the ordinary WPSI path operation relative to that directory handle with `x` as the relative path.
+It can then issue the ordinary Facet path operation relative to that directory handle with `x` as the relative path.
 
 ## 11. Rights and flags
 
@@ -758,17 +758,17 @@ stdio_stdout() -> (fd: i32, errno: i32)
 stdio_stderr() -> (fd: i32, errno: i32)
 ```
 
-WPSI 0.1 reports `abi_version() == 1`.
+Facet 0.1 reports `abi_version() == 1`.
 
 ### 12.1 Versioning and feature detection
 
-`abi_version()` identifies the overall WPSI ABI generation.
+`abi_version()` identifies the overall Facet ABI generation.
 
-WPSI profiles do not have independent version numbers.
+Facet profiles do not have independent version numbers.
 
-WPSI 0.1 defines no scalar feature-query API.
+Facet 0.1 defines no scalar feature-query API.
 
-WPSI 0.1 defines no profile-query API.
+Facet 0.1 defines no profile-query API.
 
 Normal Core WebAssembly linking determines whether an operation is available.
 
@@ -778,9 +778,9 @@ Import presence and type compatibility are authoritative.
 
 A module SHOULD import the operations and representation families that it requires.
 
-A runtime MAY expose any conforming subset of WPSI imports.
+A runtime MAY expose any conforming subset of Facet imports.
 
-Profile names such as `wpsi-filesystem`, `wpsi-gc-array`, and `wpsi-network` are documentation and conformance groupings only.
+Profile names such as `facet-filesystem`, `facet-gc-array`, and `facet-network` are documentation and conformance groupings only.
 
 They are not a second runtime negotiation namespace.
 
@@ -792,7 +792,7 @@ An incompatible replacement for one operation SHOULD normally use a new import n
 
 This lets old and new operations coexist.
 
-A change that makes the overall WPSI ABI generation incompatible MUST increment `abi_version()`.
+A change that makes the overall Facet ABI generation incompatible MUST increment `abi_version()`.
 
 ## 13. Arguments and environment
 
@@ -1195,7 +1195,7 @@ The runtime MUST NOT perform I/O in this error case.
 
 Each selected child participates with its complete logical byte view.
 
-WPSI 0.1 does not define per-child slices for nested GC scatter/gather.
+Facet 0.1 does not define per-child slices for nested GC scatter/gather.
 
 The runtime MUST validate the complete selected child range before it performs I/O.
 
@@ -1238,7 +1238,7 @@ fd_datasync(fd: i32)
 
 All path operations are relative to a directory capability.
 
-WPSI has no implicit process-wide current working directory from the operating system.
+Facet has no implicit process-wide current working directory from the operating system.
 
 A path import name identifies the storage representation and code-unit width.
 
@@ -1257,7 +1257,7 @@ GC path families are:
 
 Every path representation receives the `wtf: i32` boolean defined in section 8.
 
-WPSI does not use a path-encoding enum.
+Facet does not use a path-encoding enum.
 
 For linear memory, `pointer` is a byte address.
 
@@ -1271,7 +1271,7 @@ For text arrays, one array element is one code unit.
 
 The logical directory separator is `/`.
 
-An embedded NUL is invalid in every WPSI filesystem path.
+An embedded NUL is invalid in every Facet filesystem path.
 
 An embedded NUL returns `ERR_INVALID`.
 
@@ -1446,7 +1446,7 @@ dir_iter_rewind(iterator: i32) -> (errno: i32)
 
 The iterator identifies the pending directory entry.
 
-WPSI does not allocate a separate name resource.
+Facet does not allocate a separate name resource.
 
 `dir_iter_next_len_T` snapshots the next entry without consuming it.
 
@@ -1718,7 +1718,7 @@ socket_sendto_array_v128(...) -> (bytes_written: i64, errno: i32)
 
 ## 36. DNS
 
-DNS hostnames use the same text rules as other WPSI text.
+DNS hostnames use the same text rules as other Facet text.
 
 The import suffix selects `i8`, `i16`, or `i32`.
 
@@ -1826,17 +1826,17 @@ Both strategies conform when they produce the same observable result.
 
 ## 39. Zero-copy guidance
 
-WPSI does not guarantee zero-copy execution.
+Facet does not guarantee zero-copy execution.
 
-WPSI does guarantee that an ABI conversion through unrelated guest linear memory is unnecessary.
+Facet does guarantee that an ABI conversion through unrelated guest linear memory is unnecessary.
 
 A runtime SHOULD avoid intermediate copies when direct access is safe for its memory representation, GC representation, and operating-system API.
 
 ## 40. Concurrency
 
-WPSI 0.1 functions are synchronous.
+Facet 0.1 functions are synchronous.
 
-A runtime MAY invoke WPSI functions concurrently from multiple Wasm threads or execution contexts.
+A runtime MAY invoke Facet functions concurrently from multiple Wasm threads or execution contexts.
 
 A close can race with another operation on the same handle.
 
@@ -1863,9 +1863,9 @@ A conforming runtime MUST:
 
 ## 42. Language implementation guidance
 
-Languages SHOULD expose semantic system operations instead of exposing WPSI representation details directly when a higher-level API is appropriate.
+Languages SHOULD expose semantic system operations instead of exposing Facet representation details directly when a higher-level API is appropriate.
 
-A compiler can lower a source-language buffer to these WPSI forms:
+A compiler can lower a source-language buffer to these Facet forms:
 
 ```text
 Memory32 slice -> *_mem32
@@ -1877,7 +1877,7 @@ GC array<i64>  -> *_array_i64
 GC array<v128> -> *_array_v128
 ```
 
-A UTF-16 or UTF-32 string SHOULD remain in its native representation when the corresponding WPSI function exists.
+A UTF-16 or UTF-32 string SHOULD remain in its native representation when the corresponding Facet function exists.
 
 Conversion through UTF-8 is not required.
 
@@ -1887,7 +1887,7 @@ A GC-oriented language SHOULD prefer `*_read_into_array_*` when it already owns 
 
 ## 43. Explicit omissions from 0.1
 
-WPSI 0.1 does not define:
+Facet 0.1 does not define:
 
 - process spawning;
 - signals;
@@ -1903,7 +1903,7 @@ A future specification can add independent extensions for these areas.
 
 ## 44. Compatibility policy
 
-A published stable WPSI function signature is immutable.
+A published stable Facet function signature is immutable.
 
 If a semantic rule or Core WebAssembly signature must change incompatibly, the specification MUST introduce a new import name.
 
@@ -1911,7 +1911,7 @@ The specification MAY add new representation variants without modifying existing
 
 ## 45. Rationale for explicit names
 
-WPSI does not overload one import name by function type.
+Facet does not overload one import name by function type.
 
 Explicit representation names have these benefits:
 
@@ -1924,4 +1924,4 @@ Explicit representation names have these benefits:
 
 The duplicated names are intentional.
 
-WPSI accepts this naming cost to avoid another ABI-description and runtime-negotiation layer.
+Facet accepts this naming cost to avoid another ABI-description and runtime-negotiation layer.

@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/preopen-tilde-roundtrip
+;; Facet conformance test: filesystem/preopen-tilde-roundtrip
 ;; Purpose: A writable `~` preopen uses ordinary file operations with no scratch-specific imports.
 ;; Required profiles: core, memory32, filesystem
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/stat-size-and-type
+;; Facet conformance test: filesystem/stat-size-and-type
 ;; Purpose: fd_stat reports a regular file and exact byte size.
 ;; Required profiles: core, memory32, filesystem
 ;;

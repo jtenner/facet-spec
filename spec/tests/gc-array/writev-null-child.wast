@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/writev-null-child
+;; Facet conformance test: gc-array/writev-null-child
 ;; Purpose: A selected null child is rejected before scatter/gather I/O.
 ;; Required profiles: core, gc-array, filesystem, adversarial
 ;; Test kind: harness

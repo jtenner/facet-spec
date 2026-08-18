@@ -1,4 +1,4 @@
-;; WPSI conformance test: random/u64-success
+;; Facet conformance test: random/u64-success
 ;; Purpose: random_u64 returns a scalar and an ERR_OK status without requiring guest storage.
 ;; Required profiles: core, random
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-array-i32
+;; Facet conformance test: filesystem/path-array-i32
 ;; Purpose: path_open_array_i32 consumes the native GC code-unit representation without linear-memory lowering.
 ;; Required profiles: core, gc-array, filesystem, text
 ;;

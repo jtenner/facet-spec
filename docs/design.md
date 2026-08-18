@@ -1,4 +1,4 @@
-# WPSI Design Rationale
+# Facet Design Rationale
 
 This document explains why the specification has its current shape.
 
@@ -10,13 +10,13 @@ Use [`terminology.md`](terminology.md) for the project terminology.
 
 ## Why a flat imported-function ABI?
 
-WPSI uses ordinary Core WebAssembly imports.
+Facet uses ordinary Core WebAssembly imports.
 
 Core WebAssembly already provides a strong type system at the system boundary.
 
-For the operations in WPSI 0.1, ordinary imports provide enough structure.
+For the operations in Facet 0.1, ordinary imports provide enough structure.
 
-WPSI therefore does not require:
+Facet therefore does not require:
 
 - another interface language;
 - a canonical lowering format;
@@ -25,7 +25,7 @@ WPSI therefore does not require:
 
 This keeps runtime adoption small.
 
-An embedder can implement WPSI with the same host-function mechanism that it already uses for other Core WebAssembly imports.
+An embedder can implement Facet with the same host-function mechanism that it already uses for other Core WebAssembly imports.
 
 The caller-typed GC allocation functions are a narrow exception to ordinary abstract `(ref array)` parameters.
 
@@ -37,7 +37,7 @@ Core WebAssembly can contain repeated import names with different function types
 
 An embedder could inspect the type and choose an implementation for a name such as `"facet"."fd_read"`.
 
-WPSI does not depend on that behavior.
+Facet does not depend on that behavior.
 
 Instead, it uses explicit names:
 
@@ -79,7 +79,7 @@ A second feature registry would duplicate this information.
 
 It could also disagree with the imports that the program actually needs.
 
-WPSI therefore uses one coarse `abi_version()` for the overall ABI generation.
+Facet therefore uses one coarse `abi_version()` for the overall ABI generation.
 
 Import presence and type compatibility are authoritative for optional support.
 
@@ -95,7 +95,7 @@ An additive change can introduce a new import without changing existing modules.
 
 An incompatible form of one operation should normally receive a new import name.
 
-Only an incompatible change to the overall WPSI ABI generation requires an `abi_version()` increment.
+Only an incompatible change to the overall Facet ABI generation requires an `abi_version()` increment.
 
 ## Why an explicit memory index?
 
@@ -103,7 +103,7 @@ A pointer is not enough when one module has more than one linear memory.
 
 The runtime must also know which memory owns that pointer.
 
-WPSI therefore treats this tuple as the basic linear-memory buffer reference:
+Facet therefore treats this tuple as the basic linear-memory buffer reference:
 
 ```text
 (memory_index, pointer, length)
@@ -121,7 +121,7 @@ Memory32 and Memory64 use different Core WebAssembly pointer types.
 
 That difference changes the function signature.
 
-WPSI puts the address width in the import name.
+Facet puts the address width in the import name.
 
 This avoids:
 
@@ -139,7 +139,7 @@ If a language uses GC-native arrays, forcing system I/O through linear memory cr
 
 It also gives linear memory an unnecessary privileged role.
 
-WPSI therefore lets supported numeric GC arrays act as direct I/O buffers.
+Facet therefore lets supported numeric GC arrays act as direct I/O buffers.
 
 The specification defines a **logical byte view** for portability.
 
@@ -165,7 +165,7 @@ A byte range can end inside an element.
 
 Only the selected value bits change.
 
-WPSI 0.1 does not include `f32` or `f64` raw-buffer facets.
+Facet 0.1 does not include `f32` or `f64` raw-buffer facets.
 
 Those types provide little systems-I/O benefit over integers of the same width.
 
@@ -183,7 +183,7 @@ Possible descriptor designs include GC structs or parallel arrays.
 
 Each option adds complexity to an operation that is mainly an optimization.
 
-WPSI 0.1 therefore keeps nested `readv` and `writev` structural.
+Facet 0.1 therefore keeps nested `readv` and `writev` structural.
 
 `first` and `count` choose the child arrays.
 
@@ -197,7 +197,7 @@ A future extension can add sliced scatter/gather under new import names if real 
 
 A portable system interface should not require every language to convert native text to UTF-8 before it crosses the system boundary.
 
-WPSI supports 8-bit, 16-bit, and 32-bit text representations directly.
+Facet supports 8-bit, 16-bit, and 32-bit text representations directly.
 
 The import name selects the representation width.
 
@@ -218,7 +218,7 @@ Creating a second resource handle only to move a string would add:
 
 It would not add authority.
 
-WPSI therefore transfers these strings directly from their source operation.
+Facet therefore transfers these strings directly from their source operation.
 
 A linear-memory caller can query the required code-unit length and provide destination storage.
 
@@ -240,7 +240,7 @@ WebAssembly GC naturally supports returned references to newly allocated objects
 
 ## Why is `~` an ordinary preopen instead of a special scratch API?
 
-WPSI already has the required mechanism: directory capabilities and preopens.
+Facet already has the required mechanism: directory capabilities and preopens.
 
 A separate scratch-resource class would add:
 
@@ -282,7 +282,7 @@ They keep resource authority under runtime and embedder control.
 
 Only `0` has a standardized numeric meaning.
 
-WPSI does not standardize:
+Facet does not standardize:
 
 - resource-kind tags;
 - reserved handle ranges;
@@ -294,15 +294,15 @@ A runtime can use any private strategy that prevents a stale handle from identif
 
 Examples include generation counters, monotonic IDs, randomized values, and delayed reuse.
 
-Bindings only need to preserve the `i32` token and pass it back to WPSI.
+Bindings only need to preserve the `i32` token and pass it back to Facet.
 
-WPSI also does not require an external resource to become an `externref` or GC reference.
+Facet also does not require an external resource to become an `externref` or GC reference.
 
 A future extension can explore reference-typed resource handles independently.
 
-## Why are WPSI calls synchronous?
+## Why are Facet calls synchronous?
 
-WPSI makes synchronous call lifetime a core ABI rule.
+Facet makes synchronous call lifetime a core ABI rule.
 
 This keeps guest-storage ownership local and understandable.
 
@@ -321,7 +321,7 @@ Nonblocking I/O still works with concurrency.
 
 An operation can return `ERR_AGAIN`.
 
-A scheduler can run other work while it waits with `wpsi-poll`.
+A scheduler can run other work while it waits with `facet-poll`.
 
 The scheduler can retry the operation when the resource is ready.
 
@@ -332,11 +332,11 @@ This model works well with:
 - green threads;
 - multiple WebAssembly instances.
 
-WPSI does not standardize any of those execution models.
+Facet does not standardize any of those execution models.
 
 A future specification that adds true asynchronous imported calls would need a separate ownership model.
 
-That would be an explicit extension to the WPSI 0.1 lifetime rule.
+That would be an explicit extension to the Facet 0.1 lifetime rule.
 
 ## Why not require zero-copy?
 
@@ -344,7 +344,7 @@ Zero-copy execution is an implementation property.
 
 It is not a portable semantic guarantee.
 
-WPSI guarantees that the guest does not have to translate data through unrelated linear memory only to cross the ABI.
+Facet guarantees that the guest does not have to translate data through unrelated linear memory only to cross the ABI.
 
 A runtime can use:
 
@@ -366,7 +366,7 @@ Before adding an operation, answer these questions:
 5. What capability does the operation consume or create?
 6. Can a runtime omit the import when it does not support the required WebAssembly feature?
 
-If the answers remain simple, the operation probably fits WPSI.
+If the answers remain simple, the operation probably fits Facet.
 
 ## Why a WTF boolean instead of an encoding enum?
 
@@ -389,4 +389,4 @@ strict vs sentinel text  -> wtf boolean
 
 `wtf = 1` permits surrogate values as reversible sentinels.
 
-WPSI does not need an `ENC_*` namespace or a separate raw-8 string mode.
+Facet does not need an `ENC_*` namespace or a separate raw-8 string mode.

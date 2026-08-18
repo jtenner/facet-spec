@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/remove-timer
+;; Facet conformance test: poll/remove-timer
 ;; Purpose: Removing a timer subscription prevents it from appearing in the next ready set.
 ;; Required profiles: core, clocks, poll
 ;;

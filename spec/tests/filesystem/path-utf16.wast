@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-utf16
+;; Facet conformance test: filesystem/path-utf16
 ;; Purpose: A UTF-16LE path opens a Unicode-named fixture without UTF-8 canonicalization.
 ;; Required profiles: core, memory32, filesystem, text
 ;;

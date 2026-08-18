@@ -9,7 +9,7 @@
 
   (memory $main 1)
 
-  (data (i32.const 0) "hello from WPSI\n")
+  (data (i32.const 0) "hello from Facet\n")
 
   (func (export "run") (result i64 i32)
     (local $fd i32)

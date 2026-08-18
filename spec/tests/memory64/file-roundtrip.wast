@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory64/file-roundtrip
+;; Facet conformance test: memory64/file-roundtrip
 ;; Purpose: Memory64 paths and buffers can round-trip file data without narrowing addresses.
 ;; Required profiles: core, memory64, filesystem
 ;;

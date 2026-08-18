@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/counts
+;; Facet conformance test: args-env/counts
 ;; Purpose: Arguments and environment are provisioned exactly by the manifest.
 ;; Required profiles: core, args-env
 ;;

@@ -1,5 +1,5 @@
-;; WPSI conformance test: network/socket-open-close
-;; Purpose: A TCP/IPv4 socket is an ordinary closeable WPSI resource.
+;; Facet conformance test: network/socket-open-close
+;; Purpose: A TCP/IPv4 socket is an ordinary closeable Facet resource.
 ;; Required profiles: core, network
 ;;
 ;; SPDX-License-Identifier: MIT

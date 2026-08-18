@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/fd-read-partial-i16
+;; Facet conformance test: gc-array/fd-read-partial-i16
 ;; Purpose: A partial i16 read overlays bytes while preserving unselected bytes in boundary elements.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;

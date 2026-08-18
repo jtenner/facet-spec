@@ -1,4 +1,4 @@
-;; WPSI conformance test: clocks/resolution-positive
+;; Facet conformance test: clocks/resolution-positive
 ;; Purpose: Monotonic clock resolution is a positive duration.
 ;; Required profiles: core, clocks
 ;;

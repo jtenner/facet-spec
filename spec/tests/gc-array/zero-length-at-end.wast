@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/zero-length-at-end
+;; Facet conformance test: gc-array/zero-length-at-end
 ;; Purpose: A zero-length GC operation at the exact logical end succeeds and preserves the element.
 ;; Required profiles: core, gc-array, random
 ;;

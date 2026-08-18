@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/create-rename-remove
+;; Facet conformance test: filesystem/create-rename-remove
 ;; Purpose: Rename removes the old name, creates the new name, and removal deletes it.
 ;; Required profiles: core, memory32, filesystem
 ;;

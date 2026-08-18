@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/seek-tell-size
+;; Facet conformance test: filesystem/seek-tell-size
 ;; Purpose: Tell tracks sequential writes and SEEK_END observes a truncated size.
 ;; Required profiles: core, memory32, filesystem
 ;;

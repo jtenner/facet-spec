@@ -7,7 +7,7 @@ labels: specification, bug
 
 ## Affected rule or function
 
-Identify the WPSI rule or imported function.
+Identify the Facet rule or imported function.
 
 ## Problem
 

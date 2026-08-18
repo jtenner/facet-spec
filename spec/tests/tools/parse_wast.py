@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Parse every WPSI WAST script with wasm-tools.
+"""Parse every Facet WAST script with wasm-tools.
 
-This is syntax/encoding validation only; execution requires a WPSI runtime
+This is syntax/encoding validation only; execution requires a Facet runtime
 adapter. Auxiliary modules emitted by ``json-from-wast`` are isolated in a
 temporary directory and never written into the source tree.
 """
@@ -22,7 +22,7 @@ def main() -> int:
 
     failed: list[tuple[Path, str]] = []
     tests = sorted(ROOT.rglob("*.wast"))
-    with tempfile.TemporaryDirectory(prefix="wpsi-wast-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="facet-wast-") as temporary:
         output_root = Path(temporary)
         for index, wast in enumerate(tests):
             wasm_dir = output_root / f"modules-{index}"

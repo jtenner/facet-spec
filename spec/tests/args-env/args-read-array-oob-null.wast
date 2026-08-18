@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-array-oob-null
+;; Facet conformance test: args-env/args-read-array-oob-null
 ;; Purpose: An out-of-range allocating argument read returns null and ERR_RANGE.
 ;; Required profiles: core, gc-array, args-env, adversarial
 ;;

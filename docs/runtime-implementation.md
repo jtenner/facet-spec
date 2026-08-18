@@ -8,7 +8,7 @@ Use [`terminology.md`](terminology.md) for the project terminology.
 
 ## Import registration
 
-WPSI functions are ordinary imports from module `facet`.
+Facet functions are ordinary imports from module `facet`.
 
 A runtime does not need polymorphic import resolution.
 
@@ -17,21 +17,21 @@ A runtime can register only the imports for features that it supports.
 For example, a runtime without Wasm GC can implement:
 
 ```text
-wpsi-core
-wpsi-memory32
-wpsi-filesystem
+facet-core
+facet-memory32
+facet-filesystem
 ```
 
 A runtime with more Core WebAssembly features can also implement:
 
 ```text
-wpsi-memory64
-wpsi-gc-array
-wpsi-network
-wpsi-poll
+facet-memory64
+facet-gc-array
+facet-network
+facet-poll
 ```
 
-Do not build a second feature-negotiation registry for WPSI.
+Do not build a second feature-negotiation registry for Facet.
 
 Do not build independent profile-version negotiation.
 
@@ -45,7 +45,7 @@ Profile labels are implementation and conformance groupings only.
 
 ## Synchronous call boundary
 
-Treat the return from every WPSI imported function as a hard lifetime boundary.
+Treat the return from every Facet imported function as a hard lifetime boundary.
 
 After return, no deferred runtime work may retain:
 
@@ -57,13 +57,13 @@ After return, no deferred runtime work may retain:
 - a no-move token;
 - another borrowed guest-storage view.
 
-If an external API requires data after the WPSI call returns, copy the data into independent runtime-owned storage.
+If an external API requires data after the Facet call returns, copy the data into independent runtime-owned storage.
 
 For nonblocking I/O, prefer an operation that returns `ERR_AGAIN` and is retried after polling.
 
 Do not start background work that will later dereference a guest pointer or borrowed GC reference.
 
-The runtime MAY retain WPSI resource state and independent runtime-owned metadata.
+The runtime MAY retain Facet resource state and independent runtime-owned metadata.
 
 This restriction applies to each call.
 
@@ -71,7 +71,7 @@ It does not prohibit concurrent WebAssembly execution.
 
 A runtime can execute multiple instances, actors, tasks, or scheduler contexts concurrently.
 
-Each WPSI call must still obey the same lifetime boundary.
+Each Facet call must still obey the same lifetime boundary.
 
 ## Linear-memory access
 
@@ -198,7 +198,7 @@ Guest-owned `*_read_into_array_*` destinations still require normal validation a
 
 ## Current runtime layout observations
 
-The observations in this section explain why the WPSI 0.1 GC-array design can be efficient.
+The observations in this section explain why the Facet 0.1 GC-array design can be efficient.
 
 They are not normative requirements.
 
@@ -239,7 +239,7 @@ Relevant source files:
 - `wago-org/wago/src/core/runtime/gc/storage.go`
 - `wago-org/wago/src/core/runtime/gc/alloc.go`
 
-A Wago WPSI plugin can implement pointer-free array access efficiently.
+A Wago Facet plugin can implement pointer-free array access efficiently.
 
 It should add a scoped collector API that validates the array and prevents unsafe relocation for the duration of the call.
 
@@ -259,9 +259,9 @@ Wasmtime's public `ArrayRef` interface is typed.
 
 Lower-level runtime code uses `AutoAssertNoGc`, `GcArrayLayout`, and raw GC-heap offsets.
 
-A WPSI integration could build a scoped byte-borrow primitive on those internal mechanisms.
+A Facet integration could build a scoped byte-borrow primitive on those internal mechanisms.
 
-It should not expose collector layout as public WPSI API.
+It should not expose collector layout as public Facet API.
 
 Relevant source files:
 
@@ -339,7 +339,7 @@ The outer array contains references and is traversed structurally.
 
 Each selected child is then validated as one of the allowed pointer-free numeric array types.
 
-For WPSI 0.1:
+For Facet 0.1:
 
 1. validate the complete `first..first+count` child range before external I/O;
 2. expose each selected child's complete logical byte view in sequence;
@@ -385,7 +385,7 @@ Other private handle encodings are also conforming when they preserve the normat
 
 ## Optional `~` preopen
 
-WPSI has no scratch-specific runtime subsystem.
+Facet has no scratch-specific runtime subsystem.
 
 If the embedder wants to provide a guest home or private directory, expose it as an ordinary preopen with display name `~`.
 
@@ -408,7 +408,7 @@ It does not imply the operating-system user's home directory.
 
 A libc or language runtime that supports `~/path` can resolve the `~` preopen once.
 
-It can then issue normal handle-relative WPSI path operations.
+It can then issue normal handle-relative Facet path operations.
 
 ## Testing recommendations
 

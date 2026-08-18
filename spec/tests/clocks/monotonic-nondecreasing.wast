@@ -1,4 +1,4 @@
-;; WPSI conformance test: clocks/monotonic-nondecreasing
+;; Facet conformance test: clocks/monotonic-nondecreasing
 ;; Purpose: Successive monotonic clock observations never move backwards.
 ;; Required profiles: core, clocks
 ;;

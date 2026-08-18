@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/timer-and-drain
+;; Facet conformance test: poll/timer-and-drain
 ;; Purpose: An expired timer produces one timer event with exact userdata.
 ;; Required profiles: core, clocks, poll
 ;;
