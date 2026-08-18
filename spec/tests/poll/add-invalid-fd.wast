@@ -5,8 +5,8 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "poll_create" (func $create (result i32 i32)))
-  (import "wpsi" "poll_add_fd" (func $add (param i32 i32 i32 i64) (result i32)))
+  (import "facet" "poll_create" (func $create (result i32 i32)))
+  (import "facet" "poll_add_fd" (func $add (param i32 i32 i32 i64) (result i32)))
   (func (export "run") (result i32)
     (local $p i32) (local $e i32)
     (call $create) (local.set $e) (local.set $p)

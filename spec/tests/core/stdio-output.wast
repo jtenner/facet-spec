@@ -6,9 +6,9 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "stdio_stdout" (func $stdout (result i32 i32)))
-  (import "wpsi" "stdio_stderr" (func $stderr (result i32 i32)))
-  (import "wpsi" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
+  (import "facet" "stdio_stdout" (func $stdout (result i32 i32)))
+  (import "facet" "stdio_stderr" (func $stderr (result i32 i32)))
+  (import "facet" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
   (memory 1)
   (data (i32.const 0) "out\0aerr\0a")
   (func (export "_start")

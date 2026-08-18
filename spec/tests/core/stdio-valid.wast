@@ -5,9 +5,9 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "stdio_stdin" (func $stdin (result i32 i32)))
-  (import "wpsi" "stdio_stdout" (func $stdout (result i32 i32)))
-  (import "wpsi" "stdio_stderr" (func $stderr (result i32 i32)))
+  (import "facet" "stdio_stdin" (func $stdin (result i32 i32)))
+  (import "facet" "stdio_stdout" (func $stdout (result i32 i32)))
+  (import "facet" "stdio_stderr" (func $stderr (result i32 i32)))
   (func $one (param $which i32) (result i32)
     (local $fd i32) (local $err i32)
     (if (i32.eqz (local.get $which))

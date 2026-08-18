@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_preopen_count" (func $count (result i32 i32)))
+  (import "facet" "fs_preopen_count" (func $count (result i32 i32)))
   (func (export "run") (result i32 i32)
     (call $count)))
 (assert_return (invoke "run") (i32.const 0) (i32.const 0))

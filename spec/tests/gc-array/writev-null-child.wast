@@ -8,7 +8,7 @@
 (module
   (type $bytes (array i8))
   (type $buffers (array (mut (ref null $bytes))))
-  (import "wpsi" "fd_writev_array_i8" (func $writev (param i32 (ref array) i32 i32) (result i64 i32)))
+  (import "facet" "fd_writev_array_i8" (func $writev (param i32 (ref array) i32 i32) (result i64 i32)))
   (func (export "run") (param $fd i32) (result i32)
     (local $b (ref $buffers)) (local $n i64) (local $e i32)
     (local.set $b (array.new_default $buffers (i32.const 1)))

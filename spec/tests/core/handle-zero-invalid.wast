@@ -5,6 +5,6 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (func (export "run") (result i32) (call $close (i32.const 0))))
 (assert_return (invoke "run") (i32.const 4))

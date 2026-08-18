@@ -5,12 +5,12 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
-  (import "wpsi" "path_open_mem64_i8" (func $open (param i32 i32 i64 i64 i32 i32 i64) (result i32 i32)))
-  (import "wpsi" "fd_write_mem64" (func $write (param i32 i32 i64 i64) (result i64 i32)))
-  (import "wpsi" "fd_read_mem64" (func $read (param i32 i32 i64 i64) (result i64 i32)))
-  (import "wpsi" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
+  (import "facet" "path_open_mem64_i8" (func $open (param i32 i32 i64 i64 i32 i32 i64) (result i32 i32)))
+  (import "facet" "fd_write_mem64" (func $write (param i32 i32 i64 i64) (result i64 i32)))
+  (import "facet" "fd_read_mem64" (func $read (param i32 i32 i64 i64) (result i64 i32)))
+  (import "facet" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (memory i64 1)
   (data (i64.const 0) "m64.bin")
   (data (i64.const 32) "memory64")

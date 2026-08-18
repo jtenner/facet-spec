@@ -5,8 +5,8 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "socket_open" (func $open (param i32 i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "socket_open" (func $open (param i32 i32 i32 i32) (result i32 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (func (export "run") (result i32)
     (local $fd i32) (local $e i32)
     (call $open (i32.const 1) (i32.const 1) (i32.const 1) (i32.const 0)) (local.set $e) (local.set $fd)

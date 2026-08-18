@@ -888,7 +888,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pread_array_i16.",
+      "purpose": "Exact Core signature for facet.fd_pread_array_i16.",
       "kind": "link"
     },
     {
@@ -897,7 +897,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pread_array_i32.",
+      "purpose": "Exact Core signature for facet.fd_pread_array_i32.",
       "kind": "link"
     },
     {
@@ -906,7 +906,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pread_array_i64.",
+      "purpose": "Exact Core signature for facet.fd_pread_array_i64.",
       "kind": "link"
     },
     {
@@ -915,7 +915,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pread_array_i8.",
+      "purpose": "Exact Core signature for facet.fd_pread_array_i8.",
       "kind": "link"
     },
     {
@@ -924,7 +924,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pread_array_v128.",
+      "purpose": "Exact Core signature for facet.fd_pread_array_v128.",
       "kind": "link"
     },
     {
@@ -933,7 +933,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i16.",
+      "purpose": "Exact Core signature for facet.fd_pwrite_array_i16.",
       "kind": "link"
     },
     {
@@ -942,7 +942,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i32.",
+      "purpose": "Exact Core signature for facet.fd_pwrite_array_i32.",
       "kind": "link"
     },
     {
@@ -951,7 +951,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i64.",
+      "purpose": "Exact Core signature for facet.fd_pwrite_array_i64.",
       "kind": "link"
     },
     {
@@ -960,7 +960,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_i8.",
+      "purpose": "Exact Core signature for facet.fd_pwrite_array_i8.",
       "kind": "link"
     },
     {
@@ -969,7 +969,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_pwrite_array_v128.",
+      "purpose": "Exact Core signature for facet.fd_pwrite_array_v128.",
       "kind": "link"
     },
     {
@@ -978,7 +978,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_read_array_i16.",
+      "purpose": "Exact Core signature for facet.fd_read_array_i16.",
       "kind": "link"
     },
     {
@@ -987,7 +987,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_read_array_i32.",
+      "purpose": "Exact Core signature for facet.fd_read_array_i32.",
       "kind": "link"
     },
     {
@@ -996,7 +996,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_read_array_i64.",
+      "purpose": "Exact Core signature for facet.fd_read_array_i64.",
       "kind": "link"
     },
     {
@@ -1005,7 +1005,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_read_array_i8.",
+      "purpose": "Exact Core signature for facet.fd_read_array_i8.",
       "kind": "link"
     },
     {
@@ -1014,7 +1014,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_read_array_v128.",
+      "purpose": "Exact Core signature for facet.fd_read_array_v128.",
       "kind": "link"
     },
     {
@@ -1023,7 +1023,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_write_array_i16.",
+      "purpose": "Exact Core signature for facet.fd_write_array_i16.",
       "kind": "link"
     },
     {
@@ -1032,7 +1032,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_write_array_i32.",
+      "purpose": "Exact Core signature for facet.fd_write_array_i32.",
       "kind": "link"
     },
     {
@@ -1041,7 +1041,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_write_array_i64.",
+      "purpose": "Exact Core signature for facet.fd_write_array_i64.",
       "kind": "link"
     },
     {
@@ -1050,7 +1050,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_write_array_i8.",
+      "purpose": "Exact Core signature for facet.fd_write_array_i8.",
       "kind": "link"
     },
     {
@@ -1059,7 +1059,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.fd_write_array_v128.",
+      "purpose": "Exact Core signature for facet.fd_write_array_v128.",
       "kind": "link"
     },
     {
@@ -1084,7 +1084,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.random_fill_array_i16.",
+      "purpose": "Exact Core signature for facet.random_fill_array_i16.",
       "kind": "link"
     },
     {
@@ -1093,7 +1093,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.random_fill_array_i32.",
+      "purpose": "Exact Core signature for facet.random_fill_array_i32.",
       "kind": "link"
     },
     {
@@ -1102,7 +1102,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.random_fill_array_i64.",
+      "purpose": "Exact Core signature for facet.random_fill_array_i64.",
       "kind": "link"
     },
     {
@@ -1111,7 +1111,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.random_fill_array_i8.",
+      "purpose": "Exact Core signature for facet.random_fill_array_i8.",
       "kind": "link"
     },
     {
@@ -1120,7 +1120,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.random_fill_array_v128.",
+      "purpose": "Exact Core signature for facet.random_fill_array_v128.",
       "kind": "link"
     },
     {
@@ -1129,7 +1129,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i16.",
+      "purpose": "Exact Core signature for facet.socket_recvfrom_array_i16.",
       "kind": "link"
     },
     {
@@ -1138,7 +1138,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i32.",
+      "purpose": "Exact Core signature for facet.socket_recvfrom_array_i32.",
       "kind": "link"
     },
     {
@@ -1147,7 +1147,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i64.",
+      "purpose": "Exact Core signature for facet.socket_recvfrom_array_i64.",
       "kind": "link"
     },
     {
@@ -1156,7 +1156,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_i8.",
+      "purpose": "Exact Core signature for facet.socket_recvfrom_array_i8.",
       "kind": "link"
     },
     {
@@ -1165,7 +1165,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_recvfrom_array_v128.",
+      "purpose": "Exact Core signature for facet.socket_recvfrom_array_v128.",
       "kind": "link"
     },
     {
@@ -1174,7 +1174,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i16.",
+      "purpose": "Exact Core signature for facet.socket_sendto_array_i16.",
       "kind": "link"
     },
     {
@@ -1183,7 +1183,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i32.",
+      "purpose": "Exact Core signature for facet.socket_sendto_array_i32.",
       "kind": "link"
     },
     {
@@ -1192,7 +1192,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i64.",
+      "purpose": "Exact Core signature for facet.socket_sendto_array_i64.",
       "kind": "link"
     },
     {
@@ -1201,7 +1201,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_sendto_array_i8.",
+      "purpose": "Exact Core signature for facet.socket_sendto_array_i8.",
       "kind": "link"
     },
     {
@@ -1210,7 +1210,7 @@
       "profiles": [
         "gc-array"
       ],
-      "purpose": "Exact Core signature for wpsi.socket_sendto_array_v128.",
+      "purpose": "Exact Core signature for facet.socket_sendto_array_v128.",
       "kind": "link"
     },
     {

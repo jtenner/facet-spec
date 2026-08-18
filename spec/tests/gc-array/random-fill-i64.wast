@@ -6,7 +6,7 @@
 
 (module
   (type $a (array (mut i64)))
-  (import "wpsi" "random_fill_array_i64" (func $fill (param (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "random_fill_array_i64" (func $fill (param (ref array) i64 i64) (result i64 i32)))
   (func (export "run") (result i32)
     (local $a (ref $a)) (local $n i64) (local $e i32)
     (local.set $a (array.new $a (i64.const 2464388554683811993) (i32.const 4)))

@@ -6,7 +6,7 @@
 
 (module
   (type $a (array (mut v128)))
-  (import "wpsi" "random_fill_array_v128" (func $fill (param (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "random_fill_array_v128" (func $fill (param (ref array) i64 i64) (result i64 i32)))
   (func (export "run") (result i32)
     (local $a (ref $a)) (local $n i64) (local $e i32)
     (local.set $a (array.new $a (v128.const i32x4 1 2 3 4) (i32.const 3)))

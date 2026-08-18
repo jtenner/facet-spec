@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "random_u64" (func $random (result i64 i32)))
+  (import "facet" "random_u64" (func $random (result i64 i32)))
   (func (export "run") (result i32)
     (local $value i64) (local $e i32)
     (call $random) (local.set $e) (local.set $value)

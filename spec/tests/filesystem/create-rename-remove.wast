@@ -5,12 +5,12 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
-  (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
-  (import "wpsi" "path_rename_mem32_i8" (func $rename (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)))
-  (import "wpsi" "path_remove_mem32_i8" (func $remove (param i32 i32 i32 i32 i32 i32) (result i32)))
-  (import "wpsi" "path_stat_mem32_i8" (func $stat (param i32 i32 i32 i32 i32 i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
+  (import "facet" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "facet" "path_rename_mem32_i8" (func $rename (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)))
+  (import "facet" "path_remove_mem32_i8" (func $remove (param i32 i32 i32 i32 i32 i32) (result i32)))
+  (import "facet" "path_stat_mem32_i8" (func $stat (param i32 i32 i32 i32 i32 i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (memory 1)
   (data (i32.const 0) "old.txt") (data (i32.const 16) "new.txt")
   (func $staterr (param $dir i32) (param $ptr i32) (result i32)

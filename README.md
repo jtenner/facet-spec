@@ -19,13 +19,13 @@ For example, a file read can write into:
 Each representation has an explicit import name:
 
 ```text
-wpsi.fd_read_mem32
-wpsi.fd_read_mem64
-wpsi.fd_read_array_i8
-wpsi.fd_read_array_i16
-wpsi.fd_read_array_i32
-wpsi.fd_read_array_i64
-wpsi.fd_read_array_v128
+facet.fd_read_mem32
+facet.fd_read_mem64
+facet.fd_read_array_i8
+facet.fd_read_array_i16
+facet.fd_read_array_i32
+facet.fd_read_array_i64
+facet.fd_read_array_v128
 ```
 
 The guest chooses the representation by choosing the import.

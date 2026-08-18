@@ -5,9 +5,9 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fs_preopen_get" (func $get (param i32) (result i32 i32)))
-  (import "wpsi" "path_open_mem32_i16" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "fs_preopen_get" (func $get (param i32) (result i32 i32)))
+  (import "facet" "path_open_mem32_i16" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (memory 1)
   (data (i32.const 0) "c\00a\00f\00\e9\00.\00t\00x\00t\00")
   (func (export "run") (result i32)

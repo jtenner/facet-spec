@@ -8,7 +8,7 @@ Use [`terminology.md`](terminology.md) for the project terminology.
 
 ## Import registration
 
-WPSI functions are ordinary imports from module `wpsi`.
+WPSI functions are ordinary imports from module `facet`.
 
 A runtime does not need polymorphic import resolution.
 

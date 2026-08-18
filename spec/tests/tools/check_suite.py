@@ -324,7 +324,7 @@ def import_signatures(path: Path) -> dict[str, tuple[tuple[Any, ...], tuple[Any,
         module = quoted_atom(node[1])
         name = quoted_atom(node[2])
         declaration = node[3]
-        if module != "wpsi" or name is None or not isinstance(declaration, list) or not declaration or declaration[0] != "func":
+        if module != "facet" or name is None or not isinstance(declaration, list) or not declaration or declaration[0] != "func":
             continue
         params: list[Any] = []
         results: list[Any] = []
@@ -338,7 +338,7 @@ def import_signatures(path: Path) -> dict[str, tuple[tuple[Any, ...], tuple[Any,
         signature = (tuple(params), tuple(results))
         existing = signatures.get(name)
         if existing is not None and existing != signature:
-            fail(f"conflicting signatures for wpsi.{name} in {path}")
+            fail(f"conflicting signatures for facet.{name} in {path}")
         signatures[name] = signature
     return signatures
 
@@ -355,10 +355,10 @@ def check_imports(wast_paths: list[Path]) -> None:
         for name, signature in import_signatures(path).items():
             expected = canonical.get(name)
             if expected is None:
-                fail(f"test imports unknown canonical function wpsi.{name}: {path}")
+                fail(f"test imports unknown canonical function facet.{name}: {path}")
             if signature != expected:
                 fail(
-                    f"signature mismatch for wpsi.{name} in {path}: "
+                    f"signature mismatch for facet.{name} in {path}: "
                     f"got {signature}, expected {expected}"
                 )
 
@@ -397,7 +397,7 @@ def main() -> int:
             fail(f"missing SPDX marker: {path}")
         if not balanced_sexpr(text):
             fail(f"unbalanced WAST: {path}")
-        if 'import "wpsi"' not in text:
+        if 'import "facet"' not in text:
             fail(f"test has no WPSI import: {path}")
         manifest = path.with_suffix(".json")
         if manifest.exists():

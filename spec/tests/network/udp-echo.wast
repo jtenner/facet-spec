@@ -6,14 +6,14 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "stdio_stdout" (func $stdout (result i32 i32)))
-  (import "wpsi" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
-  (import "wpsi" "socket_open" (func $open (param i32 i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "socket_bind" (func $bind (param i32 i32 i64 i64 i32 i32) (result i32)))
-  (import "wpsi" "socket_recvfrom_mem32" (func $recv (param i32 i32 i32 i32 i32) (result i64 i32 i64 i64 i32 i32 i32 i32)))
-  (import "wpsi" "socket_sendto_mem32" (func $send (param i32 i32 i32 i32 i32 i64 i64 i32 i32 i32) (result i64 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
-  (import "wpsi" "proc_exit" (func $exit (param i32)))
+  (import "facet" "stdio_stdout" (func $stdout (result i32 i32)))
+  (import "facet" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
+  (import "facet" "socket_open" (func $open (param i32 i32 i32 i32) (result i32 i32)))
+  (import "facet" "socket_bind" (func $bind (param i32 i32 i64 i64 i32 i32) (result i32)))
+  (import "facet" "socket_recvfrom_mem32" (func $recv (param i32 i32 i32 i32 i32) (result i64 i32 i64 i64 i32 i32 i32 i32)))
+  (import "facet" "socket_sendto_mem32" (func $send (param i32 i32 i32 i32 i32 i64 i64 i32 i32 i32) (result i64 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "proc_exit" (func $exit (param i32)))
   (memory 1)
   (data (i32.const 0) "127.0.0.1:32124\0a")
   (func $check (param $e i32)
