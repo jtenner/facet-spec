@@ -7,7 +7,12 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 SELF = ".github/scripts/rename_to_facets.py"
-WORKFLOW = ".github/workflows/rename-facets.yml"
+
+
+def excluded(rel: str) -> bool:
+    # GitHub Actions tokens cannot update workflow files without workflows
+    # permission. Migrate those files separately after the validated PR lands.
+    return rel == SELF or rel.startswith(".github/workflows/")
 
 
 def tracked_files() -> list[Path]:
@@ -17,7 +22,7 @@ def tracked_files() -> list[Path]:
 
 def rewrite(path: Path) -> None:
     rel = path.relative_to(ROOT).as_posix()
-    if rel in {SELF, WORKFLOW}:
+    if excluded(rel):
         return
 
     try:
@@ -57,7 +62,7 @@ def main() -> None:
 
     for path in tracked_files():
         rel = path.relative_to(ROOT).as_posix()
-        if rel in {SELF, WORKFLOW} or not path.is_file():
+        if excluded(rel) or not path.is_file():
             continue
         try:
             text = path.read_text(encoding="utf-8")
