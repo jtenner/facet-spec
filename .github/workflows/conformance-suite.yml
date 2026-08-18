@@ -64,6 +64,6 @@ jobs:
           tar -xzf /tmp/wasm-tools.tar.gz -C /tmp
           sudo install /tmp/wasm-tools-1.256.0-x86_64-linux/wasm-tools /usr/local/bin/wasm-tools
       - name: Parse canonical import declarations
-        run: wasm-tools parse spec/imports.wat -o /tmp/wpsi-imports.wasm
+        run: wasm-tools parse spec/imports.wat -o /tmp/facet-imports.wasm
       - name: Parse every WAST file
         run: python3 spec/tests/tools/parse_wast.py
