@@ -1,0 +1,62 @@
+name: Rename specification to Facets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/scripts/rename_to_facets.py"
+      - ".github/workflows/rename-facets.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Apply Facets rename
+        run: python3 .github/scripts/rename_to_facets.py
+
+      - name: Regenerate conformance catalog
+        run: python3 spec/tests/tools/generate_catalog.py --write
+
+      - name: Validate static suite
+        run: python3 spec/tests/tools/check_suite.py
+
+      - name: Install pinned wasm-tools
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/bytecodealliance/wasm-tools/releases/download/v1.256.0/wasm-tools-1.256.0-x86_64-linux.tar.gz \
+            --output /tmp/wasm-tools.tar.gz
+          echo "0b488be25c9e8a74dfa09f7eac614a927ea197f389d8fa5a21ffb1c15deb469d  /tmp/wasm-tools.tar.gz" | sha256sum --check
+          tar -xzf /tmp/wasm-tools.tar.gz -C /tmp
+          sudo install /tmp/wasm-tools-1.256.0-x86_64-linux/wasm-tools /usr/local/bin/wasm-tools
+
+      - name: Parse canonical import declarations
+        run: wasm-tools parse spec/imports.wat -o /tmp/facets-imports.wasm
+
+      - name: Parse every WAST source
+        run: python3 spec/tests/tools/parse_wast.py
+
+      - name: Remove migration machinery
+        run: |
+          rm .github/scripts/rename_to_facets.py
+          rm .github/workflows/rename-facets.yml
+
+      - name: Commit Facets rename
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "spec: rename WPSI to Facets"
+          git push origin HEAD:main
