@@ -2,7 +2,7 @@
 
 **Status:** Draft  
 **Version:** 0.1  
-**Import module:** `wpsi`
+**Import module:** `facet`
 
 ## 1. Overview
 
@@ -100,7 +100,7 @@ Example:
 
 ```wat
 (type $string16 (array (mut i16)))
-(import "wpsi" "args_read_array_i16"
+(import "facet" "args_read_array_i16"
   (func (param i32 i32) (result (ref null $string16) i32)))
 ```
 
@@ -742,7 +742,7 @@ RENAME_EXCHANGE   = 1 << 2
 
 ## 12. Core functions
 
-All functions are imported from module `"wpsi"`.
+All functions are imported from module `"facet"`.
 
 ```text
 abi_version() -> (version: i32)

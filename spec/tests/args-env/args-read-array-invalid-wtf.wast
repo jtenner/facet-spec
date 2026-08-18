@@ -6,7 +6,7 @@
 
 (module
   (type $a (array (mut i8)))
-  (import "wpsi" "args_read_array_i8"
+  (import "facet" "args_read_array_i8"
     (func $read (param i32 i32) (result (ref null $a) i32)))
   (func (export "run") (result i32 i32)
     (local $v (ref null $a)) (local $e i32)

@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
+  (import "facet" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
   (memory 1)
   (func (export "run") (result i64 i32 i32)
     (local $n i64) (local $e i32)

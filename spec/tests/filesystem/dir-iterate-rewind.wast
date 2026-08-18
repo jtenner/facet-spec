@@ -6,10 +6,10 @@
 
 (module
   (type $s (array (mut i8)))
-  (import "wpsi" "fs_preopen_get" (func $get (param i32) (result i32 i32)))
-  (import "wpsi" "dir_iter_open" (func $open (param i32) (result i32 i32)))
-  (import "wpsi" "dir_iter_next_array_i8" (func $next (param i32 i32) (result (ref null $s) i32 i64 i32 i32)))
-  (import "wpsi" "dir_iter_rewind" (func $rewind (param i32) (result i32)))
+  (import "facet" "fs_preopen_get" (func $get (param i32) (result i32 i32)))
+  (import "facet" "dir_iter_open" (func $open (param i32) (result i32 i32)))
+  (import "facet" "dir_iter_next_array_i8" (func $next (param i32 i32) (result (ref null $s) i32 i64 i32 i32)))
+  (import "facet" "dir_iter_rewind" (func $rewind (param i32) (result i32)))
   (func (export "run") (result i32)
     (local $dir i32) (local $iter i32) (local $e i32)
     (local $name (ref null $s)) (local $type i32) (local $inode i64) (local $done i32)

@@ -5,9 +5,9 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "dns_resolve_mem32_i8" (func $resolve (param i32 i32 i32 i32 i32 i32) (result i32 i32)))
-  (import "wpsi" "dns_next" (func $next (param i32) (result i32 i64 i64 i32 i32 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "dns_resolve_mem32_i8" (func $resolve (param i32 i32 i32 i32 i32 i32) (result i32 i32)))
+  (import "facet" "dns_next" (func $next (param i32) (result i32 i64 i64 i32 i32 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (memory 1)
   (data (i32.const 0) "localhost")
   (func (export "run") (result i32)

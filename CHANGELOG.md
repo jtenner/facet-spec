@@ -7,7 +7,7 @@ This file records notable specification changes.
 ### Added
 
 - Initial WPSI 0.1 draft.
-- Core imported-function ABI under module `wpsi`.
+- Core imported-function ABI under module `facet`.
 - Explicit Memory32 and Memory64 representation families.
 - Explicit Wasm GC raw-buffer families for `array<i8>`, `array<i16>`, `array<i32>`, `array<i64>`, and `array<v128>`.
 - Normative logical byte view for numeric GC arrays.
@@ -32,6 +32,7 @@ This file records notable specification changes.
 
 ### Decided
 
+- The Core WebAssembly import module is `facet`. The previous import-module namespace is not retained as a compatibility alias.
 - GC raw-buffer byte offsets and lengths are `i64`.
 - The runtime bounds-checks each GC range against the actual array byte length.
 - Validation uses a deterministic stage order.

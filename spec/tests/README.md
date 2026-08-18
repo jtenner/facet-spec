@@ -163,7 +163,7 @@ This matches the WPSI rule that writable storage is optional.
 
 Evaluate each WAST script in source order.
 
-Resolve WPSI imports from module `"wpsi"`.
+Resolve WPSI imports from module `"facet"`.
 
 WAST assertions are the source of truth for guest-visible results.
 
@@ -305,6 +305,6 @@ python3 spec/tests/tools/check_suite.py
 When `wasm-tools` is installed, also run:
 
 ```bash
-wasm-tools parse spec/imports.wat -o /tmp/wpsi-imports.wasm
+wasm-tools parse spec/imports.wat -o /tmp/facet-imports.wasm
 python3 spec/tests/tools/parse_wast.py --wasm-tools wasm-tools
 ```

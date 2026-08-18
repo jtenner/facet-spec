@@ -6,11 +6,11 @@
 
 (module
   (type $a (array (mut v128)))
-  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
-  (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
-  (import "wpsi" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
-  (import "wpsi" "fd_read_array_v128" (func $read (param i32 (ref array) i64 i64) (result i64 i32)))
-  (import "wpsi" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
+  (import "facet" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
+  (import "facet" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "facet" "fd_write_mem32" (func $write (param i32 i32 i32 i32) (result i64 i32)))
+  (import "facet" "fd_read_array_v128" (func $read (param i32 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
   (memory 1)
   (data (i32.const 0) "partial-v128.bin")
   (data (i32.const 32) "\aa\bb\cc")

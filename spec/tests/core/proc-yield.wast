@@ -5,6 +5,6 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "proc_yield" (func $yield (result i32)))
+  (import "facet" "proc_yield" (func $yield (result i32)))
   (func (export "run") (result i32) (call $yield)))
 (assert_return (invoke "run") (i32.const 0))

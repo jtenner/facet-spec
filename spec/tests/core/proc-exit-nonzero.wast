@@ -6,6 +6,6 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "proc_exit" (func $exit (param i32)))
+  (import "facet" "proc_exit" (func $exit (param i32)))
   (func (export "_start")
     (call $exit (i32.const 7))))

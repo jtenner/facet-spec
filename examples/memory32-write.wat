@@ -1,8 +1,8 @@
 (module
-  (import "wpsi" "stdio_stdout"
+  (import "facet" "stdio_stdout"
     (func $stdio_stdout (result i32 i32)))
 
-  (import "wpsi" "fd_write_mem32"
+  (import "facet" "fd_write_mem32"
     (func $fd_write_mem32
       (param i32 i32 i32 i32)
       (result i64 i32)))

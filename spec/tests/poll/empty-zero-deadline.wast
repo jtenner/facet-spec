@@ -5,9 +5,9 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "poll_create" (func $create (result i32 i32)))
-  (import "wpsi" "poll_wait" (func $wait (param i32 i64) (result i32 i32)))
-  (import "wpsi" "handle_close" (func $close (param i32) (result i32)))
+  (import "facet" "poll_create" (func $create (result i32 i32)))
+  (import "facet" "poll_wait" (func $wait (param i32 i64) (result i32 i32)))
+  (import "facet" "handle_close" (func $close (param i32) (result i32)))
   (func (export "run") (result i32 i32)
     (local $p i32) (local $e i32) (local $n i32)
     (call $create) (local.set $e) (local.set $p)

@@ -5,6 +5,6 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "sleep_for" (func $sleep (param i64) (result i32)))
+  (import "facet" "sleep_for" (func $sleep (param i64) (result i32)))
   (func (export "run") (result i32) (call $sleep (i64.const 0))))
 (assert_return (invoke "run") (i32.const 0))

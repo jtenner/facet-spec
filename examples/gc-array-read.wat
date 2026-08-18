@@ -1,10 +1,10 @@
 (module
   (type $bytes (array (mut i8)))
 
-  (import "wpsi" "stdio_stdin"
+  (import "facet" "stdio_stdin"
     (func $stdio_stdin (result i32 i32)))
 
-  (import "wpsi" "fd_read_array_i8"
+  (import "facet" "fd_read_array_i8"
     (func $fd_read_array_i8
       (param i32 (ref array) i64 i64)
       (result i64 i32)))

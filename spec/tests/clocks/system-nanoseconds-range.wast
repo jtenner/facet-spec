@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "clock_system_now" (func $now (result i64 i32 i32)))
+  (import "facet" "clock_system_now" (func $now (result i64 i32 i32)))
   (func (export "run") (result i32)
     (local $s i64) (local $ns i32) (local $err i32)
     (call $now) (local.set $err) (local.set $ns) (local.set $s)

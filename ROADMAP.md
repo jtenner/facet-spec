@@ -4,7 +4,7 @@ WPSI is an experimental 0.1 draft.
 
 ## Phase 0 — Specification hygiene
 
-- [x] Define the flat `wpsi` import namespace.
+- [x] Define the flat `facet` import namespace.
 - [x] Define explicit Memory32, Memory64, and GC-array representation families.
 - [x] Define multi-memory addressing.
 - [x] Define 8-bit, 16-bit, and 32-bit text representation families.

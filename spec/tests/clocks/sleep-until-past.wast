@@ -5,8 +5,8 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "clock_monotonic_now" (func $now (result i64 i32)))
-  (import "wpsi" "sleep_until" (func $sleep (param i64) (result i32)))
+  (import "facet" "clock_monotonic_now" (func $now (result i64 i32)))
+  (import "facet" "sleep_until" (func $sleep (param i64) (result i32)))
   (func (export "run") (result i32)
     (local $t i64) (local $e i32)
     (call $now) (local.set $e) (local.set $t)

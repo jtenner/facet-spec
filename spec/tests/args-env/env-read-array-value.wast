@@ -6,7 +6,7 @@
 
 (module
   (type $s (array (mut i16)))
-  (import "wpsi" "env_read_array_i16" (func $read (param i32 i32 i32) (result (ref null $s) i32)))
+  (import "facet" "env_read_array_i16" (func $read (param i32 i32 i32) (result (ref null $s) i32)))
   (func (export "run") (result i32)
     (local $s (ref null $s)) (local $e i32)
     (call $read (i32.const 0) (i32.const 1) (i32.const 0)) (local.set $e) (local.set $s)

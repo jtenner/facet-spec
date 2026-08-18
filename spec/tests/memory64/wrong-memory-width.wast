@@ -5,7 +5,7 @@
 ;; SPDX-License-Identifier: MIT
 
 (module
-  (import "wpsi" "random_fill_mem64" (func $fill (param i32 i64 i64) (result i64 i32)))
+  (import "facet" "random_fill_mem64" (func $fill (param i32 i64 i64) (result i64 i32)))
   (memory 1)
   (func (export "run") (result i64 i32)
     (call $fill (i32.const 0) (i64.const 0) (i64.const 1))))

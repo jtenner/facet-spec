@@ -6,11 +6,11 @@
 
 (module
   (type $a (array i32))
-  (import "wpsi" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
-  (import "wpsi" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
-  (import "wpsi" "fd_write_array_i32" (func $writea (param i32 (ref array) i64 i64) (result i64 i32)))
-  (import "wpsi" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
-  (import "wpsi" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
+  (import "facet" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
+  (import "facet" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+  (import "facet" "fd_write_array_i32" (func $writea (param i32 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
+  (import "facet" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
   (memory 1)
   (data (i32.const 0) "view-i32.bin")
   (func (export "run") (result i32)

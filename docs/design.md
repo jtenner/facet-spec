@@ -35,7 +35,7 @@ For those functions, import instantiation also validates the concrete result arr
 
 Core WebAssembly can contain repeated import names with different function types.
 
-An embedder could inspect the type and choose an implementation for a name such as `"wpsi"."fd_read"`.
+An embedder could inspect the type and choose an implementation for a name such as `"facet"."fd_read"`.
 
 WPSI does not depend on that behavior.
 
