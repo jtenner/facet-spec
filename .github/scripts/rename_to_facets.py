@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # One-shot migration for the Core Wasm import-module namespace.
+# Execute this migration once on the validation PR.
 from __future__ import annotations
 
 from pathlib import Path
