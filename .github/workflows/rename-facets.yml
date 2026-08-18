@@ -26,7 +26,7 @@ jobs:
         run: python3 .github/scripts/rename_to_facets.py
 
       - name: Regenerate conformance catalog
-        run: python3 spec/tests/tools/generate_catalog.py --write
+        run: python3 spec/tests/tools/generate_suite.py
 
       - name: Validate static suite
         run: python3 spec/tests/tools/check_suite.py
