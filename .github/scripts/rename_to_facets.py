@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # One-shot migration for the Core Wasm import-module namespace.
+# This branch runs the final validated namespace migration.
 from __future__ import annotations
 
 from pathlib import Path
