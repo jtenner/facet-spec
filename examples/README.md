@@ -1,8 +1,19 @@
 # Examples
 
-These small WAT modules demonstrate the representation-specific WPSI ABI.
+These small WAT modules show the main WPSI representation forms.
 
-- [`memory32-write.wat`](memory32-write.wat) writes a string from linear memory through `fd_write_mem32` and explicitly selects memory index 0.
-- [`gc-array-read.wat`](gc-array-read.wat) reads directly into a mutable Wasm GC `array<i8>` through `fd_read_array_i8` without a linear-memory adapter.
+## Memory32 write
 
-The examples intentionally import only the WPSI functions they use.
+[`memory32-write.wat`](memory32-write.wat) writes a string from linear memory with `fd_write_mem32`.
+
+The call explicitly selects memory index 0.
+
+The index is explicit even though this example uses only one memory.
+
+## GC-array read
+
+[`gc-array-read.wat`](gc-array-read.wat) reads directly into a mutable Wasm GC `array<i8>` with `fd_read_array_i8`.
+
+The guest does not need a linear-memory adapter for this operation.
+
+Each example imports only the WPSI functions that it uses.

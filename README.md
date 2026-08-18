@@ -1,20 +1,22 @@
 # WPSI
 
-**WPSI** is a small, Core-WebAssembly-native system interface designed for modern WebAssembly runtimes.
+WPSI is a small system interface for Core WebAssembly.
 
-WPSI keeps the system ABI intentionally simple: ordinary imported functions from the `"wpsi"` module, explicit representation-specific function names, capability-oriented resource handles, first-class multi-memory support, Memory64 support, WebAssembly GC array buffers, 8/16/32-bit text representations with optional WTF sentinel preservation, and capability-oriented filesystem preopens, including an optional conventional `~` guest-home preopen.
+It lets a WebAssembly guest use system resources such as files, clocks, random data, sockets, and polling.
 
-WPSI is an experimental specification. The current draft is **WPSI 0.1**.
+WPSI uses ordinary Core WebAssembly imports. It does not require a component model, a canonical ABI, or a special linker.
 
-## Why WPSI?
+## The main idea
 
-Traditional Wasm system interfaces tend to assume that structured data ultimately passes through one distinguished linear memory. That model becomes awkward when a module uses multiple memories, Memory64, or WebAssembly GC objects as its native representation.
+One system operation can use more than one guest representation.
 
-WPSI instead follows one rule:
+For example, a file read can write into:
 
-> A system operation has one semantic meaning, but each materially different Core WebAssembly representation receives an explicit import name.
+- Memory32;
+- Memory64;
+- a WebAssembly GC array.
 
-For example:
+Each representation has an explicit import name:
 
 ```text
 wpsi.fd_read_mem32
@@ -26,49 +28,138 @@ wpsi.fd_read_array_i64
 wpsi.fd_read_array_v128
 ```
 
-No polymorphic import resolver, canonical ABI, component model, or implicit memory 0 is required.
+The guest chooses the representation by choosing the import.
+
+There is no runtime polymorphic dispatch between these forms.
 
 ## Core properties
 
-- **Multi-memory by construction.** Every linear-memory operation takes an explicit memory index.
-- **Memory32 and Memory64.** Pointer width is part of the import name and signature.
-- **WebAssembly GC arrays are valid I/O buffers.** Numeric arrays expose a normative logical byte view while implementations remain free to optimize contiguous native representations.
-- **Text width is explicit.** Textual import names select 8-bit, 16-bit, or 32-bit code units. A single `wtf` boolean selects strict Unicode or reversible surrogate-sentinel handling; there is no encoding enum.
-- **Natural host-to-guest strings.** Host-originated strings can write directly into linear memory or existing GC arrays, or allocate the caller's concrete GC array type.
-- **Capability-oriented resources.** Host filesystems and networking remain explicitly granted.
-- **Synchronous call lifetime.** WPSI never retains borrowed guest pointers or GC references after a host call returns; nonblocking I/O composes with `wpsi-poll` and external actor/task schedulers.
-- **No mandatory filesystem allocation.** Embedders may expose ordinary directory preopens as needed; `~` is the conventional optional guest-home/private-area name and has no special ABI semantics.
-- **Incremental runtime support.** A runtime can implement only the representation families it actually supports.
-- **Import-driven feature detection.** WPSI has one global ABI version; optional support is determined by ordinary import presence and Core Wasm type matching, not profile-version or feature-query APIs.
-- **Compatibility-first behavior.** Error classes, path resolution, polling, and socket state semantics intentionally track WASI where the models overlap.
+### Explicit memory selection
 
-## Documents
+Every linear-memory operation identifies the memory that it uses.
 
-- [`SPEC.md`](SPEC.md) — normative WPSI 0.1 ABI, representations, constants, and function signatures.
-- [`spec/behavior.md`](spec/behavior.md) — normative validation order, errors, text transfer, path resolution, GC rules, polling, and networking semantics.
-- [`spec/imports.wat`](spec/imports.wat) — canonical Core Wasm import declarations.
-- [`spec/tests/README.md`](spec/tests/README.md) — normative conformance-suite and host-manifest contract.
-- [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable inventory of conformance tests and required profiles.
-- [`docs/design.md`](docs/design.md) — design rationale and non-goals.
-- [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — runtime implementation guidance, including GC array borrowing.
-- [`docs/open-questions.md`](docs/open-questions.md) — WPSI 0.1 open-question status; currently no unresolved ABI design questions.
+Memory 0 has no special status.
+
+### Memory32 and Memory64
+
+The import name and Core WebAssembly signature identify the address width.
+
+A `_mem32` facet uses an `i32` address.
+
+A `_mem64` facet uses an `i64` address.
+
+### WebAssembly GC arrays
+
+A guest can use supported numeric GC arrays directly as I/O buffers.
+
+The specification defines a portable **logical byte view** for these arrays.
+
+The runtime does not have to expose its physical GC heap layout.
+
+### Explicit text width
+
+Text import names select one of these representations:
+
+```text
+_i8  = 8-bit code units
+_i16 = 16-bit code units
+_i32 = 32-bit code points
+```
+
+The `wtf` argument selects strict Unicode or reversible surrogate-sentinel behavior.
+
+WPSI does not use an encoding enum.
+
+### Capability-oriented resources
+
+The embedder grants filesystem and network authority explicitly.
+
+A resource cannot gain more authority than the capability from which it was derived.
+
+### Synchronous call lifetime
+
+Every WPSI imported function is synchronous.
+
+The runtime MUST NOT retain a guest pointer, GC reference, or other borrowed guest storage after the function returns.
+
+Nonblocking operations can return `ERR_AGAIN`.
+
+A scheduler can then use `wpsi-poll` and retry the operation later.
+
+Concurrency belongs outside the WPSI call boundary.
+
+### No mandatory filesystem allocation
+
+A filesystem implementation can expose zero preopens.
+
+An embedder can provide a normal preopen named `~` when it wants to provide a guest home or private writable area.
+
+The name `~` does not grant special authority and does not automatically refer to the host user's home directory.
+
+### Import-driven feature detection
+
+WPSI has one global ABI version.
+
+Profiles do not have independent versions.
+
+A module declares the imports that it needs.
+
+Normal Core WebAssembly import and type matching determine whether the runtime can instantiate that module.
+
+## Start here
+
+Read these documents in this order if you are new to the project:
+
+1. [`docs/terminology.md`](docs/terminology.md) — the terms used by the specification.
+2. [`SPEC.md`](SPEC.md) — the normative ABI, constants, representations, and function signatures.
+3. [`spec/behavior.md`](spec/behavior.md) — normative behavior, validation order, errors, path rules, polling, and networking.
+4. [`docs/design.md`](docs/design.md) — why the ABI has this shape.
+5. [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — guidance for runtime implementers.
+
+## Other documents
+
+- [`spec/imports.wat`](spec/imports.wat) — canonical Core WebAssembly import declarations.
+- [`spec/tests/README.md`](spec/tests/README.md) — conformance-suite and host-manifest contract.
+- [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable conformance-test inventory.
+- [`docs/writing-style.md`](docs/writing-style.md) — project rules for simple technical English.
+- [`docs/open-questions.md`](docs/open-questions.md) — current ABI question status.
 - [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and specification-change process.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution rules.
 - [`SECURITY.md`](SECURITY.md) — security model and vulnerability reporting guidance.
 
 ## Conformance suite
 
-The repository includes **143 focused WAST tests** covering the Core import ABI, Memory32, Memory64, multi-memory selection, GC arrays and nested arrays, strict/WTF text handling, preopen conventions, filesystem rights, links, polling, sockets, DNS, lifecycle, and adversarial bounds behavior.
+The repository contains 143 focused WAST tests.
 
-The suite deliberately mirrors `WebAssembly/wasi-testsuite` host-manifest conventions—same-basename JSON, `run`, `wait`, `read`, `connect`, `send`, `recv`, `root`, fixtures, and `.cleanup` artifacts—so existing runtime adapters can be extended instead of replaced. WPSI adds only the `preopens` provisioning needed for explicit multi-directory capability tests.
+The suite covers:
 
-Static checks validate catalog generation, manifests, fixture paths, metadata, exact WPSI import signatures, and source hygiene. CI also parses the canonical import module and every WAST script with a pinned `wasm-tools` release.
+- the Core import ABI;
+- Memory32 and Memory64;
+- multi-memory selection;
+- GC arrays and nested GC arrays;
+- strict and WTF text behavior;
+- filesystem preopens, paths, and rights;
+- hard links and symbolic links;
+- polling;
+- sockets and DNS;
+- resource lifetime;
+- adversarial bounds and capability cases.
+
+The host-manifest format follows `WebAssembly/wasi-testsuite` conventions where those conventions fit the WPSI contract.
+
+WPSI adds `preopens` provisioning for tests that need more than one explicit directory capability.
+
+Static checks validate the catalog, manifests, fixtures, metadata, import signatures, and source hygiene.
+
+CI also parses the canonical imports and every WAST source with a pinned `wasm-tools` release.
 
 ## Status
 
-WPSI 0.1 is a draft intended for implementation experiments, conformance tests, and API review. Function signatures are expected to stabilize before a 1.0 release.
+WPSI 0.1 is an experimental draft.
 
-The planned first reference implementation is a **Wago plugin**, followed by a second independent runtime prototype before ABI stabilization.
+The first reference implementation is planned as a Wago plugin.
+
+A second independent runtime prototype is planned before ABI stabilization.
 
 ## License
 

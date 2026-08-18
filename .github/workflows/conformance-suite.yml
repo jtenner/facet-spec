@@ -12,6 +12,12 @@ on:
       - "spec/tests/**"
       - "docs/open-questions.md"
       - "docs/design.md"
+      - "docs/runtime-implementation.md"
+      - "docs/terminology.md"
+      - "docs/writing-style.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "SECURITY.md"
       - "ROADMAP.md"
       - "CHANGELOG.md"
       - ".github/workflows/conformance-suite.yml"
@@ -23,6 +29,12 @@ on:
       - "spec/tests/**"
       - "docs/open-questions.md"
       - "docs/design.md"
+      - "docs/runtime-implementation.md"
+      - "docs/terminology.md"
+      - "docs/writing-style.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "SECURITY.md"
       - "ROADMAP.md"
       - "CHANGELOG.md"
       - ".github/workflows/conformance-suite.yml"
@@ -40,6 +52,8 @@ jobs:
           python-version: "3.13"
       - name: Validate catalog, manifests, and import signatures
         run: python3 spec/tests/tools/check_suite.py
+      - name: Check documentation accessibility
+        run: python3 spec/tests/tools/check_docs.py
       - name: Install pinned wasm-tools
         shell: bash
         run: |

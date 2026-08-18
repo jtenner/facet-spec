@@ -8,11 +8,28 @@
 
 WPSI is a low-level system interface for Core WebAssembly modules.
 
-WPSI deliberately avoids an interface-definition language, canonical lowering layer, component model, or linker-specific polymorphic import resolution. A WPSI operation is represented directly as a Core WebAssembly imported function.
+The WebAssembly module that calls WPSI is the **guest**.
 
-Representation differences that change the Core WebAssembly calling convention are encoded in the imported function name.
+The software that implements WPSI imports is the **runtime**.
 
-For example:
+The software that creates the guest instance and grants authority is the **embedder**.
+
+See [`docs/terminology.md`](docs/terminology.md) for the full project glossary.
+
+WPSI uses ordinary Core WebAssembly imported functions.
+
+WPSI does not require:
+
+- an interface-definition language;
+- a canonical lowering layer;
+- the Component Model;
+- linker-specific polymorphic import resolution.
+
+A system operation can have more than one guest representation.
+
+A representation difference that changes the Core WebAssembly signature receives a different import name.
+
+For example, the file-read operation has these forms:
 
 ```text
 fd_read_mem32
@@ -24,30 +41,38 @@ fd_read_array_i64
 fd_read_array_v128
 ```
 
-These functions perform the same semantic operation with different physical guest representations.
+Each form has one fixed Core WebAssembly signature.
+
+The guest chooses a form by importing its name.
+
+WPSI does not choose a representation dynamically at call time.
 
 WPSI has four primary design goals:
 
-1. work naturally with WebAssembly multi-memory and Memory64;
-2. treat WebAssembly GC arrays as legitimate system-call buffers;
+1. support WebAssembly multi-memory and Memory64 directly;
+2. let supported WebAssembly GC arrays act as system-operation buffers;
 3. support UTF-8, UTF-16, and UTF-32 without mandatory conversion through UTF-8;
-4. preserve capability-oriented sandboxing while exposing filesystem authority only through explicit directory capabilities and preopens.
+4. preserve capability-oriented sandboxing through explicit resources and directory capabilities.
 
 ## 2. Normative language
 
-The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**, and **MAY** are normative requirements.
+The words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**, and **MAY** are normative.
+
+An editorial change MUST NOT weaken or strengthen a normative rule.
 
 ## 3. Core design rules
 
 ### 3.1 Core WebAssembly is the ABI
 
-WPSI function signatures use Core WebAssembly types directly. There is no canonical ABI between a guest and WPSI.
+WPSI function signatures use Core WebAssembly types directly.
+
+There is no canonical ABI between the guest and WPSI.
 
 ### 3.2 Representation-specific names
 
-If two guest representations require materially different Core Wasm signatures, they receive different import names.
+If two guest representations require different Core WebAssembly signatures, they receive different import names.
 
-Semantic options that do not change the Core Wasm representation SHOULD remain ordinary parameters.
+If a semantic option does not change the Core WebAssembly representation, it SHOULD remain an ordinary parameter.
 
 ### 3.3 Memory 0 is not privileged
 
@@ -57,13 +82,21 @@ No WPSI function implicitly selects memory 0.
 
 ### 3.4 GC arrays are first-class buffers
 
-A guest MAY pass a WebAssembly GC array directly to a WPSI function. The implementation MUST NOT require the guest to copy that array through unrelated linear memory.
+A guest MAY pass a supported WebAssembly GC array directly to a WPSI function.
+
+The runtime MUST NOT require the guest to copy that array through unrelated linear memory.
 
 ### 3.5 Caller-typed GC allocation results
 
-Most GC-array parameters use the abstract `(ref array)` type and are dynamically validated by the runtime.
+Most GC-array parameters use the abstract `(ref array)` type.
 
-A small set of host-originated string functions instead allocate and return a new GC array. For those functions, the importing module declares a **concrete nullable array result type** such as:
+The runtime validates the dynamic array type when the guest calls the function.
+
+A small set of string functions allocate and return a new GC array.
+
+For these functions, the importing module declares a concrete nullable array result type.
+
+Example:
 
 ```wat
 (type $string16 (array (mut i16)))
@@ -71,27 +104,73 @@ A small set of host-originated string functions instead allocate and return a ne
   (func (param i32 i32) (result (ref null $string16) i32)))
 ```
 
-The function name fixes the required element storage class (`i8`, `i16`, or `i32`). The concrete array type is selected by the importing module. At instantiation the runtime MUST validate that the requested concrete result type is an array with the storage class named by the import. The element may be mutable or immutable. An incompatible concrete result type is an import-type mismatch and MUST fail instantiation; it is not a runtime `errno`.
+The import name fixes the required element storage class.
 
-On success the host allocates exactly that concrete Wasm GC type and returns a non-null reference. On call failure it returns `ref.null` and a nonzero `errno`.
+The supported classes for these string results are `i8`, `i16`, and `i32`.
 
-This is a narrow type-specialization rule for host allocation, not semantic overload resolution: the operation and storage class remain determined by the import name.
+The importing module selects the concrete array type.
+
+At instantiation, the runtime MUST validate that the result type is an array with the storage class named by the import.
+
+The array element MAY be mutable or immutable.
+
+An incompatible result type MUST fail WebAssembly instantiation.
+
+An incompatible result type is not a runtime `errno`.
+
+On success, the runtime allocates exactly the concrete GC array type requested by the import signature.
+
+The runtime returns a non-null reference on success.
+
+On call failure, the runtime returns `ref.null` and a nonzero `errno`.
+
+This rule applies only to the host-originated allocation functions defined by this specification.
+
+It does not create general type-directed import overload resolution.
 
 ### 3.6 Incremental implementation is allowed
 
-A runtime MAY implement only the WPSI profiles for WebAssembly features it supports. Missing imports fail through normal WebAssembly instantiation.
+A runtime MAY implement only the WPSI profiles for WebAssembly features that it supports.
 
-### 3.7 Synchronous host-call boundary
+A missing required import causes normal WebAssembly instantiation failure.
 
-Every WPSI host call is synchronous at the Core Wasm ABI boundary.
+### 3.7 Synchronous call boundary
 
-An implementation MUST NOT retain a guest linear-memory pointer or slice, a Wasm GC reference, a raw GC backing pointer, or any other borrowed guest storage after the imported function returns. Any rooting, pinning, no-move region, no-GC region, or equivalent borrow scope established to service the call MUST end before return.
+Every WPSI imported function is synchronous at the Core WebAssembly ABI boundary.
 
-The host MAY retain independent host-owned state or data copied from the guest, but that state MUST NOT depend on continued validity of borrowed guest storage.
+The runtime MUST NOT retain borrowed guest storage after the imported function returns.
 
-WPSI 0.1 defines no asynchronous host functions, futures, callbacks, actor primitives, or retained-buffer operations. Nonblocking resources report `ERR_AGAIN`, and `wpsi-poll` provides the portable readiness mechanism for schedulers that do not want to block an execution context.
+Borrowed guest storage includes:
 
-This rule does not prohibit concurrency outside the WPSI call boundary. A runtime or guest language MAY schedule multiple tasks, actors, instances, or execution contexts concurrently while each individual WPSI call remains synchronous.
+- a linear-memory pointer;
+- a linear-memory slice;
+- a Wasm GC reference;
+- a raw GC backing pointer;
+- another temporary view whose validity depends on guest storage remaining in place.
+
+The runtime MAY root or pin a GC object for the duration of a call.
+
+The runtime MAY enter a no-move region or a no-GC region for the duration of a call.
+
+The runtime MUST end each such borrow or collector scope before it returns to the guest.
+
+The runtime MAY retain independent runtime-owned state.
+
+The runtime MAY also retain data that it copied from the guest into independent runtime-owned storage.
+
+Retained state MUST NOT depend on the continued validity or location of borrowed guest storage.
+
+WPSI 0.1 defines no asynchronous host functions, futures, callbacks, actor primitives, or retained-buffer operations.
+
+A nonblocking resource reports `ERR_AGAIN` when it cannot make progress immediately.
+
+`wpsi-poll` provides the readiness mechanism for a scheduler that does not want to block an execution context.
+
+WPSI does not prohibit concurrency outside one imported call.
+
+A runtime or guest language MAY schedule multiple tasks, actors, instances, or execution contexts concurrently.
+
+Each individual WPSI call remains synchronous.
 
 ## 4. Conformance profiles
 
@@ -124,9 +203,13 @@ wpsi-poll
 
 `wpsi-poll` defines multi-resource polling.
 
+Profile names are documentation and conformance groupings.
+
+They are not independently versioned runtime objects.
+
 ## 5. Fundamental ABI conventions
 
-Conceptual aliases used by this specification are:
+The specification uses these conceptual aliases:
 
 ```text
 errno       = i32
@@ -142,27 +225,60 @@ These aliases are documentation only.
 
 ### 5.1 Handles
 
-All WPSI resources are opaque nonzero `i32` handles.
+All WPSI resources use opaque nonzero `i32` handles.
 
 Handle `0` is always invalid.
 
-Handles are instance-local and unforgeable in the semantic sense: an implementation MUST validate a handle before dereferencing the resource it names.
+A handle belongs to one WPSI instance.
 
-Except for the reserved invalid value `0`, the numeric bits of a handle have no WPSI-defined meaning. WPSI does not reserve handle ranges, expose table indexes or generation fields, encode resource kinds in handle bits, or otherwise standardize a handle layout. Guests MUST treat every nonzero handle as an opaque token and MUST NOT derive authority, resource kind, lifetime, or runtime state from its numeric value.
+The runtime MUST validate a handle before it uses the resource identified by that handle.
 
-An implementation MUST prevent a stale closed handle from accidentally gaining authority over an unrelated resource solely through unchecked slot reuse. A previously closed handle value MUST NOT later identify an unrelated live resource in the same WPSI instance. Generation counters, monotonic IDs, randomized tokens, delayed reuse, or equivalent mechanisms are acceptable implementation strategies, and their encoding remains entirely runtime-private.
+Only the value `0` has a WPSI-defined numeric meaning.
+
+WPSI does not define:
+
+- handle ranges;
+- table indexes inside handle bits;
+- generation fields inside handle bits;
+- resource-kind tags inside handle bits;
+- ordering guarantees for handle values.
+
+The guest MUST treat every nonzero handle as an opaque token.
+
+The guest MUST NOT derive authority, resource kind, lifetime, or runtime state from a handle value.
+
+A closed handle MUST NOT later identify an unrelated live resource in the same WPSI instance.
+
+The runtime MUST therefore protect against unchecked slot reuse.
+
+The runtime can use any private strategy that preserves this rule.
+
+Examples include:
+
+- generation counters;
+- monotonic identifiers;
+- randomized tokens;
+- delayed reuse.
+
+The handle encoding remains runtime-private.
 
 ### 5.2 Error convention
 
-`errno` is always the final result value when present.
+`errno` is always the final result value when a function returns an error code.
 
 ```text
 ERR_OK = 0
 ```
 
-On failure, non-error results MUST be zero unless a function explicitly states otherwise.
+On failure, all non-error results MUST be zero unless a function explicitly states another rule.
 
-Guest-controlled invalid input SHOULD return an error instead of trapping. Traps are reserved for runtime invariants, explicit termination, or unrecoverable implementation failure.
+Guest-controlled invalid input SHOULD return an error instead of trapping.
+
+A trap is reserved for:
+
+- a runtime invariant failure;
+- explicit guest termination;
+- an unrecoverable implementation failure.
 
 ### 5.3 Error codes
 
@@ -211,11 +327,13 @@ ERR_OTHER               = 255
 
 ### 5.4 Integer interpretation
 
-Unless otherwise specified, sizes, indexes, offsets, and counts carried in `i32` are interpreted as unsigned 32-bit values and those carried in `i64` as unsigned 64-bit values.
+Unless a rule states otherwise, an `i32` size, index, offset, or count is an unsigned 32-bit value.
 
-`fd_seek.signed_offset` is interpreted as signed `i64`.
+Unless a rule states otherwise, an `i64` size, index, offset, or count is an unsigned 64-bit value.
 
-All bounds arithmetic MUST be overflow-safe.
+`fd_seek.signed_offset` is a signed `i64` value.
+
+The runtime MUST use overflow-safe arithmetic for bounds calculations.
 
 ## 6. Linear memory representations
 
@@ -229,7 +347,9 @@ pointer:      i32
 length:       i32
 ```
 
-The selected memory MUST have an `i32` address type. Selecting a Memory64 memory returns `ERR_TYPE`.
+The selected memory MUST have an `i32` address type.
+
+Selecting a Memory64 memory returns `ERR_TYPE`.
 
 ### 6.2 Memory64
 
@@ -241,13 +361,19 @@ pointer:      i64
 length:       i64
 ```
 
-The selected memory MUST have an `i64` address type. Selecting a Memory32 memory returns `ERR_TYPE`.
+The selected memory MUST have an `i64` address type.
+
+Selecting a Memory32 memory returns `ERR_TYPE`.
 
 ### 6.3 Memory index space
 
-`memory_index` is an index into the calling module instance's normal WebAssembly memory index space. Imported and locally defined memories participate normally.
+`memory_index` is an index into the normal WebAssembly memory index space of the calling module instance.
 
-Invalid indexes or out-of-bounds ranges return `ERR_FAULT`.
+Imported memories and locally defined memories use the same index space.
+
+An invalid memory index returns `ERR_FAULT`.
+
+An out-of-bounds linear-memory range returns `ERR_FAULT`.
 
 ## 7. WebAssembly GC array representations
 
@@ -257,7 +383,7 @@ GC-array functions accept an abstract non-null array reference:
 (ref array)
 ```
 
-The imported function name defines the required dynamic element storage type.
+The imported function name identifies the required dynamic element storage type.
 
 Supported raw buffer variants are:
 
@@ -269,13 +395,19 @@ array_i64
 array_v128
 ```
 
-For destination operations the dynamic array element must be mutable.
+A destination array MUST have mutable elements.
 
-Type or mutability mismatch returns `ERR_TYPE`.
+A storage-type mismatch returns `ERR_TYPE`.
+
+A destination-mutability mismatch returns `ERR_TYPE`.
 
 ### 7.1 Normative logical byte view
 
-WPSI defines a logical byte view for supported numeric arrays. This rule defines observable behavior and does **not** require any particular physical GC heap layout.
+WPSI defines a logical byte view for supported numeric arrays.
+
+The logical byte view defines observable behavior.
+
+It does not define the physical GC heap layout.
 
 Element widths are:
 
@@ -287,11 +419,13 @@ i64   = 8 bytes
 v128  = 16 bytes
 ```
 
-Integer elements are represented little-endian in the logical byte view.
+Integer elements use little-endian byte order in the logical byte view.
 
-A `v128` element exposes the same sequence of 16 bytes that the value would have when stored by WebAssembly's ordinary `v128.store` semantics.
+A `v128` element exposes the same 16-byte sequence that WebAssembly `v128.store` would store.
 
-For example, an `array<i32>` element whose value is `0x12345678` contributes:
+Example:
+
+An `array<i32>` element with value `0x12345678` contributes these bytes:
 
 ```text
 78 56 34 12
@@ -301,29 +435,55 @@ For example, an `array<i32>` element whose value is `0x12345678` contributes:
 
 Raw array I/O takes `byte_offset: i64` and `byte_length: i64`.
 
-An operation MAY begin or end inside an element. Bytes outside the selected logical byte range MUST remain unchanged.
+An operation MAY begin inside an element.
 
-Consequently, reading one byte into the first byte of an `i32` element changes only the corresponding eight value bits.
+An operation MAY end inside an element.
+
+Bytes outside the selected logical byte range MUST remain unchanged.
+
+Example:
+
+If the runtime reads one byte into the first byte of an `i32` element, it changes only the corresponding eight value bits.
 
 All bit patterns are valid for the supported integer and `v128` buffer types.
 
 ### 7.3 Lifetime and moving collectors
 
-A runtime MUST keep the referenced object alive for the complete synchronous host call.
+The runtime MUST keep a referenced GC object alive for the complete synchronous call.
 
-A raw backing pointer, slice, or GC reference MUST NOT escape the dynamic extent of the WPSI call. The collector scope in which a backing address is valid MUST end before the imported function returns.
+A raw backing pointer, byte slice, or borrowed GC reference MUST NOT outlive the call.
 
-Moving collectors MUST pin, enter an appropriate no-move/no-GC region, re-resolve addresses safely, or copy through implementation-private native storage as required.
+If a collector can move the object, the runtime MUST preserve the logical byte-view rules while the operation runs.
+
+The runtime can do this by using one or more of these strategies:
+
+- pin the object;
+- enter a no-move region;
+- enter a no-GC region;
+- re-resolve the address safely;
+- copy through runtime-owned native storage.
 
 ### 7.4 Nested arrays
 
-Scatter/gather GC operations accept an outer `(ref array)` whose selected children MUST be non-null references to arrays of the element type named by the function.
+Scatter/gather GC operations accept an outer `(ref array)`.
 
-Read operations require mutable child arrays.
+Each selected child MUST be a non-null reference to an array with the element type named by the function.
 
-For WPSI 0.1, nested GC scatter/gather is deliberately **whole-child only**. `first` and `count` select a contiguous range of child arrays in the outer array. Every selected child contributes its complete logical byte view, from byte offset zero through the child's full logical byte length.
+For a read operation, each selected child MUST be mutable.
 
-There are no per-child offset, length, slice, or descriptor values in the WPSI 0.1 nested-array ABI. Partial access to one GC array uses the ordinary single-array functions that already take `byte_offset` and `byte_length`.
+WPSI 0.1 uses whole-child scatter/gather.
+
+`first` and `count` select a contiguous range of child arrays.
+
+Each selected child contributes its complete logical byte view.
+
+The selected view starts at byte offset zero and ends at the full logical byte length of that child.
+
+WPSI 0.1 does not define a per-child offset, length, slice, or descriptor.
+
+Use an ordinary single-array function when one array requires a byte slice.
+
+Those single-array functions already take `byte_offset` and `byte_length`.
 
 ## 8. Text representations and WTF mode
 
@@ -337,7 +497,9 @@ _i16 = 16-bit code units
 _i32 = 32-bit code points
 ```
 
-Linear-memory text imports combine the memory address width and text width in the name, for example:
+A linear-memory text import includes the memory address width and text width in its name.
+
+Examples:
 
 ```text
 args_read_mem32_i8
@@ -345,9 +507,9 @@ args_read_mem64_i16
 path_open_mem32_i32
 ```
 
-GC-array text imports use the existing `array_i8`, `array_i16`, and `array_i32` families.
+GC-array text imports use the `array_i8`, `array_i16`, and `array_i32` families.
 
-Every textual operation receives:
+Every text operation receives:
 
 ```text
 wtf: i32
@@ -364,67 +526,144 @@ Any other value returns `ERR_INVALID`.
 
 With `wtf == 0`:
 
-- `_i8` is well-formed UTF-8;
-- `_i16` is well-formed UTF-16;
+- `_i8` contains well-formed UTF-8;
+- `_i16` contains well-formed UTF-16;
 - `_i32` contains Unicode scalar values only.
 
-With `wtf == 1`, surrogate code points in `0xd800..0xdfff` are permitted as reversible sentinel values:
+With `wtf == 1`, surrogate code points in `0xd800..0xdfff` are permitted as reversible sentinel values.
+
+In WTF mode:
 
 - `_i8` uses WTF-8;
 - `_i16` uses WTF-16 code units;
-- `_i32` stores the code-point values directly, including surrogate sentinels.
+- `_i32` stores code-point values directly, including surrogate sentinels.
 
-WPSI MUST NOT silently replace an unrepresentable host unit with U+FFFD. Strict mode returns `ERR_ILLEGAL_SEQUENCE`; WTF mode preserves such values through surrogate sentinels when the host namespace can be represented that way.
+WPSI MUST NOT silently replace an unrepresentable external unit with U+FFFD.
 
-On byte-string host namespaces, invalid UTF-8 bytes `0x80..0xff` SHOULD be mapped reversibly to `U+DC80..U+DCFF`. On UTF-16 host namespaces, unpaired surrogate code units are preserved directly. A host that still cannot represent a requested WTF sequence returns `ERR_ILLEGAL_SEQUENCE`.
+Strict mode returns `ERR_ILLEGAL_SEQUENCE` when lossless representation is impossible.
 
-Linear-memory `_i16` and `_i32` values are little-endian. WPSI strings are length-delimited and are never implicitly NUL-terminated.
+WTF mode preserves non-Unicode values through surrogate sentinels when the external namespace can be represented by the defined mapping.
+
+On a byte-string namespace, invalid UTF-8 bytes `0x80..0xff` SHOULD map reversibly to `U+DC80..U+DCFF`.
+
+On a UTF-16 namespace, unpaired surrogate code units are preserved directly.
+
+If the selected WTF representation still cannot represent the external value, the runtime returns `ERR_ILLEGAL_SEQUENCE`.
+
+Linear-memory `_i16` and `_i32` values use little-endian byte order.
+
+WPSI strings are length-delimited.
+
+WPSI strings are not implicitly NUL-terminated.
 
 ## 9. Host-originated strings
 
-WPSI does not define a string resource handle. A host-originated string is identified by the operation that owns it: an argument index, environment-entry index, preopen index, directory iterator position, or symbolic-link path.
+WPSI does not define a string resource handle.
+
+A string is identified by the operation that owns the source.
+
+Examples of stable source identities include:
+
+- an argument index;
+- an environment-entry index;
+- a preopen index.
+
+Directory iteration uses iterator state instead of a string resource.
+
+A symbolic-link target is identified by a path operation instead of a string resource.
 
 For stable indexed sources, WPSI exposes three forms:
 
 1. `*_len_i8`, `*_len_i16`, and `*_len_i32` return the required code-unit count;
-2. `*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy into caller-owned storage;
+2. `*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy into guest-owned storage;
 3. `*_read_array_i*` allocates and returns a caller-typed concrete GC array.
 
-The representation suffix selects the code-unit width. `wtf` selects strict Unicode or surrogate-sentinel semantics. There is no second encoding selector.
+The representation suffix selects the code-unit width.
 
-Linear-memory forms necessarily receive an explicit memory index, pointer, and capacity. GC `read_into` forms receive an existing `(ref array)`, element offset, and capacity. Allocating GC forms return `(ref null $caller_type, errno)` as described in section 3.5.
+`wtf` selects strict Unicode or surrogate-sentinel semantics.
 
-A successful allocating function returns an array whose length exactly equals the represented string length. Empty strings return a non-null zero-length array.
+There is no second encoding selector.
+
+A linear-memory form receives an explicit memory index, pointer, and capacity.
+
+A GC `read_into` form receives an existing `(ref array)`, an element offset, and a capacity.
+
+An allocating GC form returns `(ref null $caller_type, errno)` as defined in section 3.5.
+
+A successful allocating function returns an array whose length exactly equals the represented string length.
+
+An empty string returns a non-null zero-length array.
 
 For all allocating string functions:
 
 - an invalid source index returns `(null, ERR_RANGE)`;
 - an invalid `wtf` value returns `(null, ERR_INVALID)`;
-- a source value that cannot be represented losslessly under the requested mode returns `(null, ERR_ILLEGAL_SEQUENCE)`;
+- a source value that cannot be represented losslessly returns `(null, ERR_ILLEGAL_SEQUENCE)`;
 - allocation failure returns `(null, ERR_NO_MEMORY)`.
 
-For caller-owned destinations, insufficient capacity returns `ERR_RANGE`, writes nothing, and leaves the source position unchanged when the source is stateful. A wrong GC destination storage class returns `ERR_TYPE`. No WPSI string-copy function appends a NUL terminator.
+For a guest-owned destination, insufficient capacity returns `ERR_RANGE`.
+
+The function MUST NOT modify the destination when capacity is insufficient.
+
+If the source is stateful, the function MUST NOT advance the source when capacity is insufficient.
+
+A wrong GC destination storage class returns `ERR_TYPE`.
+
+No WPSI string-copy function appends a NUL terminator.
 
 ## 10. Capabilities and filesystem preopens
 
 WPSI resource handles represent authority.
 
-Host filesystem and networking authority MUST be explicitly granted by the embedder.
+The embedder MUST grant filesystem authority explicitly.
 
-A child resource MUST NOT gain greater authority than the capability from which it was derived.
+The embedder MUST grant network authority explicitly.
 
-WPSI does not define a mandatory scratch filesystem, home filesystem, or other automatically allocated writable storage. A conforming filesystem implementation MAY expose no preopens at all.
+A derived resource MUST NOT have more authority than the capability from which it was derived.
 
-Filesystem roots supplied by the embedder are ordinary directory capabilities enumerated through the preopen APIs. Their guest-visible display names do not create authority beyond the directory handle and rights that were explicitly granted.
+WPSI does not define a mandatory scratch filesystem.
 
-An embedder MAY provide an ordinary preopen whose display name is exactly `~`. This is the conventional WPSI name for a guest home/private writable area when an environment wants to provide one, but the name has no special ABI behavior:
+WPSI does not define a mandatory home filesystem.
 
-- `~` does not implicitly refer to the host user's home directory;
-- it does not imply particular rights, quota, persistence, backing storage, or lifetime;
-- it may be omitted entirely in constrained environments;
-- if the embedder deliberately maps it to host storage, that authority exists only because the directory was explicitly preopened.
+WPSI does not allocate any other writable storage automatically.
 
-The Core WPSI path ABI remains directory-handle-relative. It does not parse or expand `~` inside path operands. Higher-level bindings, libc implementations, and language runtimes MAY interpret `~/x` by locating a preopen whose display name is `~` and issuing the ordinary WPSI path operation relative to that directory handle with `x` as the relative path.
+A conforming filesystem implementation MAY expose no preopens.
+
+Each filesystem root supplied by the embedder is an ordinary directory capability.
+
+The guest enumerates these directory capabilities through the preopen APIs.
+
+A guest-visible display name does not grant authority by itself.
+
+The authority comes from the directory handle and its rights.
+
+The embedder MAY provide an ordinary preopen whose display name is exactly `~`.
+
+The name `~` is a convention for a guest home or private writable area when an environment wants to provide one.
+
+The name has no special ABI behavior.
+
+In particular:
+
+- `~` does not automatically refer to the operating-system user's home directory;
+- `~` does not imply particular rights;
+- `~` does not imply a quota;
+- `~` does not imply persistence;
+- `~` does not imply a backing-storage type;
+- `~` does not imply a lifetime;
+- an embedder MAY omit `~`.
+
+If the embedder maps `~` to external storage, the directory has only the authority that the embedder explicitly granted.
+
+The Core WPSI path ABI remains directory-handle-relative.
+
+Raw WPSI path operands do not parse or expand `~`.
+
+A higher-level binding, libc implementation, or language runtime MAY interpret `~/x` as a convenience syntax.
+
+Such a layer can locate the preopen whose display name is `~`.
+
+It can then issue the ordinary WPSI path operation relative to that directory handle with `x` as the relative path.
 
 ## 11. Rights and flags
 
@@ -523,17 +762,43 @@ WPSI 0.1 reports `abi_version() == 1`.
 
 ### 12.1 Versioning and feature detection
 
-`abi_version()` versions the overall WPSI ABI generation. WPSI profiles do not have independent version numbers, and WPSI 0.1 defines no scalar feature-query or profile-query API.
+`abi_version()` identifies the overall WPSI ABI generation.
 
-Support for a WPSI operation is determined by normal Core WebAssembly linking. The presence of the requested import together with exact Core Wasm type compatibility is authoritative. A module SHOULD import the operations and representation families it actually requires; a runtime MAY expose any conforming subset.
+WPSI profiles do not have independent version numbers.
 
-Profile names such as `wpsi-filesystem`, `wpsi-gc-array`, and `wpsi-network` are documentation and conformance groupings only. They are not a second runtime negotiation namespace.
+WPSI 0.1 defines no scalar feature-query API.
 
-An additive capability introduced under the same ABI generation SHOULD use a new import and does not by itself require an `abi_version()` increment. An incompatible replacement for one operation SHOULD normally use a new import name so old and new operations can coexist. A change that makes the overall WPSI ABI generation incompatibly different MUST increment `abi_version()`.
+WPSI 0.1 defines no profile-query API.
+
+Normal Core WebAssembly linking determines whether an operation is available.
+
+The runtime must provide the requested import name with an exact compatible Core WebAssembly type.
+
+Import presence and type compatibility are authoritative.
+
+A module SHOULD import the operations and representation families that it requires.
+
+A runtime MAY expose any conforming subset of WPSI imports.
+
+Profile names such as `wpsi-filesystem`, `wpsi-gc-array`, and `wpsi-network` are documentation and conformance groupings only.
+
+They are not a second runtime negotiation namespace.
+
+An additive capability under the same ABI generation SHOULD use a new import.
+
+An additive import does not by itself require an `abi_version()` increment.
+
+An incompatible replacement for one operation SHOULD normally use a new import name.
+
+This lets old and new operations coexist.
+
+A change that makes the overall WPSI ABI generation incompatible MUST increment `abi_version()`.
 
 ## 13. Arguments and environment
 
-Argument and environment ordering MUST remain stable for the lifetime of the instance.
+Argument ordering MUST remain stable for the lifetime of the instance.
+
+Environment-entry ordering MUST remain stable for the lifetime of the instance.
 
 ```text
 args_count() -> (count: i32, errno: i32)
@@ -568,7 +833,7 @@ args_read_array_i32(index: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
-Environment entries use a scalar field selector:
+Environment entries use this scalar field selector:
 
 ```text
 ENV_NAME  = 0
@@ -692,9 +957,15 @@ fs_preopen_name_read_array_i32(index: i32, wtf: i32)
   -> (value: ref null $caller_i32_array, errno: i32)
 ```
 
-Preopen ordering and display names MUST remain stable for the lifetime of the instance.
+Preopen ordering MUST remain stable for the lifetime of the instance.
 
-A preopen named `~` is optional and is otherwise indistinguishable from any other preopen. Its absence does not make a filesystem implementation nonconforming.
+Preopen display names MUST remain stable for the lifetime of the instance.
+
+A preopen named `~` is optional.
+
+A `~` preopen is otherwise an ordinary preopen.
+
+The absence of `~` does not make a filesystem implementation nonconforming.
 
 ## 17. Descriptor metadata
 
@@ -836,7 +1107,9 @@ fd_pwrite_array_v128(fd: i32, file_offset: i64, source: ref array,
   -> (bytes_written: i64, errno: i32)
 ```
 
-`pread` and `pwrite` MUST NOT change the descriptor's sequential file position.
+`pread` MUST NOT change the descriptor's sequential file position.
+
+`pwrite` MUST NOT change the descriptor's sequential file position.
 
 ## 21. Scatter/gather I/O
 
@@ -912,13 +1185,35 @@ fd_writev_array_v128(fd: i32, buffers: ref array, first: i32, count: i32)
   -> (bytes_written: i64, errno: i32)
 ```
 
-`first` and `count` are unsigned child indexes/counts. The selected range MUST fit entirely within the outer array or the operation returns `ERR_RANGE` without performing I/O.
+`first` and `count` are unsigned child indexes and counts.
 
-Each selected child participates using its complete logical byte view. WPSI 0.1 does not define per-child slices for nested GC scatter/gather.
+The selected child range MUST fit entirely inside the outer array.
 
-Before performing host I/O, the runtime MUST validate the complete selected child range, including non-null child references, dynamic element storage type, and destination mutability for reads. A validation failure MUST NOT partially consume the stream or modify an earlier child.
+If it does not fit, the operation returns `ERR_RANGE`.
 
-Normal stream short-transfer rules still apply. A successful short read or write MAY stop partway through the logical byte view of the final child reached by the transfer; later children are untouched.
+The runtime MUST NOT perform I/O in this error case.
+
+Each selected child participates with its complete logical byte view.
+
+WPSI 0.1 does not define per-child slices for nested GC scatter/gather.
+
+The runtime MUST validate the complete selected child range before it performs I/O.
+
+Validation includes:
+
+- non-null child references;
+- dynamic element storage type;
+- destination mutability for reads.
+
+If validation fails, the operation MUST NOT partially consume the stream.
+
+If validation fails, the operation MUST NOT modify an earlier child.
+
+Normal stream short-transfer rules still apply after validation succeeds.
+
+A successful short read or write MAY stop inside the logical byte view of the final child reached by the transfer.
+
+Later children remain untouched.
 
 ## 22. Positioning and persistence
 
@@ -941,9 +1236,11 @@ fd_datasync(fd: i32)
 
 ## 23. Path representations
 
-All path operations are relative to a directory capability. WPSI has no implicit process-wide host current working directory.
+All path operations are relative to a directory capability.
 
-Path import names identify both the storage representation and code-unit width.
+WPSI has no implicit process-wide current working directory from the operating system.
+
+A path import name identifies the storage representation and code-unit width.
 
 Linear-memory path families are:
 
@@ -958,13 +1255,29 @@ GC path families are:
 *_array_i8   *_array_i16   *_array_i32
 ```
 
-Every path representation receives a `wtf: i32` boolean as defined in section 8. There is no path encoding enum.
+Every path representation receives the `wtf: i32` boolean defined in section 8.
 
-For linear memory, `pointer` is a byte address while `length` and capacities are measured in code units. `_i16` and `_i32` values are little-endian. For GC arrays, offsets and lengths are measured in array elements/code units.
+WPSI does not use a path-encoding enum.
 
-The logical directory separator is `/`. Embedded NUL is invalid in every WPSI filesystem path and returns `ERR_INVALID`.
+For linear memory, `pointer` is a byte address.
 
-An implementation MUST prevent path or symlink traversal from escaping the authority represented by the directory handle.
+For linear memory, `length` and capacity values are code-unit counts.
+
+Linear-memory `_i16` and `_i32` values use little-endian byte order.
+
+For GC arrays, offsets and lengths are array-element counts.
+
+For text arrays, one array element is one code unit.
+
+The logical directory separator is `/`.
+
+An embedded NUL is invalid in every WPSI filesystem path.
+
+An embedded NUL returns `ERR_INVALID`.
+
+The runtime MUST prevent path traversal from escaping the authority represented by the supplied directory handle.
+
+The runtime MUST apply the same rule to symbolic-link traversal.
 
 ## 24. Path open
 
@@ -987,7 +1300,9 @@ path_open_array_T(directory: i32, path: ref array,
   -> (fd: i32, errno: i32)
 ```
 
-`T` is part of the actual import name; for example `path_open_mem32_i16`.
+`T` is part of the actual import name.
+
+Example: `path_open_mem32_i16`.
 
 ## 25. Path stat
 
@@ -1058,7 +1373,11 @@ path_remove_array_T(directory: i32, path: ref array,
 
 ## 27. Rename
 
-Rename uses the same code-unit width for both paths to avoid a width cross-product. The source and destination may independently choose strict or WTF mode.
+Rename uses the same code-unit width for the source path and destination path.
+
+This rule avoids a width cross-product of import names.
+
+The source and destination MAY independently select strict or WTF mode.
 
 For each `T` in `i8`, `i16`, and `i32`:
 
@@ -1125,23 +1444,51 @@ dir_iter_next_array_T(iterator: i32, wtf: i32)
 dir_iter_rewind(iterator: i32) -> (errno: i32)
 ```
 
-The iterator itself identifies the pending directory entry; WPSI does not allocate a separate name resource.
+The iterator identifies the pending directory entry.
 
-`dir_iter_next_len_T` peeks and snapshots the next entry without consuming it. Repeated length queries observe the same pending entry. Any successful read or allocating next call consumes that entry and advances the iterator.
+WPSI does not allocate a separate name resource.
 
-If caller-owned capacity is insufficient, the operation returns `ERR_RANGE`, performs no write, and does not advance. The caller may query the matching length function and retry.
+`dir_iter_next_len_T` snapshots the next entry without consuming it.
 
-At end of iteration, `done == 1`, scalar metadata is zero, and allocating forms return `ref.null` with `ERR_OK`.
+Repeated length queries observe the same pending entry.
 
-`dir_iter_rewind` discards any pending snapshot and resets the iterator. The iterator is released with `handle_close`.
+A successful read form consumes the pending entry.
+
+A successful allocating form also consumes the pending entry.
+
+After consumption, the iterator advances.
+
+If guest-owned capacity is insufficient, the operation returns `ERR_RANGE`.
+
+In this case, the operation MUST NOT write to the destination.
+
+In this case, the iterator MUST NOT advance.
+
+The guest can query the matching length function and retry.
+
+At end of iteration, `done == 1`.
+
+At end of iteration, scalar metadata is zero.
+
+At end of iteration, allocating forms return `ref.null` with `ERR_OK`.
+
+`dir_iter_rewind` discards a pending snapshot.
+
+`dir_iter_rewind` resets the iterator.
+
+Release the iterator with `handle_close`.
 
 ## 29. Hard links
 
-Hard links use the same code-unit width for source and destination. For each `T` in `i8`, `i16`, and `i32`, `path_link_mem32_T`, `path_link_mem64_T`, and `path_link_array_T` use the same argument shapes as the corresponding `path_rename_*_T` functions.
+Hard links use the same code-unit width for source and destination.
+
+For each `T` in `i8`, `i16`, and `i32`, `path_link_mem32_T`, `path_link_mem64_T`, and `path_link_array_T` use the same argument shapes as the corresponding `path_rename_*_T` functions.
 
 ## 30. Symbolic links
 
-The symlink target and destination use the same code-unit width but independent `wtf` flags.
+The symbolic-link target and destination use the same code-unit width.
+
+The target and destination MAY use independent `wtf` values.
 
 For each `T` in `i8`, `i16`, and `i32`:
 
@@ -1170,7 +1517,13 @@ path_symlink_array_T(target: ref array, target_offset: i32,
 
 ## 31. Read symbolic link
 
-`path_readlink_*` never creates an intermediate string resource. The input path and output target use the same code-unit width to avoid a representation cross-product, but may independently choose strict or WTF mode.
+`path_readlink_*` does not create an intermediate string resource.
+
+The input path and output target use the same code-unit width.
+
+This rule avoids a representation cross-product of import names.
+
+The path and target MAY independently select strict or WTF mode.
 
 For each `T` in `i8`, `i16`, and `i32`:
 
@@ -1218,9 +1571,15 @@ path_readlink_array_T(directory: i32, path: ref array,
   -> (target: ref null $caller_T_array, errno: i32)
 ```
 
-Caller-owned reads require enough capacity for the complete target; insufficient capacity returns `ERR_RANGE` without modifying the destination.
+A guest-owned target buffer MUST have enough capacity for the complete stored target.
 
-The returned target is the stored symbolic-link text and is not recursively resolved.
+Insufficient capacity returns `ERR_RANGE`.
+
+In this case, the runtime MUST NOT modify the destination.
+
+The returned text is the stored symbolic-link target.
+
+The runtime does not recursively resolve the returned target.
 
 ## 32. Networking constants
 
@@ -1243,7 +1602,7 @@ SHUT_WR   = 2
 SHUT_RDWR = 3
 ```
 
-IP addresses are represented as:
+IP addresses use these fields:
 
 ```text
 family:      i32
@@ -1253,9 +1612,15 @@ port:        i32
 scope_id:    i32
 ```
 
-For IPv4, `address_hi == 0`, the low 32 bits of `address_lo` contain the address in network bit order, and `scope_id == 0`.
+For IPv4, `address_hi == 0`.
 
-For IPv6, `address_hi` is the most-significant 64 bits and `address_lo` the least-significant 64 bits.
+For IPv4, the low 32 bits of `address_lo` contain the address in network bit order.
+
+For IPv4, `scope_id == 0`.
+
+For IPv6, `address_hi` contains the most-significant 64 bits.
+
+For IPv6, `address_lo` contains the least-significant 64 bits.
 
 ## 33. Socket lifecycle
 
@@ -1297,7 +1662,7 @@ socket_shutdown(fd: i32, how: i32)
   -> (errno: i32)
 ```
 
-Connected stream sockets use ordinary `fd_read_*`, `fd_write_*`, `fd_readv_*`, and `fd_writev_*` data transfer.
+Connected stream sockets use the ordinary `fd_read_*`, `fd_write_*`, `fd_readv_*`, and `fd_writev_*` operations for data transfer.
 
 ## 34. Datagram receive
 
@@ -1353,7 +1718,11 @@ socket_sendto_array_v128(...) -> (bytes_written: i64, errno: i32)
 
 ## 36. DNS
 
-DNS hostnames use the same text representation rule as other WPSI text: the import suffix chooses `i8`, `i16`, or `i32`, and `wtf` selects strict Unicode or surrogate-sentinel mode.
+DNS hostnames use the same text rules as other WPSI text.
+
+The import suffix selects `i8`, `i16`, or `i32`.
+
+`wtf` selects strict Unicode or surrogate-sentinel mode.
 
 For each `T` in `i8`, `i16`, and `i32`:
 
@@ -1381,7 +1750,7 @@ dns_next(resolver: i32)
       errno: i32)
 ```
 
-Resolver handles are released with `handle_close`.
+Release a resolver handle with `handle_close`.
 
 ## 37. Polling
 
@@ -1426,69 +1795,77 @@ poll_next(poll: i32)
       errno: i32)
 ```
 
-`UINT64_MAX` as the `poll_wait` deadline means no deadline.
+`UINT64_MAX` as the `poll_wait` deadline means that the call has no deadline.
 
-All ready events from one `poll_wait` MUST be consumed before another `poll_wait`; otherwise `ERR_BUSY` is returned.
+The guest MUST consume all ready events from one `poll_wait` before it calls `poll_wait` again on the same poll set.
+
+If it does not, `poll_wait` returns `ERR_BUSY`.
 
 ## 38. GC implementation contract
 
-A runtime implementing a raw GC-array destination SHOULD conceptually perform:
+A runtime that implements a raw GC-array destination SHOULD conceptually perform these steps:
 
-```text
-1. validate the reference is an array;
-2. validate its dynamic element storage type;
-3. validate mutability for destination operations;
-4. validate byte_offset + byte_length with overflow-safe arithmetic;
-5. root the object;
-6. establish any pin/no-move/no-GC scope required by the collector;
+1. validate that the reference is an array;
+2. validate the dynamic element storage type;
+3. validate mutability for a destination operation;
+4. validate `byte_offset + byte_length` with overflow-safe arithmetic;
+5. keep the object alive;
+6. establish a pin, no-move scope, no-GC scope, or equivalent mechanism if required;
 7. resolve the current backing representation;
 8. perform the synchronous operation;
 9. preserve bytes outside the requested logical range;
-10. invalidate any temporary native view before leaving the collector scope.
-```
+10. invalidate any temporary native view before the collector scope ends.
 
-An implementation MAY directly expose contiguous pointer-free payload storage to the host operation where its collector permits this.
+A runtime MAY directly expose contiguous pointer-free payload storage to the operating-system or runtime I/O operation when its collector makes this safe.
 
-An implementation MAY instead use temporary native storage and encode/decode the logical byte view.
+A runtime MAY instead use temporary runtime-owned native storage.
 
-Both implementations are conforming if observable results are identical.
+If it uses temporary storage, the runtime encodes or decodes the logical byte view as required.
+
+Both strategies conform when they produce the same observable result.
 
 ## 39. Zero-copy guidance
 
 WPSI does not guarantee zero-copy execution.
 
-WPSI does guarantee that ABI conversion through unrelated guest linear memory is unnecessary.
+WPSI does guarantee that an ABI conversion through unrelated guest linear memory is unnecessary.
 
-Implementations SHOULD avoid intermediate copies when their memory or GC representation and host API make direct access safe.
+A runtime SHOULD avoid intermediate copies when direct access is safe for its memory representation, GC representation, and operating-system API.
 
 ## 40. Concurrency
 
 WPSI 0.1 functions are synchronous.
 
-A runtime MAY invoke them concurrently from multiple Wasm threads.
+A runtime MAY invoke WPSI functions concurrently from multiple Wasm threads or execution contexts.
 
-A close racing with an operation MAY either allow the already-admitted operation to complete or cause it to return `ERR_BAD_HANDLE`. It MUST NOT cause use-after-free.
+A close can race with another operation on the same handle.
+
+The runtime MAY allow an already-admitted operation to complete.
+
+The runtime MAY instead cause that operation to return `ERR_BAD_HANDLE`.
+
+The race MUST NOT cause use-after-free.
 
 ## 41. Security requirements
 
-A conforming implementation MUST:
+A conforming runtime MUST:
 
-1. validate all guest handles before use;
+1. validate every guest handle before use;
 2. validate memory indexes and address widths;
 3. bounds-check ranges with overflow-safe arithmetic;
 4. validate GC array kind, dynamic element type, destination mutability, and caller-selected concrete allocation result types;
-5. validate text according to the declared encoding;
-6. prevent filesystem escape beyond directory capability authority;
-7. keep private scratch storage isolated from unrelated host files;
-8. enforce host-granted filesystem and network capabilities;
-9. prevent synchronous GC borrows from outliving their safe collector scope;
+5. validate text according to the selected representation and `wtf` mode;
+6. prevent filesystem escape beyond the supplied directory capability;
+7. enforce filesystem authority granted by the embedder;
+8. enforce network authority granted by the embedder;
+9. prevent a borrowed GC or linear-memory view from outliving its safe synchronous scope;
 10. clean up instance-owned resources when the instance is destroyed.
 
 ## 42. Language implementation guidance
 
-Languages SHOULD expose semantic operations rather than WPSI representation details.
+Languages SHOULD expose semantic system operations instead of exposing WPSI representation details directly when a higher-level API is appropriate.
 
-A compiler may lower:
+A compiler can lower a source-language buffer to these WPSI forms:
 
 ```text
 Memory32 slice -> *_mem32
@@ -1500,11 +1877,17 @@ GC array<i64>  -> *_array_i64
 GC array<v128> -> *_array_v128
 ```
 
-UTF-16 and UTF-32 strings SHOULD remain in their native representation when the corresponding WPSI function exists; conversion through UTF-8 is not required. GC-oriented languages SHOULD prefer allocating `*_read_array_*` functions when they want a fresh string and `*_read_into_array_*` when they already own reusable storage.
+A UTF-16 or UTF-32 string SHOULD remain in its native representation when the corresponding WPSI function exists.
+
+Conversion through UTF-8 is not required.
+
+A GC-oriented language SHOULD prefer an allocating `*_read_array_*` function when it wants a fresh string.
+
+A GC-oriented language SHOULD prefer `*_read_into_array_*` when it already owns reusable destination storage.
 
 ## 43. Explicit omissions from 0.1
 
-The initial specification intentionally does not define:
+WPSI 0.1 does not define:
 
 - process spawning;
 - signals;
@@ -1513,30 +1896,32 @@ The initial specification intentionally does not define:
 - HTTP or TLS;
 - GPU or GUI access;
 - arbitrary GC struct ABI records;
-- retained host ownership of guest GC references;
+- retained runtime ownership of guest GC references;
 - automatic WASI compatibility.
 
-These may be added as independent extensions.
+A future specification can add independent extensions for these areas.
 
 ## 44. Compatibility policy
 
-Published stable WPSI function signatures are immutable.
+A published stable WPSI function signature is immutable.
 
-If semantics or a Core WebAssembly signature must change incompatibly, a new import name MUST be introduced.
+If a semantic rule or Core WebAssembly signature must change incompatibly, the specification MUST introduce a new import name.
 
-New representation variants MAY be added without modifying existing variants.
+The specification MAY add new representation variants without modifying existing variants.
 
 ## 45. Rationale for explicit names
 
-WPSI does not overload the same import name by function type.
+WPSI does not overload one import name by function type.
 
-Explicit representation names are preferred because they:
+Explicit representation names have these benefits:
 
-- use ordinary import resolution;
-- work with runtimes that index host functions by module and field name;
-- make missing feature support obvious;
-- make traces and debugging clearer;
-- allow incremental GC and Memory64 support;
-- avoid special linker semantics.
+- they use ordinary Core WebAssembly import resolution;
+- they work with runtimes that index functions by module and field name;
+- they make missing feature support visible;
+- they make traces and debugging clearer;
+- they allow incremental GC and Memory64 support;
+- they avoid special linker semantics.
 
-The deliberate naming duplication is considered less costly than introducing another ABI-description layer.
+The duplicated names are intentional.
+
+WPSI accepts this naming cost to avoid another ABI-description and runtime-negotiation layer.

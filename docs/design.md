@@ -1,22 +1,45 @@
 # WPSI Design Rationale
 
-This document is informative. `SPEC.md` is normative.
+This document explains why the specification has its current shape.
+
+This document is informative.
+
+`SPEC.md` and `spec/behavior.md` are normative.
+
+Use [`terminology.md`](terminology.md) for the project terminology.
 
 ## Why a flat imported-function ABI?
 
-WPSI is deliberately smaller than a component model.
+WPSI uses ordinary Core WebAssembly imports.
 
-The system boundary already has a strong type system available: Core WebAssembly. For the operations WPSI targets, ordinary imports provide enough structure without introducing another interface language or canonical lowering format. Host-allocated GC string results are a narrow exception where import instantiation also validates the caller-selected concrete array result type.
+Core WebAssembly already provides a strong type system at the system boundary.
 
-A minimal interface also makes runtime adoption easier. An embedder can implement WPSI using the same host-function machinery it already uses for other Core Wasm imports.
+For the operations in WPSI 0.1, ordinary imports provide enough structure.
+
+WPSI therefore does not require:
+
+- another interface language;
+- a canonical lowering format;
+- a component model;
+- a special linker protocol.
+
+This keeps runtime adoption small.
+
+An embedder can implement WPSI with the same host-function mechanism that it already uses for other Core WebAssembly imports.
+
+The caller-typed GC allocation functions are a narrow exception to ordinary abstract `(ref array)` parameters.
+
+For those functions, import instantiation also validates the concrete result array type selected by the guest.
 
 ## Why not type-directed polymorphic imports?
 
-Core Wasm permits repeated import names with different type descriptions, and an embedder could resolve `"wpsi"."fd_read"` based on the function type.
+Core WebAssembly can contain repeated import names with different function types.
 
-WPSI intentionally does not depend on that behavior.
+An embedder could inspect the type and choose an implementation for a name such as `"wpsi"."fd_read"`.
 
-Instead it uses names such as:
+WPSI does not depend on that behavior.
+
+Instead, it uses explicit names:
 
 ```text
 fd_read_mem32
@@ -28,148 +51,342 @@ fd_read_array_i64
 fd_read_array_v128
 ```
 
-This has a few useful properties:
+This choice has several benefits:
 
-- existing runtime import registries can remain keyed by module/name;
-- missing representation support is visible as an ordinary missing import;
-- stack traces and diagnostics show the selected ABI directly;
-- runtimes can adopt GC and Memory64 support independently;
+- a runtime can use a normal module-and-name import registry;
+- missing representation support appears as a normal missing import;
+- stack traces show the selected representation;
+- diagnostics show the selected representation;
+- a runtime can add GC support independently;
+- a runtime can add Memory64 support independently;
 - no linker extension is required.
+
+The duplicated names are intentional.
+
+They are cheaper than a second dynamic import-resolution system.
 
 ## Why no profile versions or feature-query API?
 
-Core Wasm linking already answers the feature question precisely: a module declares the imports it requires, including their exact function types, and instantiation succeeds only when the runtime can provide them.
+Core WebAssembly linking already answers the feature question.
 
-Adding `filesystem_version()`, `gc_array_version()`, profile manifests, or a scalar feature-query API would duplicate that mechanism and create a second source of truth that could disagree with the imports actually needed by the program.
+A module declares the imports that it requires.
 
-WPSI therefore keeps one coarse `abi_version()` for the overall ABI generation and treats import presence plus type compatibility as authoritative for optional capability support. Profile names remain useful for documentation, implementation planning, and conformance reporting, but they are not independently negotiated runtime entities.
+Each import includes its exact function type.
 
-Additive evolution can introduce new imports without disturbing existing modules. A genuinely incompatible form of one operation should normally receive a new import name; only an incompatible change to the overall WPSI ABI generation requires incrementing `abi_version()`.
+Instantiation succeeds only when the runtime can provide compatible imports.
+
+A second feature registry would duplicate this information.
+
+It could also disagree with the imports that the program actually needs.
+
+WPSI therefore uses one coarse `abi_version()` for the overall ABI generation.
+
+Import presence and type compatibility are authoritative for optional support.
+
+Profile names remain useful for:
+
+- documentation;
+- implementation planning;
+- conformance reporting.
+
+Profiles are not independently negotiated runtime objects.
+
+An additive change can introduce a new import without changing existing modules.
+
+An incompatible form of one operation should normally receive a new import name.
+
+Only an incompatible change to the overall WPSI ABI generation requires an `abi_version()` increment.
 
 ## Why an explicit memory index?
 
-A pointer without a memory identity is insufficient once a module has multiple linear memories.
+A pointer is not enough when one module has more than one linear memory.
 
-WPSI therefore treats:
+The runtime must also know which memory owns that pointer.
+
+WPSI therefore treats this tuple as the basic linear-memory buffer reference:
 
 ```text
 (memory_index, pointer, length)
 ```
 
-as the basic linear-buffer reference.
+Memory 0 has no special status.
 
-There is no distinguished application memory and no privileged memory 0.
+The same rule appears inside linear scatter/gather descriptors.
 
-The same convention appears inside WPSI linear scatter/gather descriptors, allowing one `readv` or `writev` operation to span multiple memories.
+One `readv` or `writev` operation can therefore use more than one linear memory.
 
 ## Why separate Memory32 and Memory64 imports?
 
-The pointer width changes the Core Wasm signature. Encoding it in the import name avoids runtime flags, ambiguous integer interpretation, and accidental truncation.
+Memory32 and Memory64 use different Core WebAssembly pointer types.
 
-A runtime can support either or both families.
+That difference changes the function signature.
+
+WPSI puts the address width in the import name.
+
+This avoids:
+
+- runtime pointer-width flags;
+- ambiguous integer interpretation;
+- accidental truncation.
+
+A runtime can implement either family or both families.
 
 ## Why GC arrays?
 
-Modern Wasm languages do not necessarily represent arrays in linear memory. Requiring every system operation to serialize a GC-native buffer through linear memory creates unnecessary copying and privileges one storage model.
+A modern WebAssembly language does not have to store every array in linear memory.
 
-WPSI therefore treats numeric Wasm GC arrays as direct I/O buffers.
+If a language uses GC-native arrays, forcing system I/O through linear memory creates extra copies.
 
-The specification defines a portable **logical byte view** rather than a physical heap layout. Engines with contiguous storage can optimize this directly; engines with different layouts can implement the same observable semantics through temporary native storage.
+It also gives linear memory an unnecessary privileged role.
 
-## Why include i16, i32, i64, and v128 raw buffers?
+WPSI therefore lets supported numeric GC arrays act as direct I/O buffers.
 
-Major Wasm GC implementations commonly represent numeric arrays as contiguous fixed-width storage. Wider arrays can therefore be useful native buffers, particularly for languages whose natural representation is not `array<i8>`.
+The specification defines a **logical byte view** for portability.
 
-WPSI's logical byte view also makes partial-element I/O well-defined. A byte range may begin or end inside an element; only the corresponding value bits change.
+The logical byte view defines observable values.
 
-The initial raw-buffer set intentionally excludes `f32` and `f64`. They provide little systems-I/O benefit over same-width integer storage and would require additional care around floating-point representation and NaN payload expectations.
+It does not expose the runtime's physical GC heap layout.
+
+A runtime with contiguous numeric-array storage can use a direct fast path.
+
+A runtime with another layout can use temporary native storage and produce the same observable result.
+
+## Why include `i16`, `i32`, `i64`, and `v128` raw buffers?
+
+Major WebAssembly GC implementations commonly store numeric arrays in fixed-width storage.
+
+A wider numeric array can therefore be a useful native buffer for a language whose natural representation is not `array<i8>`.
+
+The logical byte view makes partial-element I/O precise.
+
+A byte range can begin inside an element.
+
+A byte range can end inside an element.
+
+Only the selected value bits change.
+
+WPSI 0.1 does not include `f32` or `f64` raw-buffer facets.
+
+Those types provide little systems-I/O benefit over integers of the same width.
+
+They also introduce extra questions about floating-point representation and NaN payloads.
 
 ## Why are nested GC scatter/gather buffers whole-child only?
 
-The outer GC array already provides a simple scatter/gather list: each selected child is one complete buffer. Adding an offset and length for every child would require another portable descriptor representation, such as GC structs or parallel arrays, and would substantially complicate an operation that is primarily an optimization.
+The outer GC array already provides a simple scatter/gather list.
 
-WPSI 0.1 therefore keeps nested `readv/writev` structural: `first` and `count` choose child arrays, and each child contributes its entire logical byte view. The ordinary single-array I/O functions already provide `byte_offset` and `byte_length` when a caller needs a slice of one array.
+Each selected child is one complete buffer.
 
-A future extension may add sliced scatter/gather under new import names if real compiler/runtime workloads demonstrate that the additional ABI surface is worthwhile.
+Adding an offset and length for every child would require another descriptor representation.
+
+Possible descriptor designs include GC structs or parallel arrays.
+
+Each option adds complexity to an operation that is mainly an optimization.
+
+WPSI 0.1 therefore keeps nested `readv` and `writev` structural.
+
+`first` and `count` choose the child arrays.
+
+Each selected child contributes its complete logical byte view.
+
+The ordinary single-array functions already provide `byte_offset` and `byte_length` when one array needs a slice.
+
+A future extension can add sliced scatter/gather under new import names if real workloads justify the extra ABI surface.
 
 ## Why UTF-16 and UTF-32?
 
-A portable system interface should not require every language to convert its native text representation to UTF-8 merely to cross the host boundary.
+A portable system interface should not require every language to convert native text to UTF-8 before it crosses the system boundary.
 
-WPSI supports 8-bit, 16-bit, and 32-bit text representations directly. The representation width is part of the import name rather than an encoding enum. A single `wtf` boolean selects strict Unicode or surrogate-sentinel mode, so host namespaces with non-Unicode units can be preserved without a separate raw-string encoding value.
+WPSI supports 8-bit, 16-bit, and 32-bit text representations directly.
+
+The import name selects the representation width.
+
+The `wtf` boolean selects strict Unicode or reversible surrogate-sentinel behavior.
+
+This keeps physical representation separate from text semantics.
 
 ## Why no system-string handles?
 
-Strings such as arguments, environment values, preopen labels, directory-entry names, and symbolic-link targets already have a natural source identity. Creating another resource handle solely to move those strings adds allocation, lookup, lifetime, and close operations without adding authority.
+Arguments, environment values, preopen labels, directory-entry names, and symbolic-link targets already have a source identity.
 
-WPSI therefore lets the source operation expose the string directly.
+Creating a second resource handle only to move a string would add:
 
-Linear-memory callers query the width-specific code-unit length when necessary and provide `(memory, pointer, capacity)` storage. GC callers may either provide an existing mutable array with `*_read_into_array_*` or use `*_read_array_*` to ask the runtime to allocate a fresh result.
+- allocation;
+- handle lookup;
+- lifetime rules;
+- close operations.
 
-For allocating GC results, the concrete nullable array result type appears in the module's import signature. The runtime validates the requested storage class and allocates exactly that Wasm GC type. This lets a language receive its native `array<i8>`, `array<i16>`, or `array<i32>` representation without a temporary string resource or linear-memory lowering.
+It would not add authority.
 
-This asymmetry is intentional: linear memory naturally uses caller-owned addresses, while Wasm GC can naturally return newly allocated references.
+WPSI therefore transfers these strings directly from their source operation.
+
+A linear-memory caller can query the required code-unit length and provide destination storage.
+
+A GC caller can provide an existing mutable array.
+
+A GC caller can also request a fresh caller-typed array from an allocating string function.
+
+For an allocating GC result, the module's import signature contains the concrete nullable array result type.
+
+The runtime validates the requested storage class during instantiation.
+
+The runtime then allocates exactly that concrete GC type.
+
+This asymmetry is intentional.
+
+Linear memory naturally uses guest-owned addresses.
+
+WebAssembly GC naturally supports returned references to newly allocated objects.
 
 ## Why is `~` an ordinary preopen instead of a special scratch API?
 
-WPSI already has the primitive it needs: directory capabilities and preopens. A second resource class for temporary or private storage would add imports, quota APIs, lifetime rules, and implementation machinery without adding new authority semantics.
+WPSI already has the required mechanism: directory capabilities and preopens.
 
-An embedder that wants to give a guest a convenient writable home can therefore expose a normal preopen with the display name `~`. Higher-level bindings may map `~/foo` to that directory handle plus the relative path `foo`.
+A separate scratch-resource class would add:
 
-Nothing about the name is magical. The preopen may be temporary, persistent, memory-backed, host-directory-backed, read-only, writable, quota-limited, or absent, according to the authority and policy the embedder explicitly supplies. In particular, `~` never means the host user's home directory unless the embedder deliberately grants that directory as a capability.
+- new imports;
+- quota APIs;
+- lifetime rules;
+- implementation machinery.
 
-This keeps constrained runtimes free from allocating storage they do not need and keeps all filesystem authority on one mechanism.
+It would not add a new authority model.
 
-## Why opaque i32 resource handles?
+An embedder that wants to provide a convenient guest home can expose a normal preopen with display name `~`.
 
-Opaque numeric handles are simple, portable across current engines, and keep resource authority under embedder control.
+A higher-level binding can map `~/foo` to that directory handle and the relative path `foo`.
 
-`Opaque` is intentional and complete: WPSI assigns no meaning to the bits of a nonzero handle. There are no standardized resource-kind tags, reserved ranges, table-index fields, generation fields, or ordering guarantees. A runtime may use generation counters, monotonically increasing IDs, randomized values, delayed reuse, or another representation as long as stale handles cannot alias unrelated live resources.
+The name itself has no special authority.
 
-Keeping the encoding private avoids constraining runtime handle tables and prevents language bindings from accidentally depending on one implementation's bookkeeping. Bindings need only preserve the `i32` token and pass it back to WPSI.
+The preopen can be:
 
-WPSI does not require host objects to become `externref` or GC references. A future extension can explore reference-typed resource handles independently without changing the existing ABI.
+- temporary;
+- persistent;
+- memory-backed;
+- directory-backed;
+- read-only;
+- writable;
+- quota-limited;
+- absent.
+
+The embedder decides these properties.
+
+The name `~` does not mean the operating-system user's home directory unless the embedder explicitly grants that directory.
+
+This design also lets constrained runtimes avoid allocating storage they do not need.
+
+## Why opaque `i32` resource handles?
+
+Opaque numeric handles are simple Core WebAssembly values.
+
+They keep resource authority under runtime and embedder control.
+
+Only `0` has a standardized numeric meaning.
+
+WPSI does not standardize:
+
+- resource-kind tags;
+- reserved handle ranges;
+- table-index fields;
+- generation fields;
+- ordering guarantees.
+
+A runtime can use any private strategy that prevents a stale handle from identifying an unrelated live resource.
+
+Examples include generation counters, monotonic IDs, randomized values, and delayed reuse.
+
+Bindings only need to preserve the `i32` token and pass it back to WPSI.
+
+WPSI also does not require an external resource to become an `externref` or GC reference.
+
+A future extension can explore reference-typed resource handles independently.
 
 ## Why are WPSI calls synchronous?
 
-WPSI deliberately makes synchronous call lifetime a core ABI invariant rather than defining futures or retained-buffer asynchronous host operations.
+WPSI makes synchronous call lifetime a core ABI rule.
 
-This keeps guest-storage ownership local and tractable. A runtime can root or pin a Wasm GC object, stabilize linear memory, perform one host operation, invalidate the borrowed view, and return. No guest pointer, GC reference, or borrowed backing address remains live in host code after the call boundary.
+This keeps guest-storage ownership local and understandable.
 
-Nonblocking I/O still composes with concurrency: an operation can return `ERR_AGAIN`, a scheduler can wait through `wpsi-poll`, run other work, and retry when the resource becomes ready.
+For one call, the runtime can:
 
-This model is intentionally friendly to actor-style, event-loop, green-thread, and multi-instance scheduling without standardizing any of those execution models. WPSI defines neither actors nor a scheduler; it only guarantees that each system call has a bounded synchronous dynamic extent.
+1. validate the guest storage;
+2. root or pin a GC object when necessary;
+3. stabilize linear memory when necessary;
+4. perform the operation;
+5. invalidate the borrowed view;
+6. return.
 
-A future specification that introduces true asynchronous host calls would need a separate ownership model and would be an explicit extension to this invariant, not an implied part of WPSI 0.1.
+No guest pointer, GC reference, or borrowed backing address remains live in deferred runtime work after the call returns.
+
+Nonblocking I/O still works with concurrency.
+
+An operation can return `ERR_AGAIN`.
+
+A scheduler can run other work while it waits with `wpsi-poll`.
+
+The scheduler can retry the operation when the resource is ready.
+
+This model works well with:
+
+- actor schedulers;
+- event loops;
+- green threads;
+- multiple WebAssembly instances.
+
+WPSI does not standardize any of those execution models.
+
+A future specification that adds true asynchronous imported calls would need a separate ownership model.
+
+That would be an explicit extension to the WPSI 0.1 lifetime rule.
 
 ## Why not require zero-copy?
 
-Zero-copy is an implementation property, not a portable semantic guarantee.
+Zero-copy execution is an implementation property.
 
-WPSI instead guarantees that a representation does not have to be translated through an unrelated guest memory. A runtime may use a direct native view, pinning, a no-GC scope, or a temporary native buffer depending on collector and operating-system constraints.
+It is not a portable semantic guarantee.
+
+WPSI guarantees that the guest does not have to translate data through unrelated linear memory only to cross the ABI.
+
+A runtime can use:
+
+- a direct native view;
+- pinning;
+- a no-GC scope;
+- a temporary native buffer.
+
+The runtime chooses the safe implementation for its collector and operating-system APIs.
 
 ## Design rule for future additions
 
-When adding a new operation, ask:
+Before adding an operation, answer these questions:
 
-1. What is the semantic operation?
-2. Which Core Wasm representations materially change its signature?
-3. Can those representations receive explicit names?
-4. Can the observable behavior be specified without depending on one runtime's private heap layout?
+1. What semantic system operation does the import provide?
+2. Which Core WebAssembly representations change the function signature?
+3. Can those representations use explicit import names?
+4. Can the specification define observable behavior without exposing a runtime's private heap layout?
 5. What capability does the operation consume or create?
-6. Can a runtime that does not support the relevant Wasm feature simply omit the import?
+6. Can a runtime omit the import when it does not support the required WebAssembly feature?
 
-If the answer to those questions stays simple, the operation likely fits WPSI.
+If the answers remain simple, the operation probably fits WPSI.
 
 ## Why a WTF boolean instead of an encoding enum?
 
-The code-unit width changes the physical ABI and therefore belongs in the import name. UTF versus WTF semantics do not change the Core Wasm signature, so they are represented by one boolean.
+The code-unit width changes the physical ABI.
 
-This keeps the rule simple:
+It therefore belongs in the import name.
+
+Strict Unicode versus WTF semantics do not change the Core WebAssembly signature.
+
+They therefore use one boolean parameter.
+
+The rule is:
 
 ```text
 physical representation -> import name
 strict vs sentinel text  -> wtf boolean
 ```
 
-`wtf = 0` requires Unicode scalar text. `wtf = 1` permits surrogate values as reversible sentinels. WPSI does not need an `ENC_*` namespace or a separate raw-8 string mode.
+`wtf = 0` requires Unicode scalar text.
+
+`wtf = 1` permits surrogate values as reversible sentinels.
+
+WPSI does not need an `ENC_*` namespace or a separate raw-8 string mode.

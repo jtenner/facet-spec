@@ -1,41 +1,103 @@
 # Security
 
-WPSI is a specification for a sandbox-facing system ABI. Security properties are therefore part of the interface contract rather than optional implementation details.
+WPSI is a system ABI that faces untrusted guest input.
+
+Security rules are part of the interface contract.
+
+They are not optional implementation details.
 
 ## Security model
 
-A conforming implementation must treat all guest-provided values as untrusted, including handles, memory indexes, offsets, lengths, `wtf` booleans, flags, GC references, and dynamic GC types.
+A conforming runtime MUST treat every guest-provided value as untrusted.
 
-Implementations must validate:
+This includes:
 
-- resource handles and resource ownership;
-- memory index existence and address width;
-- pointer-range arithmetic using overflow-safe checks;
-- GC reference kind, dynamic array element type, and mutability;
-- text well-formedness under the import's code-unit width and strict/WTF mode;
-- path restrictions, including embedded NUL and capability-boundary traversal;
-- requested rights against the parent capability;
-- filesystem traversal, including traversal through symbolic links;
-- network actions against host-granted network authority.
+- resource handles;
+- memory indexes;
+- offsets;
+- lengths;
+- `wtf` values;
+- flags;
+- GC references;
+- dynamic GC types.
 
-A preopen named `~` must not imply ambient access to the host user's home directory. Like every filesystem root, it grants only the directory authority explicitly supplied by the embedder. Host filesystem paths and network access remain explicit capabilities.
+The runtime MUST validate resource handles before use.
 
-A borrowed GC backing view must never outlive the synchronous call or collector scope that makes its address stable.
+The runtime MUST verify that a resource belongs to the current WPSI instance.
 
-WTF mode must be reversible where it is used to preserve non-Unicode host units. Implementations must not silently replace unrepresentable values with U+FFFD or otherwise collapse distinct host names into the same guest-visible string.
+The runtime MUST validate each memory index.
+
+The runtime MUST validate the selected memory address width.
+
+The runtime MUST use overflow-safe arithmetic for pointer and range checks.
+
+The runtime MUST validate GC reference kind.
+
+The runtime MUST validate the dynamic array element type.
+
+The runtime MUST validate destination mutability.
+
+The runtime MUST validate text according to the selected code-unit width and `wtf` mode.
+
+The runtime MUST reject embedded NUL in filesystem paths.
+
+The runtime MUST prevent a path from escaping its directory capability.
+
+The runtime MUST apply the same boundary to symbolic-link traversal.
+
+The runtime MUST validate requested rights against the parent capability.
+
+The runtime MUST enforce network authority granted by the embedder.
+
+### Optional `~` preopen
+
+A preopen named `~` is an ordinary directory capability.
+
+The name MUST NOT imply ambient access to the operating-system user's home directory.
+
+It grants only the directory authority that the embedder explicitly supplied.
+
+### Borrowed GC and linear-memory storage
+
+A borrowed GC backing view MUST NOT outlive the synchronous call or collector scope that makes its address valid.
+
+The same rule applies to a borrowed linear-memory view.
+
+The runtime MUST NOT retain borrowed guest storage for deferred work after the imported function returns.
+
+### WTF mode
+
+WTF mode must preserve distinct external values when the specification defines a reversible mapping.
+
+The runtime MUST NOT silently replace an unrepresentable value with U+FFFD.
+
+The runtime MUST NOT collapse distinct external names into one guest-visible string through lossy replacement.
 
 ## Reporting vulnerabilities
 
-Please do not publish exploitable vulnerabilities in a public issue before a fix or mitigation is available.
+Do not publish an exploitable vulnerability in a public issue before a fix or mitigation is available.
 
-Use GitHub's private vulnerability-reporting mechanism for this repository when available. If private reporting is not available, contact the repository owner privately before publishing details.
+Use GitHub private vulnerability reporting for this repository when it is available.
 
-Useful reports should include:
+If private reporting is not available, contact the repository owner privately before you publish exploit details.
+
+A useful report should include:
 
 - the affected WPSI function or rule;
-- the relevant runtime or implementation;
-- a minimal Wasm reproducer when possible;
-- whether the issue crosses a capability, memory, instance, GC-domain, or host boundary;
-- expected and observed behavior.
+- the affected runtime or implementation;
+- a minimal Wasm reproducer when practical;
+- the boundary that the issue crosses, if any;
+- expected behavior;
+- observed behavior.
 
-Because WPSI is currently a draft specification, ambiguities that could cause independent runtimes to enforce different security boundaries should also be treated as security-relevant specification bugs.
+Relevant boundaries include:
+
+- capability boundaries;
+- memory boundaries;
+- instance boundaries;
+- GC-domain boundaries;
+- external system boundaries.
+
+WPSI is a draft specification.
+
+An ambiguity that causes independent runtimes to enforce different security boundaries is also a security-relevant specification bug.

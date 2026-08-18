@@ -1,14 +1,20 @@
 # Runtime Implementation Guidance
 
-This document is informative. `SPEC.md` defines observable behavior.
+This document is informative.
 
-## Host-import structure
+`SPEC.md` and `spec/behavior.md` define observable behavior.
 
-A runtime does not need polymorphic import resolution. WPSI functions are ordinary imports from module `wpsi`.
+Use [`terminology.md`](terminology.md) for the project terminology.
 
-A minimal implementation can register only the functions corresponding to features it supports.
+## Import registration
 
-For example, a runtime without Wasm GC may implement:
+WPSI functions are ordinary imports from module `wpsi`.
+
+A runtime does not need polymorphic import resolution.
+
+A runtime can register only the imports for features that it supports.
+
+For example, a runtime without Wasm GC can implement:
 
 ```text
 wpsi-core
@@ -16,7 +22,7 @@ wpsi-memory32
 wpsi-filesystem
 ```
 
-while a Core Wasm 3.0 runtime may additionally implement:
+A runtime with more Core WebAssembly features can also implement:
 
 ```text
 wpsi-memory64
@@ -25,46 +31,92 @@ wpsi-network
 wpsi-poll
 ```
 
-Do not build a second profile-version or feature-negotiation registry for WPSI. Register the imports the runtime implements and let ordinary Core Wasm import/type matching decide whether a module can instantiate. `abi_version()` is the only global ABI generation number; profile labels are implementation/conformance groupings, not independently versioned runtime objects.
+Do not build a second feature-negotiation registry for WPSI.
+
+Do not build independent profile-version negotiation.
+
+Register the imports that the runtime implements.
+
+Let normal Core WebAssembly import and type matching determine whether a module can instantiate.
+
+`abi_version()` is the only global ABI generation number.
+
+Profile labels are implementation and conformance groupings only.
 
 ## Synchronous call boundary
 
-Treat the return from every WPSI host function as a hard lifetime boundary.
+Treat the return from every WPSI imported function as a hard lifetime boundary.
 
-No guest linear-memory view, GC reference, raw GC payload pointer, pin, root, no-move token, or other borrowed guest-storage state may remain owned by host work after the function returns. If an operating-system or runtime API requires an operation to outlive the call, copy the relevant guest data into host-owned storage or use a nonblocking operation that returns `ERR_AGAIN` and is retried after polling.
+After return, no deferred runtime work may retain:
 
-Do not implement a WPSI import by starting background work that will later dereference a guest pointer or GC reference. The host may retain WPSI resource handles and host-owned metadata, but not borrowed guest storage.
+- a guest linear-memory view;
+- a guest GC reference borrowed for the call;
+- a raw GC payload pointer;
+- a pin;
+- a root used only for the call;
+- a no-move token;
+- another borrowed guest-storage view.
 
-This restriction is per call, not per runtime. A runtime is free to execute multiple Wasm instances, actors, tasks, or scheduler contexts concurrently as long as each WPSI call obeys the same lifetime boundary.
+If an external API requires data after the WPSI call returns, copy the data into independent runtime-owned storage.
+
+For nonblocking I/O, prefer an operation that returns `ERR_AGAIN` and is retried after polling.
+
+Do not start background work that will later dereference a guest pointer or borrowed GC reference.
+
+The runtime MAY retain WPSI resource state and independent runtime-owned metadata.
+
+This restriction applies to each call.
+
+It does not prohibit concurrent WebAssembly execution.
+
+A runtime can execute multiple instances, actors, tasks, or scheduler contexts concurrently.
+
+Each WPSI call must still obey the same lifetime boundary.
 
 ## Linear-memory access
 
 For every `_mem32` or `_mem64` call:
 
 1. resolve the calling instance;
-2. validate `memory_index` against the instance's memory index space;
+2. validate `memory_index` against that instance's memory index space;
 3. validate the selected memory's address width;
-4. check pointer/length arithmetic for overflow;
-5. bounds-check against the memory's current size;
-6. keep the memory backing stable for the synchronous host operation;
-7. perform the host operation directly on the selected memory when safe.
+4. check pointer and length arithmetic for overflow;
+5. bounds-check the range against the current memory size;
+6. keep the memory backing stable for the synchronous operation;
+7. perform the operation directly on the selected memory when this is safe.
 
-Memory 0 must not receive special treatment.
+Do not give memory 0 special treatment.
 
 ## Text representation
 
-Text width is part of the WPSI import name. A runtime should dispatch `*_i8`, `*_i16`, and `*_i32` directly to the corresponding code-unit reader/writer rather than decoding an encoding enum on every call.
+The import name selects text width.
 
-The `wtf` argument is a strict boolean. Validate it before touching guest buffers or host namespaces.
+Dispatch `*_i8`, `*_i16`, and `*_i32` directly to the corresponding code-unit path.
+
+Do not decode a text-width enum on each call.
+
+The `wtf` argument is a strict boolean.
+
+Validate it before the runtime modifies guest storage or resolves an external text namespace.
 
 ```text
 wtf = 0 -> strict Unicode scalar text
 wtf = 1 -> permit surrogate sentinel values
 ```
 
-On byte-oriented host namespaces, a practical reversible mapping for invalid UTF-8 bytes is the surrogate-escape range `U+DC80..U+DCFF`. On UTF-16 hosts, preserve unpaired surrogate code units directly. Never substitute U+FFFD when WPSI requires lossless transfer; return `ERR_ILLEGAL_SEQUENCE` if the selected mode cannot represent the host value.
+For a byte-oriented external namespace, a practical reversible mapping for invalid UTF-8 bytes is `U+DC80..U+DCFF`.
 
-For linear memory, `_i16` and `_i32` code units are little-endian. The pointer remains a byte address while lengths/capacities are code-unit counts.
+For a UTF-16 external namespace, preserve unpaired surrogate code units directly.
+
+Do not substitute U+FFFD when the specification requires lossless transfer.
+
+Return `ERR_ILLEGAL_SEQUENCE` when the selected mode cannot represent the external value.
+
+For linear memory, `_i16` and `_i32` code units use little-endian byte order.
+
+The pointer is a byte address.
+
+Lengths and capacities are code-unit counts.
 
 ## GC array access
 
@@ -74,92 +126,111 @@ A useful internal runtime primitive is:
 with_array_bytes(reference, expected_element_type, access_mode, callback)
 ```
 
-with semantics equivalent to:
+A conceptual implementation should:
 
-```text
-validate array reference
-validate dynamic storage type
-validate destination mutability when required
-validate logical byte range
-root reference
-establish pin/no-move/no-GC scope if needed
-resolve current backing storage
-invoke callback over a temporary byte view
-invalidate the byte view
-leave collector scope
-```
+1. validate the array reference;
+2. validate the dynamic storage type;
+3. validate destination mutability when required;
+4. validate the logical byte range;
+5. keep the reference alive;
+6. establish a pin, no-move scope, or no-GC scope when required;
+7. resolve the current backing storage;
+8. call the operation with a temporary byte view;
+9. invalidate the temporary byte view;
+10. leave the collector scope.
 
-The callback must not retain the native address or slice.
+The callback must not retain the native address or byte view.
 
-### Fast path
+### Direct fast path
 
-If a runtime stores pointer-free numeric arrays contiguously and can safely stabilize the object for a synchronous call, the logical byte view can map directly onto the array payload.
+If the runtime stores pointer-free numeric arrays contiguously, the logical byte view can map directly to the array payload.
 
-This permits operations such as an OS `read` to write directly into the GC array.
+The runtime must still keep the object stable for the complete synchronous call.
+
+This can let an operating-system `read` write directly into the GC array.
 
 ### Portable fallback
 
-A runtime whose array layout is non-contiguous, encoded, compressed, or otherwise unsuitable for direct native access may use a temporary native byte buffer.
+A runtime can use temporary native storage when its GC layout is not suitable for direct access.
 
-For reads:
-
-```text
-host read -> temporary bytes -> logical-byte-view update
-```
-
-For writes:
+For a read:
 
 ```text
-logical-byte-view extraction -> temporary bytes -> host write
+external read -> temporary bytes -> logical-byte-view update
 ```
 
-This is conforming as long as partial-element behavior and all observable values match the specification.
+For a write:
 
-## Host-allocated GC string results
+```text
+logical-byte-view extraction -> temporary bytes -> external write
+```
 
-Allocating string imports such as `args_read_array_i16` are specialized to the concrete nullable array result type requested by the importing module.
+This is conforming when the observable result matches the specification.
 
-At import instantiation a runtime should:
+The fallback must preserve partial-element behavior.
+
+## Runtime-allocated GC string results
+
+Allocating string imports such as `args_read_array_i16` use the concrete nullable array result type declared by the importing module.
+
+At import instantiation:
 
 1. inspect the requested function result type;
 2. require a concrete array heap type with the storage class named by the import;
-3. retain the runtime type identity in the host-function instance;
-4. encode the selected source string completely;
-5. allocate exactly that array type at the exact required length;
-6. initialize every element before returning the reference;
-7. return `null` plus `ERR_NO_MEMORY` if allocation fails.
+3. retain the runtime type identity in the imported-function implementation.
 
-The result array may be mutable or immutable. This path does not borrow an existing object and therefore does not use the scoped raw-array byte-borrow primitive.
+At call time:
 
-Caller-owned `*_read_into_array_*` functions still use normal destination validation and require mutable arrays.
+1. encode the complete source string;
+2. allocate exactly the requested array type at the exact required length;
+3. initialize every element;
+4. return the non-null reference with `ERR_OK`.
+
+If allocation fails, return `null` with `ERR_NO_MEMORY`.
+
+The result array can be mutable or immutable.
+
+This path allocates a new object.
+
+It does not borrow an existing GC array.
+
+Guest-owned `*_read_into_array_*` destinations still require normal validation and mutable storage.
 
 ## Current runtime layout observations
 
-These observations motivated the WPSI 0.1 array design. They are not normative requirements.
+The observations in this section explain why the WPSI 0.1 GC-array design can be efficient.
+
+They are not normative requirements.
 
 ### Wago
 
-Wago's collector stores objects in byte heaps with a 16-byte object header. Array size is computed as:
+Wago stores GC objects in byte heaps with a 16-byte object header.
+
+Array size is computed as:
 
 ```text
 header + element_size * length
 ```
 
-with final object alignment.
+The final object is aligned as required by the collector.
 
 Current numeric storage sizes are:
 
 ```text
 i8      1
- i16     2
- i32     4
- i64     8
- f32     4
- f64     8
- v128   16
+i16     2
+i32     4
+i64     8
+f32     4
+f64     8
+v128   16
 ```
 
-Numeric stores use little-endian byte encoding, and `v128` occupies two consecutive little-endian 64-bit words. The collector resolves compact references through handle metadata to nursery/old/large/tiny backing storage.
+Numeric stores use little-endian byte encoding.
+
+A `v128` value occupies two consecutive little-endian 64-bit words.
+
+The collector resolves compact references through handle metadata to nursery, old, large, or tiny backing storage.
 
 Relevant source files:
 
@@ -168,19 +239,29 @@ Relevant source files:
 - `wago-org/wago/src/core/runtime/gc/storage.go`
 - `wago-org/wago/src/core/runtime/gc/alloc.go`
 
-A Wago WPSI plugin can therefore implement pointer-free array access efficiently if it adds a scoped collector API that validates the array and prevents backing relocation for the duration of the host call.
+A Wago WPSI plugin can implement pointer-free array access efficiently.
+
+It should add a scoped collector API that validates the array and prevents unsafe relocation for the duration of the call.
 
 ### Wasmtime
 
-Wasmtime's `GcArrayLayout` explicitly describes arrays as collector-specific headers followed by contiguous naturally aligned elements. Element offsets are computed from:
+Wasmtime's `GcArrayLayout` describes collector-specific headers followed by contiguous naturally aligned elements.
+
+Element offsets use this form:
 
 ```text
 base_size + index * elem_size
 ```
 
-and storage sizes are 1, 2, 4, 8, and 16 bytes for the corresponding numeric/SIMD types.
+The relevant numeric and SIMD storage sizes are 1, 2, 4, 8, and 16 bytes.
 
-Wasmtime's public `ArrayRef` interface is intentionally typed, while lower-level runtime code operates with `AutoAssertNoGc`, `GcArrayLayout`, and raw GC-heap offsets. A WPSI integration could build a scoped bulk-borrow primitive on those mechanisms without making layout public API.
+Wasmtime's public `ArrayRef` interface is typed.
+
+Lower-level runtime code uses `AutoAssertNoGc`, `GcArrayLayout`, and raw GC-heap offsets.
+
+A WPSI integration could build a scoped byte-borrow primitive on those internal mechanisms.
+
+It should not expose collector layout as public WPSI API.
 
 Relevant source files:
 
@@ -190,36 +271,44 @@ Relevant source files:
 
 ### V8
 
-V8's `WasmArray` stores a length in the object and computes array size as a header plus `element_size * length`, rounded to object alignment. Element addresses are computed as the array header offset plus `index * element_size`.
+V8's `WasmArray` stores a length in the object.
 
-V8 supports element widths 1, 2, 4, 8, and 16 bytes in this representation.
+It computes array size from a header plus `element_size * length`, rounded to object alignment.
+
+An element address is the array payload base plus `index * element_size`.
+
+V8 supports element widths of 1, 2, 4, 8, and 16 bytes in this representation.
 
 Relevant source files:
 
 - `v8/v8/src/wasm/wasm-objects.tq`
 - `v8/v8/src/wasm/wasm-objects-inl.h`
 
-A V8 implementation must still coordinate with the moving collector before handing an element address to an external synchronous operation.
+A V8 implementation must still coordinate with the moving collector before it gives an element address to an external synchronous operation.
 
 ### SpiderMonkey
 
-SpiderMonkey's `WasmArrayObject` exposes an internal `data_` pointer to its element storage. Array indexing scales the index by the element storage size and addresses `data_ + offset`.
+SpiderMonkey's `WasmArrayObject` has an internal `data_` pointer for element storage.
 
-Numeric values, including `V128`, are written through the corresponding fixed-width native representation. SpiderMonkey also has explicit logic for keeping array backing/trailer storage coordinated with generational GC and object movement.
+Array indexing scales the index by the element storage size.
+
+Numeric values, including `V128`, use their corresponding fixed-width native representation.
+
+SpiderMonkey also contains logic that coordinates array backing storage with generational GC and object movement.
 
 Relevant source area:
 
 - `mozilla/gecko-dev/js/src/wasm/WasmGcObject.cpp`
 
-## Partial element updates
+## Partial-element updates
 
-For wide arrays, do not implement an unaligned byte range by blindly casting the beginning of the range to the element type.
+Do not implement an unaligned byte range by casting the beginning of the range to the array element type.
 
-If the runtime can expose the payload as bytes, the operation is naturally a byte-range update.
+If the runtime can expose the payload as bytes, update the selected byte range directly.
 
-If it only exposes typed element operations, handle the first and last partial elements with read-modify-write and bulk-process complete elements in between.
+If the runtime can access only typed elements, use read-modify-write for partial elements.
 
-Example for a portable `array<i32>` update:
+A portable `array<i32>` update has this shape:
 
 ```text
 [first partial i32]
@@ -227,27 +316,54 @@ Example for a portable `array<i32>` update:
 [last partial i32]
 ```
 
-All integer encoding in the logical view is little-endian.
+Process complete elements in bulk when practical.
+
+All integer encoding in the logical byte view is little-endian.
 
 ## Reference arrays
 
-The raw `_array_i8/i16/i32/i64/v128` functions are only for pointer-free numeric arrays.
+The raw `_array_i8`, `_array_i16`, `_array_i32`, `_array_i64`, and `_array_v128` functions are only for pointer-free numeric arrays.
 
-Do not treat reference-bearing arrays as raw byte buffers. Their slots may contain collector handles, compressed pointers, barriers, or other runtime-private representations.
+Do not treat a reference-bearing array as a raw byte buffer.
 
-Nested scatter/gather arrays are different: the outer array contains references and is traversed structurally, while each child is validated as one of the allowed pointer-free numeric array types.
+A reference slot can contain runtime-private data such as:
 
-For WPSI 0.1, validate the entire `first..first+count` child range before beginning host I/O, then expose each selected child's complete logical byte view in sequence. Do not invent or infer per-child slices. A short host transfer may finish inside the final child reached; bytes outside the transferred prefix remain untouched.
+- collector handles;
+- compressed pointers;
+- write-barrier state;
+- other private representations.
+
+Nested scatter/gather arrays are different.
+
+The outer array contains references and is traversed structurally.
+
+Each selected child is then validated as one of the allowed pointer-free numeric array types.
+
+For WPSI 0.1:
+
+1. validate the complete `first..first+count` child range before external I/O;
+2. expose each selected child's complete logical byte view in sequence;
+3. do not infer a per-child slice.
+
+A short external transfer can stop inside the final child reached.
+
+Bytes after the transferred prefix remain unchanged.
 
 ## GC barriers
 
-Raw writes into pointer-free arrays require no reference write barrier.
+Raw writes into pointer-free arrays do not require a reference write barrier.
 
-The runtime must still satisfy collector invariants for object movement, pinning, incremental/concurrent collection, and object liveness.
+The runtime must still preserve collector invariants for:
+
+- object movement;
+- pinning;
+- incremental collection;
+- concurrent collection;
+- object liveness.
 
 ## Capability table
 
-A practical resource handle can be encoded as an index plus generation:
+One practical private handle encoding is an index plus a generation value:
 
 ```text
 handle = generation | slot
@@ -255,25 +371,44 @@ handle = generation | slot
 
 The exact bit allocation is runtime-private.
 
-Lookup must validate:
+Handle lookup should validate:
 
-- nonzero handle;
+- a nonzero handle;
 - slot bounds;
 - generation match;
 - resource kind when required;
-- rights/capability set;
+- rights and capability set;
 - instance ownership;
 - open state.
 
+Other private handle encodings are also conforming when they preserve the normative handle rules.
+
 ## Optional `~` preopen
 
-There is no scratch-specific runtime subsystem in WPSI.
+WPSI has no scratch-specific runtime subsystem.
 
-If an embedder wants to provide a private or convenient guest home directory, expose it through the ordinary preopen table with the display name `~`. Do not allocate such storage when the embedding environment does not need it.
+If the embedder wants to provide a guest home or private directory, expose it as an ordinary preopen with display name `~`.
 
-The backing implementation is ordinary filesystem policy: it may be a host directory, memory filesystem, temporary directory, overlay, persistent store, or another directory-capability implementation. The `~` name itself grants no rights and does not imply the host user's real home directory.
+Do not allocate this storage when the embedding environment does not need it.
 
-A libc or language runtime that supports `~/path` should resolve the `~` preopen once and then issue normal handle-relative WPSI path operations.
+The backing storage is ordinary filesystem policy.
+
+It can be:
+
+- an operating-system directory;
+- a memory filesystem;
+- a temporary directory;
+- an overlay;
+- a persistent store;
+- another directory-capability implementation.
+
+The display name `~` grants no rights by itself.
+
+It does not imply the operating-system user's home directory.
+
+A libc or language runtime that supports `~/path` can resolve the `~` preopen once.
+
+It can then issue normal handle-relative WPSI path operations.
 
 ## Testing recommendations
 
@@ -281,16 +416,18 @@ Every representation family should test:
 
 - zero-length operations;
 - exact-end boundary operations;
-- one-byte-out-of-bounds ranges;
-- overflowing offset-plus-length;
-- short reads/writes;
+- a range that is one byte out of bounds;
+- offset-plus-length overflow;
+- short reads and writes;
 - EOF;
 - invalid memory indexes;
 - memory-address-width mismatch;
 - GC element-type mismatch;
 - immutable destination arrays;
 - unaligned and partial-element GC byte ranges;
-- forced moving collection around host calls;
-- immediate memory growth/GC after return to catch retained guest borrows;
-- stale handles and close races;
-- capability and symlink escapes.
+- forced moving collection around imported calls;
+- immediate memory growth or GC after return, to detect retained guest borrows;
+- stale handles;
+- close races;
+- capability escapes;
+- symbolic-link escapes.

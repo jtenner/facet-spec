@@ -4,22 +4,27 @@
 **Manifest version:** 1  
 **Applies to:** WPSI 0.1
 
-This directory contains the normative WPSI conformance tests. Tests are standard
-WebAssembly Script (`.wast`) files and optional same-basename JSON manifests.
-The host-manifest model intentionally mirrors the operation-based format from
-`WebAssembly/wasi-testsuite` so an existing WASI adapter can be extended rather
-than replaced.
+This directory contains the normative WPSI conformance tests.
 
-Contributions are welcome. Every contributed test should isolate one important
-contract, document why it matters, and avoid asserting behavior the WPSI
-specification does not promise.
+A test is a standard WebAssembly Script (`.wast`) file.
+
+A test can also have a same-basename JSON manifest when it needs external setup or interaction.
+
+The manifest model follows `WebAssembly/wasi-testsuite` conventions where those conventions can express the required setup without weakening the WPSI contract.
+
+## Authoring goal
+
+Each test should isolate one important observable rule.
+
+Each test should explain why that rule matters.
+
+Do not assert behavior that the specification does not promise.
 
 ## Compatibility rule
 
-> Reuse a WASI testsuite convention whenever it can express the same host setup
-> or interaction without weakening the WPSI contract.
+Reuse a WASI testsuite convention when it can express the same setup or interaction.
 
-The following fields and operations retain their WASI meanings:
+The following fields and operations keep their WASI meanings:
 
 - `args`, `env`, and `root` on `run`;
 - `run`, `wait`, `read`, `connect`, `send`, and `recv` operations;
@@ -30,14 +35,17 @@ The following fields and operations retain their WASI meanings:
 
 WPSI adds one host-provisioning extension:
 
-- `preopens`, for more than one directory capability, explicit guest display names, or explicit rights.
+- `preopens`, for explicit multiple directory capabilities, guest display names, and rights.
 
-A preopen may use the guest display name `~`; this is provisioned exactly like any other preopen.
+A preopen can use guest display name `~`.
+
+The harness provisions it exactly like any other preopen.
 
 ## Discovery
 
-For each `foo.wast`, a runner looks for `foo.json` in the same directory. If no
-manifest exists, the default is:
+For `foo.wast`, the runner looks for `foo.json` in the same directory.
+
+If no manifest exists, use this default:
 
 ```json
 {
@@ -49,17 +57,31 @@ manifest exists, the default is:
 }
 ```
 
-A runner must create a fresh test context, handle table, poll state, network namespace,
-argument vector, and environment for every test.
-Each module instantiated by one WAST script receives a distinct WPSI instance
-context unless the test manifest explicitly requests host-mediated sharing.
-This prevents raw handles from crossing module-instance boundaries.
-Files ending in `.cleanup` are deleted before and after execution.
+For every test, the runner MUST create a fresh test context.
 
-Generated `wast2json` output must go to a build directory; source-side JSON is
-always WPSI host metadata.
+The fresh context includes:
+
+- a handle table;
+- poll state;
+- network state;
+- an argument vector;
+- an environment.
+
+Each module instantiated by one WAST script receives a distinct WPSI instance context unless the manifest explicitly requests runtime-mediated sharing.
+
+This rule prevents raw handles from crossing module-instance boundaries.
+
+Delete `.cleanup` artifacts before execution.
+
+Delete them again after execution.
+
+Generated `wast2json` output MUST go to a build directory.
+
+Source-side JSON is always WPSI harness metadata.
 
 ## `run`
+
+Example:
 
 ```json
 {
@@ -70,10 +92,11 @@ always WPSI host metadata.
 }
 ```
 
-`root` creates one preopen whose display name is `/`. This is deliberately the
-same convention used by the WASI testsuite.
+`root` creates one preopen with display name `/`.
 
-For multiple preopens:
+This matches the WASI testsuite convention.
+
+For more than one preopen, use `preopens`:
 
 ```json
 {
@@ -85,25 +108,43 @@ For multiple preopens:
 }
 ```
 
-Preopen order is normative for a test: `fs_preopen_get(0)` corresponds to the
-first entry. `host` paths are relative to the manifest. `guest` is the value
-returned by the preopen-name APIs; it is not ambient path authority.
+Preopen order is normative for a test.
 
-Supported manifest right names are:
+`fs_preopen_get(0)` corresponds to the first entry.
+
+A manifest `host` path is relative to the manifest file.
+
+The `guest` field is the display name returned by the preopen-name APIs.
+
+The `guest` field does not create ambient path authority.
+
+Supported right names are:
 
 ```text
 read write seek tell stat set-size sync
 open create remove rename link symlink readlink iterate
 ```
 
-A preopen that grants mutation rights MUST be backed by an isolated per-test view
-of its fixture directory. Runners MUST NOT mutate the checked-in fixture tree in
-place. A fresh run starts from the committed fixture contents; copying, overlay
-filesystems, temporary directories, or equivalent isolation are all acceptable.
+If a preopen grants mutation rights, the runner MUST give that test an isolated view of the fixture directory.
+
+The runner MUST NOT mutate the checked-in fixture tree directly.
+
+A fresh run starts from the committed fixture contents.
+
+A runner can provide isolation with:
+
+- a copy;
+- an overlay filesystem;
+- a temporary directory;
+- an equivalent mechanism.
 
 ## Optional `~` preopen
 
-The conformance harness does not allocate scratch storage implicitly. Tests that need a private/writable guest home provision an ordinary preopen explicitly:
+The harness does not allocate writable guest storage automatically.
+
+A test that needs a guest home or private writable area must provision an ordinary preopen explicitly.
+
+Example:
 
 ```json
 {
@@ -114,66 +155,109 @@ The conformance harness does not allocate scratch storage implicitly. Tests that
 }
 ```
 
-A test with no `root` and no `preopens` receives no filesystem roots. This keeps the harness aligned with WPSI's rule that writable storage is optional rather than automatically allocated.
+A test with no `root` and no `preopens` receives no filesystem roots.
+
+This matches the WPSI rule that writable storage is optional.
 
 ## WAST execution
 
-The runner evaluates the script in source order and resolves imports from the
-`"wpsi"` module. WAST assertions remain the source of truth for guest-visible
-results. The manifest describes only host provisioning and interactions.
+Evaluate each WAST script in source order.
 
-A module exporting `_start` may also be launched by the `run` operation for
-process- and networking-style tests. Such tests use `wait`, `read`, `connect`,
-`send`, and `recv` exactly as the WASI testsuite does.
+Resolve WPSI imports from module `"wpsi"`.
+
+WAST assertions are the source of truth for guest-visible results.
+
+The manifest describes only external provisioning and interactions.
+
+A module that exports `_start` can also be launched by the `run` operation for process-style or networking-style tests.
+
+These tests use `wait`, `read`, `connect`, `send`, and `recv` with the same meanings used by `WebAssembly/wasi-testsuite`.
 
 ## Text tests
 
-Text representation is selected by the WPSI import name: `i8`, `i16`, or `i32`.
-Textual calls use a boolean `wtf` argument where `0` means strict Unicode and
-`1` enables reversible surrogate-sentinel semantics. Tests should use exact
-`ERR_INVALID` behavior for non-boolean `wtf` values and `ERR_ILLEGAL_SEQUENCE`
-when strict mode cannot represent the source without loss.
+The WPSI import name selects text width: `i8`, `i16`, or `i32`.
 
-There is no `ENC_*` selector or raw-string encoding mode in WPSI 0.1.
+Text functions use the boolean `wtf` argument.
+
+`wtf == 0` selects strict Unicode.
+
+`wtf == 1` selects reversible surrogate-sentinel behavior.
+
+A non-boolean `wtf` value must produce the exact `ERR_INVALID` behavior defined by the specification.
+
+Strict mode must produce `ERR_ILLEGAL_SEQUENCE` when the source cannot be represented without loss.
+
+WPSI 0.1 has no `ENC_*` selector.
+
+WPSI 0.1 has no raw-string encoding mode.
 
 ## Profiles and unsupported tests
 
-Required WPSI functions are inferred from imports. A runner may report a test as
-`unsupported` only when it lacks a required WPSI representation family or Core
-Wasm feature. Unsupported is distinct from pass, fail, and expected-fail.
+Infer required WPSI functions from the imports in the test.
 
-The catalog in [`catalog.json`](catalog.json) provides human-readable profile
-metadata but does not override the imports. There are no profile-version fields
-or separate feature-query results in the conformance contract: import presence
-and Core Wasm type matching are authoritative.
+A runner may report a test as `unsupported` only when the runner lacks a required WPSI representation family or Core WebAssembly feature.
+
+`unsupported` is distinct from:
+
+- pass;
+- fail;
+- expected-fail.
+
+The catalog in [`catalog.json`](catalog.json) contains human-readable profile metadata.
+
+The catalog does not override imports.
+
+The conformance contract has no profile-version fields.
+
+The conformance contract has no separate feature-query results.
+
+Import presence and Core WebAssembly type matching are authoritative.
 
 ## Harness-driven tests
 
-Most tests contain ordinary WAST assertions. A small number are marked
-`Test kind: harness` because they require behavior outside the standard WAST
-command language, such as process exit, stdout/stderr validation, network
-client interactions, or passing a raw value between independently instantiated
-modules. Harness tests still use standard WAST modules and the same operation
-format as `WebAssembly/wasi-testsuite`; the catalog identifies the additional
-runner obligation.
+Most tests use ordinary WAST assertions.
 
-The TCP and UDP echo tests bind fixed loopback ports inside the fresh per-test
-network context. Runners without network namespaces MUST serialize harness
-network tests and ensure the selected ports are unavailable before launch.
+A small number use `Test kind: harness` because they require behavior outside the standard WAST command language.
+
+Examples include:
+
+- process exit;
+- stdout or stderr validation;
+- network client interaction;
+- passing a raw value between independently instantiated modules.
+
+Harness tests still use standard WAST modules.
+
+They also use the same operation format as `WebAssembly/wasi-testsuite`.
+
+The catalog identifies the additional runner obligation.
+
+The TCP and UDP echo tests use fixed loopback ports inside a fresh per-test network context.
+
+A runner without network namespaces MUST serialize these network tests.
+
+The runner MUST also verify that the selected ports are available before launch.
 
 ## Result classes
 
-Reports must distinguish:
+Reports must distinguish these result classes:
 
-1. malformed or invalid Core Wasm;
-2. WPSI import/link failure;
-3. WPSI runtime errno mismatch;
+1. malformed or invalid Core WebAssembly;
+2. WPSI import or link failure;
+3. WPSI runtime `errno` mismatch;
 4. guest trap;
-5. host crash or timeout;
+5. runtime crash or timeout;
 6. unsupported feature.
 
-A crash, panic, out-of-bounds host access, or leaked authority is always a test
-failure, even if the guest supplied invalid data.
+A crash is always a test failure.
+
+A panic is always a test failure.
+
+Out-of-bounds runtime memory access is always a test failure.
+
+Leaked authority is always a test failure.
+
+These remain failures even when the guest supplied invalid data.
 
 ## Structure
 
@@ -192,20 +276,21 @@ poll/          poll sets, timers, and readiness
 adversarial/   overflow, atomicity, stale handles, and isolation
 imports/       signature and feature-surface guards
 tools/         deterministic generation and static validation
-fixtures/      host directories used by manifests
+fixtures/      external directories used by manifests
 ```
 
 ## Authoring requirements
 
-A new test must:
+A new test MUST:
 
-- include a purpose comment and required-profile comment;
+- include a purpose comment;
+- include a required-profile comment;
 - assert one primary behavior;
 - preserve sentinels around modified buffers;
-- close resources it acquires unless lifecycle is the subject;
-- avoid wall-clock timing assumptions when a property assertion is enough;
+- close resources that it acquires unless lifecycle is the behavior under test;
+- avoid wall-clock timing assumptions when a property assertion is sufficient;
 - avoid public-network dependencies;
-- use exact error codes only where the WPSI specification fixes them;
+- use exact error codes only when the WPSI specification fixes them;
 - be added to `catalog.json` by the generator.
 
 The current catalog contains **143** focused tests.

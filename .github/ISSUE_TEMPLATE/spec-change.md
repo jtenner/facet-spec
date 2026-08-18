@@ -7,15 +7,19 @@ labels: specification
 
 ## Problem
 
-What system-interface or portability problem needs to be solved?
+Describe the system-interface or portability problem.
 
-## Proposed semantics
+Use short sentences.
 
-Describe the operation and its observable behavior.
+## Proposed behavior
+
+Describe the guest-visible behavior.
+
+State one normative rule per sentence when practical.
 
 ## Core Wasm signatures
 
-List every new or changed import signature.
+List each new or changed import signature.
 
 ```wat
 ;; imports here
@@ -23,29 +27,50 @@ List every new or changed import signature.
 
 ## Representations
 
-Which representation families are affected?
+Select each affected representation family.
 
 - [ ] Memory32
 - [ ] Memory64
 - [ ] GC array
-- [ ] Scalar/resource only
+- [ ] Scalar or resource only
 
 ## Multi-memory behavior
 
-Explain how the operation selects or interacts with memories.
+Explain how the operation selects memory.
 
-## Capability/security impact
+Explain whether one call can use more than one memory.
 
-What authority does the operation consume or create? What untrusted values must be validated?
+## Capability and security impact
+
+State the authority that the operation consumes or creates.
+
+List the untrusted values that the runtime must validate.
 
 ## Runtime implementation notes
 
-Can existing runtimes implement this with ordinary host imports? Are pinning, no-GC scopes, barriers, or layout-independent fallbacks required?
+Explain whether a runtime can implement this with ordinary imported functions.
+
+List special implementation requirements when applicable, such as:
+
+- pinning;
+- no-GC scopes;
+- barriers;
+- layout-independent fallbacks.
 
 ## Conformance tests
 
-List tests that distinguish conforming and non-conforming implementations.
+List tests that distinguish a conforming implementation from a nonconforming implementation.
 
 ## Compatibility
 
-Does this modify an existing published signature or can it be introduced under a new import name?
+State whether the proposal changes an existing published signature.
+
+If it is incompatible, explain why a new import name is or is not sufficient.
+
+## Documentation accessibility
+
+- [ ] Uses the terms in `docs/terminology.md`.
+- [ ] Follows `docs/writing-style.md`.
+- [ ] Uses one normative requirement per sentence where practical.
+- [ ] Keeps the actor clear.
+- [ ] Does not change normative meaning only to simplify wording.

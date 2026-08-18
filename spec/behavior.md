@@ -4,126 +4,281 @@
 **Applies to:** WPSI 0.1  
 **Companion to:** [`../SPEC.md`](../SPEC.md)
 
-This document is part of the normative WPSI 0.1 specification. `SPEC.md` defines the public ABI, function signatures, constants, representations, and profiles. This document fixes behavioral details that runtimes need in order to produce compatible results.
+This document is part of the normative WPSI 0.1 specification.
 
-The defaults intentionally follow established WASI behavior where it maps cleanly to WPSI. The goal is to minimize implementation novelty for runtimes that already implement WASI, while preserving the parts of WPSI that are deliberately different: direct Core Wasm imports, explicit multi-memory addressing, Memory64, and Wasm GC arrays.
+`SPEC.md` defines the public ABI, signatures, constants, representations, and profiles.
+
+This document defines behavior that independent runtimes must implement consistently.
+
+WPSI follows established WASI behavior when that behavior maps cleanly to the WPSI model.
+
+WPSI remains different in these areas:
+
+- direct Core WebAssembly imports;
+- explicit multi-memory addressing;
+- Memory64;
+- direct WebAssembly GC-array buffers.
+
+Use [`../docs/terminology.md`](../docs/terminology.md) for the project terminology.
 
 ## 1. Validation and error precedence
 
-WPSI functions MUST validate guest-controlled inputs in the following order unless a function explicitly states otherwise:
+A WPSI function MUST validate guest-controlled input in the order below unless that function defines a different order.
 
-1. **Scalar form.** Validate booleans such as `wtf`, enum values, flag masks, reserved bits, mutually incompatible scalar options, numeric domains such as port ranges, and other scalar-only constraints.
-2. **Resource handles.** Validate handles in parameter order. A zero, stale, closed, unknown, or wrong-resource-kind handle fails with `ERR_BAD_HANDLE`.
-3. **Resource state and authority.** Validate socket/file state, descriptor rights, and embedder-granted capabilities before accessing guest buffers or host namespaces.
-4. **Guest representation.** Resolve the selected linear memory or GC reference and validate the expected address width, GC array kind, dynamic element storage type, and destination mutability.
-5. **Ranges.** Validate indexes, offsets, lengths, descriptor tables, and all checked arithmetic. Overflow MUST be detected before address arithmetic or host calls.
-6. **Text.** Validate the code-unit representation selected by the import name and apply strict or WTF text semantics where the operation requires text.
-7. **Namespace resolution.** Resolve filesystem paths, symbolic links, DNS names, and similar namespace-dependent inputs subject to the operation's capability boundary.
-8. **Host operation.** Perform the operating-system, virtual filesystem, socket, clock, random, or other host operation.
-9. **Normalization.** Translate the host result into WPSI return values and WPSI error codes.
+### Stage 1: scalar form
 
-The first failing stage determines the returned WPSI error. Within one stage, parameters are validated from left to right in the order they appear in the WPSI function signature.
+Validate scalar-only constraints first.
 
-An implementation MAY combine or reorder internal checks when the observable result is identical.
+Examples include:
 
-No guest-visible mutation or externally visible host side effect may occur before stages 1 through 7 have succeeded. Reading a guest source buffer for validation is not a guest-visible mutation, but a runtime MUST NOT perform a host write, create a file, consume a datagram, advance a file position, or modify a destination buffer before deterministic validation succeeds.
+- the `wtf` boolean;
+- enum values;
+- flag masks;
+- reserved bits;
+- mutually incompatible options;
+- numeric domains such as port ranges.
 
-This order exists to make failures reproducible across runtimes and to prevent host behavior from accidentally deciding which of several invalid guest inputs is reported first.
+### Stage 2: resource handles
 
-### 1.1 Opaque handle values
+Validate handles in parameter order.
 
-A WPSI resource handle is an instance-local opaque `i32` token. Only the value `0` has defined bit-level meaning: it is always invalid.
+A zero handle returns `ERR_BAD_HANDLE`.
 
-No nonzero handle bit, range, subfield, ordering relation, or numeric pattern is portable WPSI information. A guest MUST NOT inspect a handle to infer its resource kind, table position, generation, authority, age, or implementation strategy.
+A stale handle returns `ERR_BAD_HANDLE`.
 
-Runtimes are free to choose any private handle encoding that preserves the observable WPSI rules. In particular, a stale or closed handle MUST return `ERR_BAD_HANDLE` and MUST NOT become authority over an unrelated live resource through internal slot reuse.
+A closed handle returns `ERR_BAD_HANDLE`.
 
-### 1.2 Synchronous call lifetime
+An unknown handle returns `ERR_BAD_HANDLE`.
 
-Every WPSI imported function has a bounded synchronous lifetime. Guest storage borrowed by a call is valid only during that call.
+A handle for the wrong resource kind returns `ERR_BAD_HANDLE`.
 
-Before returning to the guest, the runtime MUST release every borrow of guest linear memory and every borrowed Wasm GC reference or backing view established for the operation. The runtime MUST NOT arrange for a callback, worker, kernel operation, future completion, or other later action to read from or write to borrowed guest storage after return.
+### Stage 3: resource state and authority
 
-A runtime MAY copy guest data into host-owned storage or retain ordinary WPSI resource state when an operation requires it. Such retained state MUST be independent of the lifetime or location of the guest storage from which it was derived.
+Validate resource state before the runtime accesses guest buffers or external namespaces.
 
-Concurrency is outside this lifetime rule: multiple guest execution contexts may run concurrently, but each WPSI call still completes or returns `ERR_AGAIN` before its guest-storage borrows end. A scheduler can use `wpsi-poll` to wait for readiness and retry a nonblocking operation.
+Validate descriptor rights at this stage.
+
+Validate authority granted by the embedder at this stage.
+
+### Stage 4: guest representation
+
+Resolve the selected linear memory or GC reference.
+
+Validate the memory address width.
+
+Validate the GC array kind and dynamic element storage type.
+
+For a destination GC array, validate mutability.
+
+### Stage 5: ranges
+
+Validate indexes, offsets, lengths, and descriptor tables.
+
+Use checked arithmetic.
+
+The runtime MUST detect arithmetic overflow before it computes an address or starts an external operation.
+
+### Stage 6: text
+
+Validate the code-unit representation selected by the import name.
+
+Apply strict or WTF text rules when the operation uses text.
+
+### Stage 7: namespace resolution
+
+Resolve filesystem paths, symbolic links, DNS names, and similar namespace inputs.
+
+The runtime MUST apply the capability boundary during this stage.
+
+### Stage 8: external operation
+
+Perform the operating-system, virtual-filesystem, socket, clock, random, or other external operation.
+
+### Stage 9: normalization
+
+Translate the external result into WPSI result values and WPSI error codes.
+
+### 1.1 Which failure wins
+
+The first failing stage determines the returned WPSI error.
+
+Within one stage, validate parameters from left to right in function-signature order.
+
+The runtime MAY combine or reorder internal checks when the guest-visible result is identical.
+
+The runtime MUST NOT cause a guest-visible mutation before stages 1 through 7 succeed.
+
+The runtime MUST NOT cause an externally visible side effect before stages 1 through 7 succeed.
+
+Reading a guest source buffer for validation is not a guest-visible mutation.
+
+Before validation succeeds, the runtime MUST NOT:
+
+- write to an external resource;
+- create a file;
+- consume a datagram;
+- advance a file position;
+- modify a guest destination buffer.
+
+This validation order makes failures reproducible across runtimes.
+
+It also prevents external behavior from deciding which invalid guest input is reported first.
+
+### 1.2 Opaque handle values
+
+A WPSI resource handle is an opaque `i32` token that belongs to one WPSI instance.
+
+Only the value `0` has defined bit-level meaning.
+
+The value `0` is always invalid.
+
+No nonzero bit, range, subfield, ordering relation, or numeric pattern is portable WPSI information.
+
+A guest MUST NOT inspect a handle to infer:
+
+- resource kind;
+- table position;
+- generation;
+- authority;
+- age;
+- runtime implementation strategy.
+
+The runtime can choose any private handle encoding that preserves the WPSI rules.
+
+A stale or closed handle MUST return `ERR_BAD_HANDLE`.
+
+A stale or closed handle MUST NOT become authority over an unrelated live resource through internal slot reuse.
+
+### 1.3 Synchronous call lifetime
+
+Every WPSI imported function has a bounded synchronous lifetime.
+
+Borrowed guest storage is valid only during the call that borrowed it.
+
+Before the runtime returns to the guest, it MUST release every borrow of guest linear memory.
+
+Before the runtime returns to the guest, it MUST release every borrowed Wasm GC reference or backing view created for the operation.
+
+The runtime MUST NOT arrange for later work to access borrowed guest storage.
+
+This prohibition includes later work performed by:
+
+- a callback;
+- a worker;
+- an operating-system request;
+- a future completion;
+- another deferred action.
+
+The runtime MAY copy guest data into independent runtime-owned storage.
+
+The runtime MAY retain ordinary WPSI resource state when an operation requires it.
+
+Retained state MUST NOT depend on the lifetime or location of guest storage from which it was derived.
+
+Multiple guest execution contexts MAY run concurrently.
+
+Each WPSI call still completes or returns `ERR_AGAIN` before its guest-storage borrows end.
+
+A scheduler can use `wpsi-poll` to wait for readiness and retry a nonblocking operation.
 
 ## 2. Error semantics
 
-WPSI keeps its own compact numeric error namespace. The numeric values in `SPEC.md` are normative WPSI values; they are **not** required to equal POSIX errno values or WASI enum ordinals.
+WPSI has its own compact numeric error namespace.
 
-The intended semantics deliberately track WASI/POSIX categories where possible:
+The numeric values in `SPEC.md` are normative WPSI values.
+
+They do not have to equal POSIX `errno` values.
+
+They do not have to equal WASI enum ordinals.
+
+WPSI follows WASI and POSIX error categories when practical.
 
 | WPSI error | Meaning |
 | --- | --- |
-| `ERR_OK` | Operation completed successfully. |
-| `ERR_PERMISSION` | Operation is not permitted. This corresponds to the WASI/POSIX `not-permitted` / `EPERM` class and is also used for forbidden path-resolution escape attempts. |
-| `ERR_NO_ENTRY` | Named filesystem object, DNS name, or other requested entry does not exist. |
-| `ERR_IO` | Host I/O failure without a more specific portable classification. |
-| `ERR_BAD_HANDLE` | Handle is zero, stale, closed, unknown, or the wrong resource kind. |
-| `ERR_AGAIN` | Operation would block or a temporary condition requires retry. |
-| `ERR_NO_MEMORY` | Runtime or host could not allocate memory or an equivalent bounded resource needed to complete the operation. |
-| `ERR_ACCESS` | The underlying host object or ACL denies access, corresponding to the WASI/POSIX `access` / `EACCES` class. |
-| `ERR_BUSY` | Resource is busy or conflicts with another operation already in progress. |
-| `ERR_EXISTS` | Destination or requested entry already exists. |
-| `ERR_NOT_DIRECTORY` | Operation requires a directory but the resolved object is not a directory. |
-| `ERR_IS_DIRECTORY` | Operation requires a non-directory object but the resolved object is a directory. |
-| `ERR_INVALID` | Scalar argument, flag combination, operation state, or semantic value is invalid and no more specific WPSI error applies. |
-| `ERR_FILE_TOO_LARGE` | File or requested file extent exceeds an implementation or filesystem limit. |
-| `ERR_NO_SPACE` | Backing storage has insufficient free space. |
-| `ERR_READ_ONLY` | Mutation was requested through a read-only filesystem or read-only directory capability. |
-| `ERR_PIPE` | Broken pipe or equivalent write-side stream failure. |
-| `ERR_RANGE` | A valid-kind scalar index or value lies outside the operation's semantic range. Examples include an argument index past `args_count`, a port greater than 65535, or an iterator range outside an array. |
-| `ERR_NOT_EMPTY` | Directory is not empty. |
-| `ERR_LOOP` | Too many symbolic-link expansions or a final symbolic link was forbidden from being followed where WPSI defines that result. |
-| `ERR_NAME_TOO_LONG` | A path component or name exceeds an implementation/filesystem limit. |
-| `ERR_NOT_SUPPORTED` | Operation or option is valid WPSI but unsupported by the host/runtime. |
-| `ERR_OVERFLOW` | Arithmetic result or host result cannot be represented in the required WPSI value type. |
-| `ERR_ILLEGAL_SEQUENCE` | Text cannot be represented or decoded losslessly in the selected code-unit representation and WTF mode. |
-| `ERR_FAULT` | Guest linear-memory selection or byte address range is invalid or out of bounds. |
-| `ERR_TYPE` | Guest representation has the wrong physical type, such as Memory64 passed to a `_mem32` operation, wrong GC element storage, or immutable GC storage used as a destination. |
-| `ERR_QUOTA` | An explicit WPSI/host quota was exceeded. |
-| `ERR_CANCELED` | Operation was canceled by a supported host mechanism. WPSI 0.1 does not otherwise require cancellation support. |
-| `ERR_ADDRESS_IN_USE` | Socket address or ephemeral port is already in use. |
-| `ERR_ADDRESS_INVALID` | Socket address is malformed, outside the socket's address family, not bindable, or otherwise invalid for the operation. |
-| `ERR_CONNECTION_REFUSED` | Remote endpoint actively refused a connection. |
-| `ERR_CONNECTION_RESET` | Established or pending connection was reset or aborted. |
-| `ERR_NOT_CONNECTED` | Operation requires a connected socket but the socket is not connected. |
-| `ERR_TIMED_OUT` | Operation exceeded its timeout. |
-| `ERR_HOST_UNREACHABLE` | Host-specific routing reports that the destination host is unreachable. |
+| `ERR_OK` | The operation completed successfully. |
+| `ERR_PERMISSION` | WPSI does not permit the operation. Use this for a forbidden capability-boundary escape. |
+| `ERR_NO_ENTRY` | The requested filesystem entry, DNS name, or similar named entry does not exist. |
+| `ERR_IO` | An external I/O failure occurred and no more specific portable category applies. |
+| `ERR_BAD_HANDLE` | The handle is zero, stale, closed, unknown, or for the wrong resource kind. |
+| `ERR_AGAIN` | The operation would block, or a temporary condition requires retry. |
+| `ERR_NO_MEMORY` | The runtime or external system could not allocate a required bounded resource. |
+| `ERR_ACCESS` | WPSI authority exists, but the external access-control system denies access. |
+| `ERR_BUSY` | The resource conflicts with another active operation or state. |
+| `ERR_EXISTS` | The requested destination or entry already exists. |
+| `ERR_NOT_DIRECTORY` | The operation requires a directory, but the object is not a directory. |
+| `ERR_IS_DIRECTORY` | The operation requires a non-directory object, but the object is a directory. |
+| `ERR_INVALID` | A scalar value, flag combination, resource state, or semantic value is invalid and no more specific error applies. |
+| `ERR_FILE_TOO_LARGE` | The file or requested extent exceeds an implementation or filesystem limit. |
+| `ERR_NO_SPACE` | The backing storage has insufficient free space. |
+| `ERR_READ_ONLY` | The operation requests mutation through a read-only filesystem or directory capability. |
+| `ERR_PIPE` | A broken pipe or equivalent write-side stream failure occurred. |
+| `ERR_RANGE` | A value has the correct kind but is outside the semantic range for the operation. |
+| `ERR_NOT_EMPTY` | The directory is not empty. |
+| `ERR_LOOP` | Symbolic-link expansion exceeded a limit, or the operation forbids following the final symbolic link. |
+| `ERR_NAME_TOO_LONG` | A path component or name exceeds an implementation or filesystem limit. |
+| `ERR_NOT_SUPPORTED` | The operation or option is valid WPSI but is not supported by the runtime or external system. |
+| `ERR_OVERFLOW` | A required value cannot be represented in the WPSI result type. |
+| `ERR_ILLEGAL_SEQUENCE` | Text cannot be represented or decoded losslessly in the selected representation and mode. |
+| `ERR_FAULT` | A selected linear memory or byte range is invalid or out of bounds. |
+| `ERR_TYPE` | The guest representation has the wrong physical type or mutability. |
+| `ERR_QUOTA` | An explicit WPSI or embedder policy quota was exceeded. |
+| `ERR_CANCELED` | A supported external mechanism canceled the operation. WPSI 0.1 does not otherwise require cancellation support. |
+| `ERR_ADDRESS_IN_USE` | The requested socket address or port is already in use. |
+| `ERR_ADDRESS_INVALID` | The socket address is malformed or invalid for the requested operation. |
+| `ERR_CONNECTION_REFUSED` | The remote endpoint refused the connection. |
+| `ERR_CONNECTION_RESET` | A connected or pending connection was reset or aborted. |
+| `ERR_NOT_CONNECTED` | The operation requires a connected socket, but the socket is not connected. |
+| `ERR_TIMED_OUT` | The operation exceeded its timeout. |
+| `ERR_HOST_UNREACHABLE` | Routing reports that the destination host is unreachable. |
 | `ERR_NETWORK_UNREACHABLE` | Routing reports that the destination network is unreachable. |
-| `ERR_PROTOCOL` | Socket/protocol operation is incompatible with the socket type or a protocol-level failure has no more specific WPSI category. |
-| `ERR_CAPABILITY` | The WPSI instance lacks required authority granted by the embedder or a parent WPSI capability/rights set. |
-| `ERR_END` | Reserved end-of-sequence error for extensions. WPSI 0.1 operations that expose an explicit `done` result use `done` with `ERR_OK` instead. |
-| `ERR_OTHER` | Host error has no stable portable WPSI classification. |
+| `ERR_PROTOCOL` | The operation is incompatible with the socket protocol or a protocol failure has no more specific category. |
+| `ERR_CAPABILITY` | The embedder did not grant the authority required by the operation, or that authority was attenuated away. |
+| `ERR_END` | Reserved for end-of-sequence use by extensions. WPSI 0.1 sequences with a `done` result use `done` with `ERR_OK`. |
+| `ERR_OTHER` | An external failure has no stable portable WPSI classification. |
 
 ### 2.1 Capability, permission, and access
 
-These three errors are intentionally distinct:
+`ERR_CAPABILITY`, `ERR_PERMISSION`, and `ERR_ACCESS` have different meanings.
 
-- `ERR_CAPABILITY` means WPSI authority was never granted or was attenuated away.
-- `ERR_PERMISSION` means the operation is categorically not permitted, including a filesystem path attempting to escape its base capability.
-- `ERR_ACCESS` means WPSI authority exists but the underlying host object or host access-control system denies the operation.
+Use `ERR_CAPABILITY` when the embedder never granted the required authority or when the authority was attenuated away.
 
-A runtime SHOULD classify an embedder network-policy denial as `ERR_CAPABILITY`, an operating-system `EACCES`-like filesystem denial as `ERR_ACCESS`, and an `EPERM`-like operation denial as `ERR_PERMISSION`.
+Use `ERR_PERMISSION` when WPSI itself prohibits the operation.
 
-### 2.2 Unknown host errors
+A filesystem path that tries to escape its directory capability returns `ERR_PERMISSION`.
 
-A host error MUST NOT be guessed into an unrelated portable category merely to avoid `ERR_OTHER`. If the runtime cannot map a host failure faithfully, it MUST return `ERR_OTHER`.
+Use `ERR_ACCESS` when WPSI authority exists but the external access-control system denies the operation.
+
+A runtime SHOULD map an embedder network-policy denial to `ERR_CAPABILITY`.
+
+A runtime SHOULD map an operating-system `EACCES`-like filesystem denial to `ERR_ACCESS`.
+
+A runtime SHOULD map an `EPERM`-like operation denial to `ERR_PERMISSION`.
+
+### 2.2 Unknown external errors
+
+The runtime MUST NOT guess an unrelated portable error category only to avoid `ERR_OTHER`.
+
+If the runtime cannot classify an external failure faithfully, it MUST return `ERR_OTHER`.
 
 ### 2.3 Validation failures are side-effect free
 
-If a function fails during validation stages 1 through 7, all non-error results MUST be zero and the operation MUST NOT mutate guest destinations or externally visible host state.
+If a function fails during validation stages 1 through 7, all non-error results MUST be zero.
+
+The operation MUST NOT modify a guest destination in this case.
+
+The operation MUST NOT modify externally visible state in this case.
 
 ### 2.4 Partial stream I/O
 
-For byte-stream reads and writes, if the host successfully transfers one or more bytes and then encounters an error, WPSI returns the transferred byte count with `ERR_OK`. A later operation may report the deferred host condition.
+A byte-stream read or write can transfer some bytes before an external error occurs.
 
-If no bytes were transferred, the host condition is returned normally.
+If the operation transferred one or more bytes, WPSI returns the transferred byte count with `ERR_OK`.
 
-This follows the usual POSIX/WASI stream convention and avoids returning a nonzero transfer count together with a failing errno.
+A later operation can report the deferred external condition.
 
-EOF remains:
+If the operation transferred zero bytes, return the external condition normally.
+
+EOF is:
 
 ```text
 bytes_read = 0
@@ -134,89 +289,150 @@ A nonblocking operation that cannot transfer data immediately returns zero bytes
 
 ### 2.5 Datagram atomicity
 
-A datagram send is atomic from the WPSI caller's perspective: either the whole datagram is accepted and the full byte count is returned with `ERR_OK`, or zero bytes are returned with an error.
+A datagram send is atomic from the WPSI caller's perspective.
 
-A datagram receive may copy a prefix when the destination buffer is too small. In that case the operation succeeds and sets:
+Either the runtime accepts the complete datagram and returns the full byte count with `ERR_OK`, or it returns zero bytes with an error.
+
+A datagram receive MAY copy a prefix when the destination buffer is too small.
+
+In this case, the receive succeeds and sets:
 
 ```text
 MSG_TRUNCATED = 1 << 0
 ```
 
-in `message_flags`. The returned byte count is the number of bytes actually copied into the guest buffer.
+in `message_flags`.
+
+The returned byte count is the number of bytes copied into the guest buffer.
 
 ## 3. Filesystem path and symbolic-link resolution
 
-WPSI path resolution follows the same capability-beneath model used by WASI filesystem APIs.
+WPSI path resolution uses a capability-beneath model.
+
+Every path operation is constrained by its supplied directory capability.
 
 ### 3.1 Relative paths only
 
-Every WPSI path is interpreted relative to the supplied directory capability.
+Every WPSI path is relative to the supplied directory capability.
 
 The logical directory separator is `/`.
 
-A path beginning with `/` is forbidden and returns `ERR_PERMISSION`.
+A path that begins with `/` returns `ERR_PERMISSION`.
 
-There is no process-global host current working directory and no path operation may use an ambient host root.
+WPSI has no process-global current working directory from the operating system.
 
-`~` is not special syntax in a raw WPSI path operand. If an embedder provides a preopen whose display name is `~`, a higher-level binding may resolve `~/x` by selecting that preopen and passing `x` as the relative path. Without that binding-level resolution, a `~` component is an ordinary filename component.
+A WPSI path operation MUST NOT use an ambient operating-system root.
+
+The raw WPSI path grammar does not give `~` special meaning.
+
+If the embedder provides a preopen whose display name is `~`, a higher-level binding MAY interpret `~/x` as convenience syntax.
+
+The binding can select that preopen and pass `x` as the relative path.
+
+Without that higher-level rule, a `~` path component is an ordinary filename component.
 
 ### 3.2 `.` and `..`
 
 `.` names the current directory component.
 
-`..` removes one resolved directory component. If resolving `..` would move above the directory represented by the base capability, resolution fails with `ERR_PERMISSION`.
+`..` removes one resolved directory component.
 
-A path is not allowed to temporarily leave the capability and later re-enter it.
+If `..` would move above the supplied directory capability, resolution returns `ERR_PERMISSION`.
+
+A path MUST NOT leave the capability temporarily and later re-enter it.
 
 ### 3.3 Intermediate symbolic links
 
-Intermediate symbolic links may be followed while resolving a path, but every expansion remains constrained beneath the supplied directory capability.
+The runtime MAY follow intermediate symbolic links while it resolves a path.
 
-If a symbolic link expands to an absolute/rooted host path, or if following it would step outside the base capability, resolution fails with `ERR_PERMISSION`.
+Every expansion MUST remain beneath the supplied directory capability.
 
-The runtime MUST preserve this invariant in the presence of concurrent host filesystem rename, unlink, and symlink changes. A check-then-open implementation that permits a race to escape the directory capability is nonconforming.
+If a symbolic link expands to an absolute or rooted external path, resolution returns `ERR_PERMISSION`.
+
+If following a symbolic link would move outside the base capability, resolution returns `ERR_PERMISSION`.
+
+The runtime MUST preserve this rule during concurrent filesystem rename, unlink, and symbolic-link changes.
+
+A check-then-open implementation that permits a race to escape the capability is nonconforming.
 
 ### 3.4 Final symbolic-link component
 
-The final component follows operation-specific rules:
+The final path component uses operation-specific rules.
 
-- `path_open_*` follows the final symbolic link unless `OPEN_NOFOLLOW` is present. If the final object is a symbolic link and `OPEN_NOFOLLOW` is present, the operation returns `ERR_LOOP`.
-- `path_stat_*` follows the final symbolic link only when `PATH_FOLLOW_SYMLINK` is present. Without that flag it returns metadata for the symbolic link itself.
-- `path_link_*` follows the final source symbolic link only when `PATH_FOLLOW_SYMLINK` is present. The destination final component is never followed.
-- `path_readlink_*` never follows the final component and requires it to be a symbolic link.
-- create, remove, rename, and symlink-destination operations act on the final directory entry rather than following it, while still resolving intermediate components beneath the base capability.
+#### `path_open_*`
 
-An implementation-defined symlink-expansion limit is permitted. Exceeding that limit returns `ERR_LOOP`.
+`path_open_*` follows the final symbolic link unless `OPEN_NOFOLLOW` is present.
+
+If the final object is a symbolic link and `OPEN_NOFOLLOW` is present, return `ERR_LOOP`.
+
+#### `path_stat_*`
+
+`path_stat_*` follows the final symbolic link only when `PATH_FOLLOW_SYMLINK` is present.
+
+Without that flag, return metadata for the symbolic link itself.
+
+#### `path_link_*`
+
+`path_link_*` follows the final source symbolic link only when `PATH_FOLLOW_SYMLINK` is present.
+
+The destination final component is never followed.
+
+#### `path_readlink_*`
+
+`path_readlink_*` never follows the final component.
+
+The final component MUST be a symbolic link.
+
+#### create, remove, rename, and symlink destination
+
+These operations act on the final directory entry instead of following it.
+
+They still resolve intermediate components beneath the supplied directory capability.
+
+The runtime MAY use an implementation-defined symbolic-link expansion limit.
+
+Exceeding that limit returns `ERR_LOOP`.
 
 ### 3.5 Creating and reading symbolic links
 
 Creating a symbolic link whose target begins with `/` returns `ERR_PERMISSION`.
 
-A relative target containing `..` MAY be stored. The capability boundary is enforced later when the link is followed.
+A relative target that contains `..` MAY be stored.
 
-`path_readlink_*` returns the stored target string without resolving it. If an externally created host symlink contains an absolute/rooted target, `path_readlink_*` returns `ERR_PERMISSION`, matching WASI's sandboxing behavior.
+The runtime enforces the capability boundary later if that link is followed.
+
+`path_readlink_*` returns the stored target text without resolving it.
+
+If an externally created symbolic link contains an absolute or rooted target, `path_readlink_*` returns `ERR_PERMISSION`.
 
 ## 4. Settled Wasm GC array rules
 
-The following rules are fixed for WPSI 0.1:
+The following rules are fixed for WPSI 0.1.
 
 1. Raw GC-array byte offsets and byte lengths are unsigned `i64` values.
 2. `array<i16>`, `array<i32>`, `array<i64>`, and `array<v128>` raw-buffer operations MUST support byte ranges that begin or end inside an element.
-3. GC-array imports use the abstract non-null `(ref array)` Core Wasm parameter. The import name determines the required dynamic storage type.
-4. Source arrays used by write/send operations MAY be immutable.
-5. Destination arrays used by read/receive/random-fill operations MUST be mutable.
-6. Dynamic kind, storage-type, or destination-mutability mismatch returns `ERR_TYPE`.
-7. Nested GC `readv/writev` uses complete selected child arrays only. `first` and `count` select children; WPSI 0.1 has no per-child slice descriptors.
-8. Every selected nested child MUST be validated before host I/O begins, so a later invalid child cannot cause partial I/O through earlier children.
-9. These rules specify observable values only and do not require contiguous physical GC storage.
+3. GC-array imports use the abstract non-null `(ref array)` parameter.
+4. The import name determines the required dynamic storage type.
+5. A source array used by a write or send MAY be immutable.
+6. A destination array used by a read, receive, or random-fill MUST be mutable.
+7. A dynamic kind, storage-type, or destination-mutability mismatch returns `ERR_TYPE`.
+8. Nested GC `readv` and `writev` use complete selected child arrays only.
+9. `first` and `count` select the children.
+10. WPSI 0.1 has no per-child slice descriptors.
+11. The runtime MUST validate every selected nested child before I/O begins.
+12. A later invalid child MUST NOT cause partial I/O through an earlier child.
+13. These rules define observable values only.
+14. These rules do not require contiguous physical GC storage.
 
 ## 5. Text and host-originated string transfer
 
-WPSI does not use an encoding enum and does not use resource handles merely to transport strings.
+WPSI does not use an encoding enum.
+
+WPSI does not use resource handles only to transport strings.
 
 ### 5.1 Representation and WTF mode
 
-The text width is selected by the import name:
+The import name selects the text width:
 
 ```text
 _i8  -> UTF-8 / WTF-8 code units
@@ -224,42 +440,90 @@ _i16 -> UTF-16 / WTF-16 code units
 _i32 -> 32-bit code points
 ```
 
-Every textual operation receives `wtf: i32`:
+Every text operation receives `wtf: i32`:
 
 ```text
 0 = strict Unicode
 1 = WTF / surrogate-sentinel mode
 ```
 
-Other values return `ERR_INVALID` before any guest destination or host namespace is touched.
+Any other value returns `ERR_INVALID`.
 
-Strict mode rejects malformed UTF-8, unpaired UTF-16 surrogates, surrogate-valued i32 code points, and values above `0x10ffff` with `ERR_ILLEGAL_SEQUENCE`.
+The runtime MUST reject the invalid `wtf` value before it modifies a guest destination or resolves an external text namespace.
 
-WTF mode permits surrogate values as reversible sentinels. It never silently substitutes U+FFFD. For host-originated byte namespaces, invalid UTF-8 bytes may be represented with `U+DC80..U+DCFF`; UTF-16 host namespaces preserve unpaired surrogates directly.
+Strict mode rejects malformed UTF-8.
+
+Strict mode rejects unpaired UTF-16 surrogates.
+
+Strict mode rejects surrogate-valued `i32` code points.
+
+Strict mode rejects values above `0x10ffff`.
+
+Each of these cases returns `ERR_ILLEGAL_SEQUENCE`.
+
+WTF mode permits surrogate values as reversible sentinels.
+
+WTF mode MUST NOT silently substitute U+FFFD for an external value.
+
+For a byte-oriented external namespace, invalid UTF-8 bytes MAY map to `U+DC80..U+DCFF` as defined by the specification.
+
+For a UTF-16 external namespace, preserve unpaired surrogate code units directly.
 
 ### 5.2 Length queries
 
-Every stable indexed source exposes width-specific length operations such as `args_len_i8`, `args_len_i16`, and `args_len_i32`. Length is the exact number of code units required, excluding any terminator.
+Each stable indexed source exposes width-specific length operations.
 
-An invalid source index returns zero and `ERR_RANGE`. An invalid `wtf` value returns zero and `ERR_INVALID`. A source value that cannot be represented losslessly under the selected mode returns zero and `ERR_ILLEGAL_SEQUENCE`.
+Examples include `args_len_i8`, `args_len_i16`, and `args_len_i32`.
 
-### 5.3 Caller-owned destinations
+The returned length is the exact number of required code units.
 
-`*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy the complete represented string into caller-owned storage.
+The length excludes a terminator.
 
-The operation succeeds only when the supplied capacity can hold the entire value. If capacity is too small, it returns zero units and `ERR_RANGE` and MUST NOT modify the destination.
+An invalid source index returns zero and `ERR_RANGE`.
 
-On success, `units_written` is the complete code-unit length. No NUL terminator is appended and storage after the represented value is unchanged.
+An invalid `wtf` value returns zero and `ERR_INVALID`.
+
+A source value that cannot be represented losslessly returns zero and `ERR_ILLEGAL_SEQUENCE`.
+
+### 5.3 Guest-owned destinations
+
+`*_read_mem32_i*`, `*_read_mem64_i*`, and `*_read_into_array_i*` copy the complete represented string into guest-owned storage.
+
+The destination must have enough capacity for the complete value.
+
+If capacity is too small, return zero units and `ERR_RANGE`.
+
+In this case, the runtime MUST NOT modify the destination.
+
+On success, `units_written` is the complete code-unit length.
+
+The runtime does not append a NUL terminator.
+
+Storage after the represented value remains unchanged.
 
 A zero-capacity destination succeeds only for an empty string.
 
-Array destination offsets and capacities are measured in array elements. Array destinations must be mutable and must match the storage class named by the import. Linear-memory pointers are byte addresses while capacity is measured in code units.
+For a GC-array destination, offset and capacity are measured in array elements.
+
+A GC-array destination MUST be mutable.
+
+A GC-array destination MUST match the storage class named by the import.
+
+For linear memory, the pointer is a byte address.
+
+For linear memory, capacity is measured in code units.
 
 ### 5.4 Allocating GC results
 
-`*_read_array_i8`, `*_read_array_i16`, and `*_read_array_i32` allocate a fresh Wasm GC array using the concrete result heap type declared by the importing module.
+`*_read_array_i8`, `*_read_array_i16`, and `*_read_array_i32` allocate a fresh Wasm GC array.
 
-The runtime validates the concrete result type during import linking. A mismatched storage class is an import-type mismatch and fails instantiation rather than becoming a runtime `ERR_TYPE`.
+The importing module selects the concrete result heap type.
+
+The runtime validates that type during import linking.
+
+A mismatched storage class is an import-type mismatch.
+
+It fails instantiation instead of returning runtime `ERR_TYPE`.
 
 On success:
 
@@ -275,15 +539,41 @@ value = null
 errno = specific error
 ```
 
-An empty string still returns a non-null zero-length array. Allocation failure returns `ERR_NO_MEMORY`.
+An empty string returns a non-null zero-length array.
+
+Allocation failure returns `ERR_NO_MEMORY`.
 
 ### 5.5 Stable and stateful sources
 
-Arguments, environment entries, and preopen display names are immutable WPSI instance inputs and therefore remain stable for the lifetime of the instance.
+Arguments are immutable WPSI instance inputs.
 
-Directory iteration is stateful. A width-specific `dir_iter_next_len_i*` snapshots but does not consume the next entry. A successful read/allocating next call consumes it; a failed capacity or text validation check does not. Rewind discards any pending snapshot.
+Environment entries are immutable WPSI instance inputs.
 
-A symbolic-link target is identified by the supplied path rather than a string handle. Separate length and read calls may observe different host filesystem states. Callers requiring one atomic result SHOULD use an allocating GC readlink when available or provide sufficient caller-owned capacity in one read operation.
+Preopen display names are immutable WPSI instance inputs.
+
+These values remain stable for the lifetime of the instance.
+
+Directory iteration is stateful.
+
+A width-specific `dir_iter_next_len_i*` snapshots the next entry but does not consume it.
+
+A successful read of that entry consumes it.
+
+A successful allocating read of that entry consumes it.
+
+A failed capacity check does not consume it.
+
+A failed text-validation check does not consume it.
+
+Rewind discards a pending snapshot.
+
+A symbolic-link target is identified by the supplied path instead of a string handle.
+
+Separate length and read calls can observe different filesystem states.
+
+A caller that requires one atomic result SHOULD use an allocating GC readlink when available.
+
+A caller can also provide enough guest-owned capacity for one read operation.
 
 ### 5.6 Error examples
 
@@ -298,7 +588,9 @@ args_read_mem32_i8(valid_index, 0, memory, ptr, too_small)
   -> (0, ERR_RANGE)
 ```
 
-These are ordinary WPSI errors, not Wasm traps.
+These are ordinary WPSI errors.
+
+They are not Wasm traps.
 
 ## 6. Polling semantics
 
@@ -306,23 +598,47 @@ WPSI polling is level-triggered and snapshot-based.
 
 ### 6.1 File-descriptor registrations
 
-`poll_add_fd` accepts only `POLL_READABLE` and `POLL_WRITABLE` as requested interest bits. Unknown bits or `POLL_HANGUP`, `POLL_ERROR`, or `POLL_TIMER` as requested interests return `ERR_INVALID`.
+`poll_add_fd` accepts `POLL_READABLE` and `POLL_WRITABLE` as requested interest bits.
 
-A poll set may contain at most one registration for a given fd. Adding the same fd twice returns `ERR_EXISTS`.
+Unknown interest bits return `ERR_INVALID`.
 
-Updating or removing an fd that is not registered returns `ERR_NO_ENTRY`. Updating a registration does not change any ordering guarantee because WPSI does not define event ordering.
+Requesting `POLL_HANGUP`, `POLL_ERROR`, or `POLL_TIMER` as an interest returns `ERR_INVALID`.
 
-Closing an fd automatically removes future registrations for that fd from all poll sets owned by the same WPSI instance. Already-snapshotted events remain drainable and retain their captured `source_id`, `events`, and `userdata`.
+A poll set MAY contain at most one registration for one file descriptor.
+
+Adding the same file descriptor twice returns `ERR_EXISTS`.
+
+Updating an unregistered file descriptor returns `ERR_NO_ENTRY`.
+
+Removing an unregistered file descriptor returns `ERR_NO_ENTRY`.
+
+Updating a registration does not create an event-order guarantee.
+
+WPSI does not define event order.
+
+Closing a file descriptor removes future registrations for that descriptor from all poll sets owned by the same WPSI instance.
+
+An event that is already in a readiness snapshot remains available.
+
+That event keeps its captured `source_id`, `events`, and `userdata`.
 
 ### 6.2 Timers
 
-`poll_add_timer` creates a one-shot timer subscription and returns a nonzero subscription id unique within that poll set while the subscription exists.
+`poll_add_timer` creates a one-shot timer subscription.
+
+It returns a nonzero subscription ID.
+
+The ID is unique inside that poll set while the subscription exists.
 
 A deadline less than or equal to the current monotonic time is immediately ready.
 
-Once a timer is included in a completed `poll_wait` snapshot it is removed from the active subscription set. Its captured event remains available through `poll_next` until drained.
+When a timer appears in a completed `poll_wait` snapshot, the timer is removed from the active subscription set.
 
-Removing an unknown or already-fired timer id returns `ERR_NO_ENTRY`.
+The captured timer event remains available through `poll_next` until the guest drains it.
+
+Removing an unknown timer ID returns `ERR_NO_ENTRY`.
+
+Removing an already-fired timer ID returns `ERR_NO_ENTRY`.
 
 ### 6.3 Waiting
 
@@ -330,23 +646,42 @@ Removing an unknown or already-fired timer id returns `ERR_NO_ENTRY`.
 
 `UINT64_MAX` means no timeout.
 
-The call blocks until one or more subscriptions are ready or until the supplied deadline expires. If the deadline is already in the past, the call returns immediately.
+The call blocks until at least one subscription is ready or until the deadline expires.
 
-A finite-deadline wait on an empty poll set is valid and returns zero when the deadline is reached. An empty poll set combined with `UINT64_MAX` returns `ERR_INVALID` rather than requiring a permanently unobservable wait.
+If the deadline is already in the past, the call returns immediately.
 
-When `poll_wait` returns because subscriptions are ready, it snapshots all subscriptions known to be ready at that point. `ready_count` is the number of snapshot records available through `poll_next`.
+A finite-deadline wait on an empty poll set is valid.
 
-A single source produces at most one record in a snapshot; multiple conditions are ORed into its `events` field.
+It returns zero when the deadline is reached.
 
-Event order is unspecified. Callers MUST NOT rely on registration order, fd number, timer id, or host polling order.
+An empty poll set with `UINT64_MAX` returns `ERR_INVALID`.
 
-A second `poll_wait` before the current snapshot is fully drained returns `ERR_BUSY`.
+This avoids a wait that can never become observable.
+
+When readiness causes `poll_wait` to return, the runtime snapshots all subscriptions known to be ready at that point.
+
+`ready_count` is the number of snapshot records available through `poll_next`.
+
+One source produces at most one record in a snapshot.
+
+If more than one condition is true for that source, OR the conditions into its `events` field.
+
+Event order is unspecified.
+
+The guest MUST NOT depend on:
+
+- registration order;
+- file-descriptor number;
+- timer ID;
+- operating-system polling order.
+
+A second `poll_wait` before the guest drains the current snapshot returns `ERR_BUSY`.
 
 ### 6.4 Event delivery
 
-`poll_next` removes and returns one snapshot record.
+`poll_next` removes and returns one readiness-snapshot record.
 
-After all records are drained it returns:
+After all records are drained, it returns:
 
 ```text
 source_kind = 0
@@ -359,21 +694,41 @@ errno       = ERR_OK
 
 A timer record has `POLL_TIMER` set.
 
-For fd records, `POLL_HANGUP` and `POLL_ERROR` may be reported even when the caller did not request those bits. This follows the WASI principle that an I/O error makes a source ready rather than causing the poll operation itself to fail.
+For file-descriptor records, the runtime MAY report `POLL_HANGUP` even when the guest did not request that bit.
 
-Regular files and other resources on which the requested operation would complete without blocking are considered ready. EOF therefore counts as readable readiness because a read can immediately return zero bytes.
+The runtime MAY report `POLL_ERROR` even when the guest did not request that bit.
+
+An I/O error makes the source ready instead of making the poll operation itself fail.
+
+A regular file is ready when the requested operation would complete without blocking.
+
+The same rule applies to another resource whose requested operation would complete without blocking.
+
+EOF counts as readable readiness because a read can immediately return zero bytes.
 
 ## 7. Networking semantics
 
-WPSI networking follows the state and error categories used by WASI sockets, adapted to WPSI's synchronous flat Core Wasm functions.
+WPSI networking follows WASI socket state and error categories where they fit the WPSI model.
+
+The WPSI API remains synchronous and uses flat Core WebAssembly functions.
 
 ### 7.1 Authority
 
-Network policy is configured by the embedder and is not exposed through a guest-visible policy-query API in WPSI 0.1.
+The embedder configures network policy.
 
-This matches the current WASI direction where network authority is granted by instantiation/import context rather than by a discoverable policy object.
+WPSI 0.1 does not expose that policy through a guest-visible query API.
 
-If the WPSI network profile is unavailable, required imports fail normal Wasm instantiation. If the profile exists but a specific bind, connect, send, receive, or DNS action is outside the granted network authority, that operation returns `ERR_CAPABILITY`.
+If the WPSI network profile is unavailable, a required network import fails normal Wasm instantiation.
+
+If the profile exists but a requested network action is outside granted authority, return `ERR_CAPABILITY`.
+
+This rule applies to:
+
+- bind;
+- connect;
+- send;
+- receive;
+- DNS resolution.
 
 ### 7.2 Valid socket combinations
 
@@ -386,42 +741,101 @@ AF_INET4 + SOCK_DGRAM  + (PROTO_DEFAULT or PROTO_UDP)
 AF_INET6 + SOCK_DGRAM  + (PROTO_DEFAULT or PROTO_UDP)
 ```
 
-`AF_UNSPEC` is valid for DNS family selection but not for `socket_open`.
+`AF_UNSPEC` is valid for DNS family selection.
 
-Unknown families/types/protocols return `ERR_INVALID`. A known but incompatible socket/protocol combination returns `ERR_PROTOCOL`.
+`AF_UNSPEC` is not valid for `socket_open`.
 
-Ports are unsigned values in the range `0..65535`; larger values return `ERR_RANGE`.
+An unknown family, socket type, or protocol returns `ERR_INVALID`.
 
-An IPv4 socket address requires `address_hi == 0` and `scope_id == 0`. Address-family mismatch or otherwise malformed addresses return `ERR_ADDRESS_INVALID`.
+A known but incompatible socket and protocol combination returns `ERR_PROTOCOL`.
+
+A port is an unsigned value in the range `0..65535`.
+
+A larger value returns `ERR_RANGE`.
+
+An IPv4 address requires `address_hi == 0`.
+
+An IPv4 address requires `scope_id == 0`.
+
+A family mismatch or malformed address returns `ERR_ADDRESS_INVALID`.
 
 ### 7.3 Stream socket state machine
 
-A stream socket begins **unbound**.
+A stream socket begins in the **unbound** state.
 
-- `socket_bind` is valid only while unbound. Success transitions to **bound**.
-- `socket_listen` is valid only while bound. Success transitions to **listening**.
-- `socket_accept` is valid only while listening. A successful accept returns a new **connected** stream socket.
-- `socket_connect` is valid while unbound or bound. An unbound connect may perform an implicit bind. Success transitions to **connected**.
-- `socket_local_address` requires bound, listening, connecting, or connected state.
-- `socket_peer_address` requires connected state and otherwise returns `ERR_NOT_CONNECTED`.
-- `socket_shutdown` is valid only for connected stream sockets and otherwise returns `ERR_NOT_CONNECTED`.
+#### Bind
 
-Calling bind on an already bound socket, listen on a socket that is not bound, accept on a non-listener, or connect on an already connected/listening socket returns `ERR_INVALID` unless a more specific error above applies.
+`socket_bind` is valid only in the unbound state.
 
-A listen backlog of zero returns `ERR_INVALID`. Other positive values MAY be clamped to a host-supported range.
+Success changes the state to **bound**.
+
+#### Listen
+
+`socket_listen` is valid only in the bound state.
+
+Success changes the state to **listening**.
+
+#### Accept
+
+`socket_accept` is valid only in the listening state.
+
+A successful accept returns a new **connected** stream socket.
+
+#### Connect
+
+`socket_connect` is valid in the unbound or bound state.
+
+An unbound connect MAY perform an implicit bind.
+
+Success changes the state to **connected**.
+
+#### Local address
+
+`socket_local_address` requires a bound, listening, connecting, or connected state.
+
+#### Peer address
+
+`socket_peer_address` requires a connected state.
+
+Otherwise it returns `ERR_NOT_CONNECTED`.
+
+#### Shutdown
+
+`socket_shutdown` is valid only for a connected stream socket.
+
+Otherwise it returns `ERR_NOT_CONNECTED`.
+
+Calling bind on an already bound socket returns `ERR_INVALID` unless a more specific rule applies.
+
+Calling listen on a socket that is not bound returns `ERR_INVALID` unless a more specific rule applies.
+
+Calling accept on a non-listener returns `ERR_INVALID` unless a more specific rule applies.
+
+Calling connect on an already connected or listening socket returns `ERR_INVALID` unless a more specific rule applies.
+
+A listen backlog of zero returns `ERR_INVALID`.
+
+The runtime MAY clamp another positive backlog value to a supported external range.
 
 ### 7.4 Blocking and nonblocking stream operations
 
-Without `SOCK_NONBLOCK`, connect and accept may block until they complete or fail.
+Without `SOCK_NONBLOCK`, connect and accept MAY block until they complete or fail.
 
-With `SOCK_NONBLOCK`:
+With `SOCK_NONBLOCK`, `socket_accept` returns `ERR_AGAIN` when no connection is pending.
 
-- `socket_accept` returns `ERR_AGAIN` when no connection is pending.
-- `socket_connect` may return `ERR_AGAIN` while connection establishment is still in progress.
-- after `ERR_AGAIN`, the guest may use `wpsi-poll` writable/error readiness and call `socket_connect` again with the same remote address to obtain the final result;
-- calling `socket_connect` with a different remote address while a connect is pending returns `ERR_BUSY`.
+With `SOCK_NONBLOCK`, `socket_connect` MAY return `ERR_AGAIN` while connection establishment is in progress.
 
-A final failed connection attempt leaves the socket unusable for another connect attempt; only address inspection where meaningful and `handle_close` remain valid. This follows WASI's one-connect-attempt socket model and prevents host-specific reconnect behavior from leaking into the ABI.
+After `socket_connect` returns `ERR_AGAIN`, the guest can wait for writable or error readiness with `wpsi-poll`.
+
+The guest can then call `socket_connect` again with the same remote address to obtain the final result.
+
+Calling `socket_connect` with a different remote address while a connect is pending returns `ERR_BUSY`.
+
+A final failed connection attempt makes that stream socket unusable for another connect attempt.
+
+The guest can still close the socket.
+
+The guest can still inspect addresses when that inspection is meaningful.
 
 Typical final mappings include:
 
@@ -436,25 +850,37 @@ address already used -> ERR_ADDRESS_IN_USE
 
 ### 7.5 Stream data
 
-Connected stream sockets use the ordinary `fd_read_*`, `fd_write_*`, `fd_readv_*`, and `fd_writev_*` operations.
+A connected stream socket uses the ordinary `fd_read_*`, `fd_write_*`, `fd_readv_*`, and `fd_writev_*` operations.
 
 A nonblocking stream operation that cannot make progress returns zero bytes and `ERR_AGAIN`.
 
-A graceful peer close is ordinary EOF: zero bytes and `ERR_OK`.
+A graceful peer close is ordinary EOF.
 
-A write after the peer has closed the receiving direction returns `ERR_PIPE` when the host exposes that distinction.
+EOF returns zero bytes and `ERR_OK`.
+
+A write after the peer closes its receiving direction returns `ERR_PIPE` when the external system exposes that distinction.
 
 ### 7.6 Datagram sockets
 
 `socket_bind` is valid for datagram sockets.
 
-`socket_listen`, `socket_accept`, `socket_shutdown`, and stream `socket_connect` semantics are not defined for datagram sockets in WPSI 0.1 and return `ERR_PROTOCOL`.
+WPSI 0.1 does not define `socket_listen` for datagram sockets.
+
+WPSI 0.1 does not define `socket_accept` for datagram sockets.
+
+WPSI 0.1 does not define `socket_shutdown` for datagram sockets.
+
+WPSI 0.1 does not define stream `socket_connect` semantics for datagram sockets.
+
+Each of these operations returns `ERR_PROTOCOL` on a datagram socket.
 
 Datagram data uses only `socket_sendto_*` and `socket_recvfrom_*`.
 
 A nonblocking datagram operation with no immediate progress returns `ERR_AGAIN`.
 
-A datagram send is all-or-nothing as defined in section 2.5. A receive buffer smaller than the datagram receives the fitting prefix and sets `MSG_TRUNCATED`.
+A datagram send is all-or-nothing as defined in section 2.5.
+
+If a receive buffer is smaller than the datagram, the operation copies the fitting prefix and sets `MSG_TRUNCATED`.
 
 ### 7.7 DNS
 
@@ -464,11 +890,15 @@ A name with no suitable address returns `ERR_NO_ENTRY`.
 
 A temporary resolver failure returns `ERR_AGAIN`.
 
-A permanent resolver/protocol failure without a more specific WPSI category returns `ERR_PROTOCOL` or `ERR_OTHER` when it cannot be classified faithfully.
+A permanent resolver or protocol failure returns `ERR_PROTOCOL` when that category applies.
 
-Network-policy denial returns `ERR_CAPABILITY`.
+If no more specific portable category applies, return `ERR_OTHER`.
 
-`dns_next` uses the explicit `done` result. Exhaustion is:
+An embedder network-policy denial returns `ERR_CAPABILITY`.
+
+`dns_next` uses an explicit `done` result.
+
+Exhaustion is:
 
 ```text
 family      = 0
@@ -481,17 +911,33 @@ errno       = ERR_OK
 
 ## 8. Version and feature compatibility
 
-WPSI 0.1 has one global ABI version and no independently versioned profiles. Import presence and Core Wasm type matching are the authoritative feature-detection mechanism.
+WPSI 0.1 has one global ABI version.
 
-A runtime MUST NOT require a guest-visible profile manifest, profile-version negotiation step, or scalar feature-query call in addition to normal Core Wasm linking. Profile labels are descriptive groupings for documentation and conformance only.
+Profiles do not have independent versions.
+
+Import presence and Core Wasm type matching are the authoritative feature-detection mechanism.
+
+The runtime MUST NOT require a guest-visible profile manifest in addition to normal Core Wasm linking.
+
+The runtime MUST NOT require profile-version negotiation in addition to normal Core Wasm linking.
+
+The runtime MUST NOT require a scalar feature-query call in addition to normal Core Wasm linking.
+
+Profile labels are descriptive groupings for documentation and conformance only.
 
 ## 9. Compatibility references
 
-The behavioral choices above intentionally track established WASI semantics where possible, especially:
+WPSI intentionally follows established WASI behavior where practical.
 
-- WASI filesystem's capability-beneath path resolution and `not-permitted` handling for escape attempts;
-- WASI filesystem's distinction between access, not-permitted, read-only, overflow, unsupported, and other portable error categories;
-- WASI polling's model that I/O errors make a source ready instead of making polling itself an I/O operation;
-- WASI sockets' state-oriented error model and instantiation-context network authority.
+Important compatibility areas include:
 
-WPSI does not require a runtime to implement WASI internally. These references describe compatible observable behavior only.
+- filesystem capability-beneath path resolution;
+- `not-permitted` handling for escape attempts;
+- the distinction between access, permission, read-only, overflow, unsupported, and other portable filesystem errors;
+- the polling rule that an I/O error makes a source ready instead of making polling itself fail;
+- socket state-oriented errors;
+- network authority supplied by the instantiation context.
+
+A runtime does not have to implement WASI internally.
+
+These references describe compatible observable behavior only.
