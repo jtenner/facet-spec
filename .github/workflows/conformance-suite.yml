@@ -1,4 +1,4 @@
-name: WPSI conformance sources
+name: Facet conformance sources
 
 # Keep the canonical ABI, behavior contract, design documentation, and source conformance suite in lockstep.
 on:
