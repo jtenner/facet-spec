@@ -110,9 +110,7 @@ Prefer:
 
 > filesystem and network authority
 
-Avoid:
-
-> filesystem/network authority
+Do not join the words `filesystem` and `network` with a slash when the phrase means both kinds of authority.
 
 Prefer:
 
