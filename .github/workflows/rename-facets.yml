@@ -1,6 +1,7 @@
 name: Rename specification to Facets
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
