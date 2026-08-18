@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/create-remove-directory
+;; Facet conformance test: filesystem/create-remove-directory
 ;; Purpose: A newly created empty directory can be removed, and a second removal reports ERR_NO_ENTRY.
 ;; Required profiles: core, memory32, filesystem
 ;;

@@ -1,6 +1,6 @@
 ## Summary
 
-Describe the WPSI change.
+Describe the Facet change.
 
 Use short sentences.
 

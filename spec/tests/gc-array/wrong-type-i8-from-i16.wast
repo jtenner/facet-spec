@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/wrong-type-i8-from-i16
+;; Facet conformance test: gc-array/wrong-type-i8-from-i16
 ;; Purpose: The i8 entry point rejects a dynamic array<i16> with ERR_TYPE.
 ;; Required profiles: core, gc-array, adversarial
 ;;

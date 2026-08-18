@@ -1,18 +1,18 @@
-# WPSI 0.1 Behavioral Semantics
+# Facet 0.1 Behavioral Semantics
 
 **Status:** Draft, normative  
-**Applies to:** WPSI 0.1  
+**Applies to:** Facet 0.1  
 **Companion to:** [`../SPEC.md`](../SPEC.md)
 
-This document is part of the normative WPSI 0.1 specification.
+This document is part of the normative Facet 0.1 specification.
 
 `SPEC.md` defines the public ABI, signatures, constants, representations, and profiles.
 
 This document defines behavior that independent runtimes must implement consistently.
 
-WPSI follows established WASI behavior when that behavior maps cleanly to the WPSI model.
+Facet follows established WASI behavior when that behavior maps cleanly to the Facet model.
 
-WPSI remains different in these areas:
+Facet remains different in these areas:
 
 - direct Core WebAssembly imports;
 - explicit multi-memory addressing;
@@ -23,7 +23,7 @@ Use [`../docs/terminology.md`](../docs/terminology.md) for the project terminolo
 
 ## 1. Validation and error precedence
 
-A WPSI function MUST validate guest-controlled input in the order below unless that function defines a different order.
+A Facet function MUST validate guest-controlled input in the order below unless that function defines a different order.
 
 ### Stage 1: scalar form
 
@@ -96,11 +96,11 @@ Perform the operating-system, virtual-filesystem, socket, clock, random, or othe
 
 ### Stage 9: normalization
 
-Translate the external result into WPSI result values and WPSI error codes.
+Translate the external result into Facet result values and Facet error codes.
 
 ### 1.1 Which failure wins
 
-The first failing stage determines the returned WPSI error.
+The first failing stage determines the returned Facet error.
 
 Within one stage, validate parameters from left to right in function-signature order.
 
@@ -126,13 +126,13 @@ It also prevents external behavior from deciding which invalid guest input is re
 
 ### 1.2 Opaque handle values
 
-A WPSI resource handle is an opaque `i32` token that belongs to one WPSI instance.
+A Facet resource handle is an opaque `i32` token that belongs to one Facet instance.
 
 Only the value `0` has defined bit-level meaning.
 
 The value `0` is always invalid.
 
-No nonzero bit, range, subfield, ordering relation, or numeric pattern is portable WPSI information.
+No nonzero bit, range, subfield, ordering relation, or numeric pattern is portable Facet information.
 
 A guest MUST NOT inspect a handle to infer:
 
@@ -143,7 +143,7 @@ A guest MUST NOT inspect a handle to infer:
 - age;
 - runtime implementation strategy.
 
-The runtime can choose any private handle encoding that preserves the WPSI rules.
+The runtime can choose any private handle encoding that preserves the Facet rules.
 
 A stale or closed handle MUST return `ERR_BAD_HANDLE`.
 
@@ -151,7 +151,7 @@ A stale or closed handle MUST NOT become authority over an unrelated live resour
 
 ### 1.3 Synchronous call lifetime
 
-Every WPSI imported function has a bounded synchronous lifetime.
+Every Facet imported function has a bounded synchronous lifetime.
 
 Borrowed guest storage is valid only during the call that borrowed it.
 
@@ -171,38 +171,38 @@ This prohibition includes later work performed by:
 
 The runtime MAY copy guest data into independent runtime-owned storage.
 
-The runtime MAY retain ordinary WPSI resource state when an operation requires it.
+The runtime MAY retain ordinary Facet resource state when an operation requires it.
 
 Retained state MUST NOT depend on the lifetime or location of guest storage from which it was derived.
 
 Multiple guest execution contexts MAY run concurrently.
 
-Each WPSI call still completes or returns `ERR_AGAIN` before its guest-storage borrows end.
+Each Facet call still completes or returns `ERR_AGAIN` before its guest-storage borrows end.
 
-A scheduler can use `wpsi-poll` to wait for readiness and retry a nonblocking operation.
+A scheduler can use `facet-poll` to wait for readiness and retry a nonblocking operation.
 
 ## 2. Error semantics
 
-WPSI has its own compact numeric error namespace.
+Facet has its own compact numeric error namespace.
 
-The numeric values in `SPEC.md` are normative WPSI values.
+The numeric values in `SPEC.md` are normative Facet values.
 
 They do not have to equal POSIX `errno` values.
 
 They do not have to equal WASI enum ordinals.
 
-WPSI follows WASI and POSIX error categories when practical.
+Facet follows WASI and POSIX error categories when practical.
 
-| WPSI error | Meaning |
+| Facet error | Meaning |
 | --- | --- |
 | `ERR_OK` | The operation completed successfully. |
-| `ERR_PERMISSION` | WPSI does not permit the operation. Use this for a forbidden capability-boundary escape. |
+| `ERR_PERMISSION` | Facet does not permit the operation. Use this for a forbidden capability-boundary escape. |
 | `ERR_NO_ENTRY` | The requested filesystem entry, DNS name, or similar named entry does not exist. |
 | `ERR_IO` | An external I/O failure occurred and no more specific portable category applies. |
 | `ERR_BAD_HANDLE` | The handle is zero, stale, closed, unknown, or for the wrong resource kind. |
 | `ERR_AGAIN` | The operation would block, or a temporary condition requires retry. |
 | `ERR_NO_MEMORY` | The runtime or external system could not allocate a required bounded resource. |
-| `ERR_ACCESS` | WPSI authority exists, but the external access-control system denies access. |
+| `ERR_ACCESS` | Facet authority exists, but the external access-control system denies access. |
 | `ERR_BUSY` | The resource conflicts with another active operation or state. |
 | `ERR_EXISTS` | The requested destination or entry already exists. |
 | `ERR_NOT_DIRECTORY` | The operation requires a directory, but the object is not a directory. |
@@ -216,13 +216,13 @@ WPSI follows WASI and POSIX error categories when practical.
 | `ERR_NOT_EMPTY` | The directory is not empty. |
 | `ERR_LOOP` | Symbolic-link expansion exceeded a limit, or the operation forbids following the final symbolic link. |
 | `ERR_NAME_TOO_LONG` | A path component or name exceeds an implementation or filesystem limit. |
-| `ERR_NOT_SUPPORTED` | The operation or option is valid WPSI but is not supported by the runtime or external system. |
-| `ERR_OVERFLOW` | A required value cannot be represented in the WPSI result type. |
+| `ERR_NOT_SUPPORTED` | The operation or option is valid Facet but is not supported by the runtime or external system. |
+| `ERR_OVERFLOW` | A required value cannot be represented in the Facet result type. |
 | `ERR_ILLEGAL_SEQUENCE` | Text cannot be represented or decoded losslessly in the selected representation and mode. |
 | `ERR_FAULT` | A selected linear memory or byte range is invalid or out of bounds. |
 | `ERR_TYPE` | The guest representation has the wrong physical type or mutability. |
-| `ERR_QUOTA` | An explicit WPSI or embedder policy quota was exceeded. |
-| `ERR_CANCELED` | A supported external mechanism canceled the operation. WPSI 0.1 does not otherwise require cancellation support. |
+| `ERR_QUOTA` | An explicit Facet or embedder policy quota was exceeded. |
+| `ERR_CANCELED` | A supported external mechanism canceled the operation. Facet 0.1 does not otherwise require cancellation support. |
 | `ERR_ADDRESS_IN_USE` | The requested socket address or port is already in use. |
 | `ERR_ADDRESS_INVALID` | The socket address is malformed or invalid for the requested operation. |
 | `ERR_CONNECTION_REFUSED` | The remote endpoint refused the connection. |
@@ -233,8 +233,8 @@ WPSI follows WASI and POSIX error categories when practical.
 | `ERR_NETWORK_UNREACHABLE` | Routing reports that the destination network is unreachable. |
 | `ERR_PROTOCOL` | The operation is incompatible with the socket protocol or a protocol failure has no more specific category. |
 | `ERR_CAPABILITY` | The embedder did not grant the authority required by the operation, or that authority was attenuated away. |
-| `ERR_END` | Reserved for end-of-sequence use by extensions. WPSI 0.1 sequences with a `done` result use `done` with `ERR_OK`. |
-| `ERR_OTHER` | An external failure has no stable portable WPSI classification. |
+| `ERR_END` | Reserved for end-of-sequence use by extensions. Facet 0.1 sequences with a `done` result use `done` with `ERR_OK`. |
+| `ERR_OTHER` | An external failure has no stable portable Facet classification. |
 
 ### 2.1 Capability, permission, and access
 
@@ -242,11 +242,11 @@ WPSI follows WASI and POSIX error categories when practical.
 
 Use `ERR_CAPABILITY` when the embedder never granted the required authority or when the authority was attenuated away.
 
-Use `ERR_PERMISSION` when WPSI itself prohibits the operation.
+Use `ERR_PERMISSION` when Facet itself prohibits the operation.
 
 A filesystem path that tries to escape its directory capability returns `ERR_PERMISSION`.
 
-Use `ERR_ACCESS` when WPSI authority exists but the external access-control system denies the operation.
+Use `ERR_ACCESS` when Facet authority exists but the external access-control system denies the operation.
 
 A runtime SHOULD map an embedder network-policy denial to `ERR_CAPABILITY`.
 
@@ -272,7 +272,7 @@ The operation MUST NOT modify externally visible state in this case.
 
 A byte-stream read or write can transfer some bytes before an external error occurs.
 
-If the operation transferred one or more bytes, WPSI returns the transferred byte count with `ERR_OK`.
+If the operation transferred one or more bytes, Facet returns the transferred byte count with `ERR_OK`.
 
 A later operation can report the deferred external condition.
 
@@ -289,7 +289,7 @@ A nonblocking operation that cannot transfer data immediately returns zero bytes
 
 ### 2.5 Datagram atomicity
 
-A datagram send is atomic from the WPSI caller's perspective.
+A datagram send is atomic from the Facet caller's perspective.
 
 Either the runtime accepts the complete datagram and returns the full byte count with `ERR_OK`, or it returns zero bytes with an error.
 
@@ -307,23 +307,23 @@ The returned byte count is the number of bytes copied into the guest buffer.
 
 ## 3. Filesystem path and symbolic-link resolution
 
-WPSI path resolution uses a capability-beneath model.
+Facet path resolution uses a capability-beneath model.
 
 Every path operation is constrained by its supplied directory capability.
 
 ### 3.1 Relative paths only
 
-Every WPSI path is relative to the supplied directory capability.
+Every Facet path is relative to the supplied directory capability.
 
 The logical directory separator is `/`.
 
 A path that begins with `/` returns `ERR_PERMISSION`.
 
-WPSI has no process-global current working directory from the operating system.
+Facet has no process-global current working directory from the operating system.
 
-A WPSI path operation MUST NOT use an ambient operating-system root.
+A Facet path operation MUST NOT use an ambient operating-system root.
 
-The raw WPSI path grammar does not give `~` special meaning.
+The raw Facet path grammar does not give `~` special meaning.
 
 If the embedder provides a preopen whose display name is `~`, a higher-level binding MAY interpret `~/x` as convenience syntax.
 
@@ -407,7 +407,7 @@ If an externally created symbolic link contains an absolute or rooted target, `p
 
 ## 4. Settled Wasm GC array rules
 
-The following rules are fixed for WPSI 0.1.
+The following rules are fixed for Facet 0.1.
 
 1. Raw GC-array byte offsets and byte lengths are unsigned `i64` values.
 2. `array<i16>`, `array<i32>`, `array<i64>`, and `array<v128>` raw-buffer operations MUST support byte ranges that begin or end inside an element.
@@ -418,7 +418,7 @@ The following rules are fixed for WPSI 0.1.
 7. A dynamic kind, storage-type, or destination-mutability mismatch returns `ERR_TYPE`.
 8. Nested GC `readv` and `writev` use complete selected child arrays only.
 9. `first` and `count` select the children.
-10. WPSI 0.1 has no per-child slice descriptors.
+10. Facet 0.1 has no per-child slice descriptors.
 11. The runtime MUST validate every selected nested child before I/O begins.
 12. A later invalid child MUST NOT cause partial I/O through an earlier child.
 13. These rules define observable values only.
@@ -426,9 +426,9 @@ The following rules are fixed for WPSI 0.1.
 
 ## 5. Text and host-originated string transfer
 
-WPSI does not use an encoding enum.
+Facet does not use an encoding enum.
 
-WPSI does not use resource handles only to transport strings.
+Facet does not use resource handles only to transport strings.
 
 ### 5.1 Representation and WTF mode
 
@@ -545,11 +545,11 @@ Allocation failure returns `ERR_NO_MEMORY`.
 
 ### 5.5 Stable and stateful sources
 
-Arguments are immutable WPSI instance inputs.
+Arguments are immutable Facet instance inputs.
 
-Environment entries are immutable WPSI instance inputs.
+Environment entries are immutable Facet instance inputs.
 
-Preopen display names are immutable WPSI instance inputs.
+Preopen display names are immutable Facet instance inputs.
 
 These values remain stable for the lifetime of the instance.
 
@@ -588,13 +588,13 @@ args_read_mem32_i8(valid_index, 0, memory, ptr, too_small)
   -> (0, ERR_RANGE)
 ```
 
-These are ordinary WPSI errors.
+These are ordinary Facet errors.
 
 They are not Wasm traps.
 
 ## 6. Polling semantics
 
-WPSI polling is level-triggered and snapshot-based.
+Facet polling is level-triggered and snapshot-based.
 
 ### 6.1 File-descriptor registrations
 
@@ -614,9 +614,9 @@ Removing an unregistered file descriptor returns `ERR_NO_ENTRY`.
 
 Updating a registration does not create an event-order guarantee.
 
-WPSI does not define event order.
+Facet does not define event order.
 
-Closing a file descriptor removes future registrations for that descriptor from all poll sets owned by the same WPSI instance.
+Closing a file descriptor removes future registrations for that descriptor from all poll sets owned by the same Facet instance.
 
 An event that is already in a readiness snapshot remains available.
 
@@ -708,17 +708,17 @@ EOF counts as readable readiness because a read can immediately return zero byte
 
 ## 7. Networking semantics
 
-WPSI networking follows WASI socket state and error categories where they fit the WPSI model.
+Facet networking follows WASI socket state and error categories where they fit the Facet model.
 
-The WPSI API remains synchronous and uses flat Core WebAssembly functions.
+The Facet API remains synchronous and uses flat Core WebAssembly functions.
 
 ### 7.1 Authority
 
 The embedder configures network policy.
 
-WPSI 0.1 does not expose that policy through a guest-visible query API.
+Facet 0.1 does not expose that policy through a guest-visible query API.
 
-If the WPSI network profile is unavailable, a required network import fails normal Wasm instantiation.
+If the Facet network profile is unavailable, a required network import fails normal Wasm instantiation.
 
 If the profile exists but a requested network action is outside granted authority, return `ERR_CAPABILITY`.
 
@@ -825,7 +825,7 @@ With `SOCK_NONBLOCK`, `socket_accept` returns `ERR_AGAIN` when no connection is 
 
 With `SOCK_NONBLOCK`, `socket_connect` MAY return `ERR_AGAIN` while connection establishment is in progress.
 
-After `socket_connect` returns `ERR_AGAIN`, the guest can wait for writable or error readiness with `wpsi-poll`.
+After `socket_connect` returns `ERR_AGAIN`, the guest can wait for writable or error readiness with `facet-poll`.
 
 The guest can then call `socket_connect` again with the same remote address to obtain the final result.
 
@@ -864,13 +864,13 @@ A write after the peer closes its receiving direction returns `ERR_PIPE` when th
 
 `socket_bind` is valid for datagram sockets.
 
-WPSI 0.1 does not define `socket_listen` for datagram sockets.
+Facet 0.1 does not define `socket_listen` for datagram sockets.
 
-WPSI 0.1 does not define `socket_accept` for datagram sockets.
+Facet 0.1 does not define `socket_accept` for datagram sockets.
 
-WPSI 0.1 does not define `socket_shutdown` for datagram sockets.
+Facet 0.1 does not define `socket_shutdown` for datagram sockets.
 
-WPSI 0.1 does not define stream `socket_connect` semantics for datagram sockets.
+Facet 0.1 does not define stream `socket_connect` semantics for datagram sockets.
 
 Each of these operations returns `ERR_PROTOCOL` on a datagram socket.
 
@@ -911,7 +911,7 @@ errno       = ERR_OK
 
 ## 8. Version and feature compatibility
 
-WPSI 0.1 has one global ABI version.
+Facet 0.1 has one global ABI version.
 
 Profiles do not have independent versions.
 
@@ -927,7 +927,7 @@ Profile labels are descriptive groupings for documentation and conformance only.
 
 ## 9. Compatibility references
 
-WPSI intentionally follows established WASI behavior where practical.
+Facet intentionally follows established WASI behavior where practical.
 
 Important compatibility areas include:
 

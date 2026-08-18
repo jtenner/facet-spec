@@ -1,4 +1,4 @@
-;; WPSI conformance test: random/mem32-zero-length
+;; Facet conformance test: random/mem32-zero-length
 ;; Purpose: Zero-length fill at the final byte is valid and does not mutate it.
 ;; Required profiles: core, memory32
 ;;

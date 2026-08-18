@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory32/writev-cross-memory
+;; Facet conformance test: memory32/writev-cross-memory
 ;; Purpose: Memory32 writev gathers buffers from different memories in iovec order.
 ;; Required profiles: core, memory32, multi-memory, filesystem
 ;;

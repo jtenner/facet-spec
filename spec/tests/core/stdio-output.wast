@@ -1,4 +1,4 @@
-;; WPSI conformance test: core/stdio-output
+;; Facet conformance test: core/stdio-output
 ;; Purpose: Standard output and error descriptors integrate with WASI-compatible read operations in the host manifest.
 ;; Required profiles: core, memory32
 ;; Test kind: harness

@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/immutable-destination
+;; Facet conformance test: gc-array/immutable-destination
 ;; Purpose: Destination operations reject immutable arrays.
 ;; Required profiles: core, gc-array, adversarial
 ;;

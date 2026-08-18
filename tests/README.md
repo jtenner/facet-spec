@@ -1,6 +1,6 @@
-# WPSI conformance tests
+# Facet conformance tests
 
-The normative WPSI 0.1 test suite lives in [`spec/tests`](../spec/tests).
+The normative Facet 0.1 test suite lives in [`spec/tests`](../spec/tests).
 It currently contains **143** standard WAST tests plus compatibility-oriented
 host manifests, deterministic fixtures, a machine-readable catalog, signature
 validation against [`spec/imports.wat`](../spec/imports.wat), and pinned

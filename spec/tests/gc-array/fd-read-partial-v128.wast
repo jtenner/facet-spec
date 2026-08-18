@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/fd-read-partial-v128
+;; Facet conformance test: gc-array/fd-read-partial-v128
 ;; Purpose: A partial v128 read overlays only selected lanes and preserves every surrounding byte.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;

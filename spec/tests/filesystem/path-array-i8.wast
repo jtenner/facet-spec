@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-array-i8
+;; Facet conformance test: filesystem/path-array-i8
 ;; Purpose: path_open_array_i8 consumes the native GC code-unit representation without linear-memory lowering.
 ;; Required profiles: core, gc-array, filesystem, text
 ;;

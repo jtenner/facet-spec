@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/add-invalid-fd
+;; Facet conformance test: poll/add-invalid-fd
 ;; Purpose: Poll registration rejects the permanently invalid descriptor zero.
 ;; Required profiles: core, poll, adversarial
 ;;

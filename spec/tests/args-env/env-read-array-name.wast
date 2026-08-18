@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/env-read-array-name
+;; Facet conformance test: args-env/env-read-array-name
 ;; Purpose: Environment names are selected directly by index and field without string handles.
 ;; Required profiles: core, gc-array, args-env, text
 ;;

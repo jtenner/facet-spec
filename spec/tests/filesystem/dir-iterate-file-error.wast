@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/dir-iterate-file-error
+;; Facet conformance test: filesystem/dir-iterate-file-error
 ;; Purpose: Opening a directory iterator on a regular file returns a zero handle and ERR_NOT_DIRECTORY.
 ;; Required profiles: core, memory32, filesystem, adversarial
 ;;

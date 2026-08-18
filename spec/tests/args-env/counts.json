@@ -4,7 +4,7 @@
     {
       "type": "run",
       "args": [
-        "wpsi-test",
+        "facet-test",
         "alpha",
         "βeta",
         "𐐷"

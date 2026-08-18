@@ -1,4 +1,4 @@
-;; WPSI conformance test: poll/wait-before-drain-busy
+;; Facet conformance test: poll/wait-before-drain-busy
 ;; Purpose: A second poll_wait before draining ready events returns ERR_BUSY.
 ;; Required profiles: core, clocks, poll, adversarial
 ;;

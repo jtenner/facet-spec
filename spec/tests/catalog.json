@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "specification": "WPSI 0.1",
+  "specification": "Facet 0.1",
   "test_count": 143,
   "tests": [
     {
@@ -209,7 +209,7 @@
       "profiles": [
         "core"
       ],
-      "purpose": "WPSI 0.1 reports ABI version 1.",
+      "purpose": "Facet 0.1 reports ABI version 1.",
       "kind": "wast"
     },
     {
@@ -1388,7 +1388,7 @@
         "core",
         "network"
       ],
-      "purpose": "A TCP/IPv4 socket is an ordinary closeable WPSI resource.",
+      "purpose": "A TCP/IPv4 socket is an ordinary closeable Facet resource.",
       "kind": "wast"
     },
     {
@@ -1399,7 +1399,7 @@
         "memory32",
         "network"
       ],
-      "purpose": "The WASI-compatible connect/send/recv harness can drive a WPSI TCP listener through accept and stream I/O.",
+      "purpose": "The WASI-compatible connect/send/recv harness can drive a Facet TCP listener through accept and stream I/O.",
       "kind": "harness"
     },
     {
@@ -1410,7 +1410,7 @@
         "memory32",
         "network"
       ],
-      "purpose": "The WASI-compatible connect/send/recv harness can drive WPSI datagram receive and reply operations.",
+      "purpose": "The WASI-compatible connect/send/recv harness can drive Facet datagram receive and reply operations.",
       "kind": "harness"
     },
     {

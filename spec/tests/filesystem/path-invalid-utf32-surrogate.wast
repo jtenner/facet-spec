@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-invalid-utf32-surrogate
+;; Facet conformance test: filesystem/path-invalid-utf32-surrogate
 ;; Purpose: A UTF-32 surrogate value is rejected as an illegal sequence.
 ;; Required profiles: core, memory32, filesystem, text, adversarial
 ;;

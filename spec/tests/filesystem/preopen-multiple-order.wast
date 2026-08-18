@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/preopen-multiple-order
+;; Facet conformance test: filesystem/preopen-multiple-order
 ;; Purpose: Multiple preopens and their source-specific display names remain in manifest order.
 ;; Required profiles: core, memory32, filesystem
 ;;

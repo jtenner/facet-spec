@@ -1,4 +1,4 @@
-;; WPSI conformance test: core/stdio-valid
+;; Facet conformance test: core/stdio-valid
 ;; Purpose: All standard streams resolve to nonzero descriptor handles.
 ;; Required profiles: core
 ;;

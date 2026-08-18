@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/out-of-range-zeroes
+;; Facet conformance test: args-env/out-of-range-zeroes
 ;; Purpose: Out-of-range argument and environment indexes return zero lengths and ERR_RANGE.
 ;; Required profiles: core, args-env
 ;;

@@ -1,5 +1,5 @@
-;; WPSI conformance test: network/tcp-echo
-;; Purpose: The WASI-compatible connect/send/recv harness can drive a WPSI TCP listener through accept and stream I/O.
+;; Facet conformance test: network/tcp-echo
+;; Purpose: The WASI-compatible connect/send/recv harness can drive a Facet TCP listener through accept and stream I/O.
 ;; Required profiles: core, memory32, network
 ;; Test kind: harness
 ;;

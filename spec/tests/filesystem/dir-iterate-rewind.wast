@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/dir-iterate-rewind
+;; Facet conformance test: filesystem/dir-iterate-rewind
 ;; Purpose: Directory iteration uses the iterator as the stable name source and rewind resets pending state.
 ;; Required profiles: core, gc-array, filesystem, text
 ;;

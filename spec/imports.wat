@@ -1,15 +1,15 @@
-;; Canonical Core WebAssembly import declarations for WPSI 0.1.
+;; Canonical Core WebAssembly import declarations for Facet 0.1.
 ;;
-;; This module is declarative documentation: consumers import only the WPSI
+;; This module is declarative documentation: consumers import only the Facet
 ;; functions they actually require.
 
 (module
   ;; Representative concrete result types for host-allocated strings.
   ;; Allocating string imports are templates: an importing module supplies its
   ;; own concrete array type with the matching element storage class.
-  (type $wpsi_string_i8 (array (mut i8)))
-  (type $wpsi_string_i16 (array (mut i16)))
-  (type $wpsi_string_i32 (array (mut i32)))
+  (type $facet_string_i8 (array (mut i8)))
+  (type $facet_string_i16 (array (mut i16)))
+  (type $facet_string_i32 (array (mut i32)))
 
   ;; Core
   (import "facet" "abi_version" (func $abi_version (result i32)))
@@ -34,9 +34,9 @@
   (import "facet" "args_read_into_array_i8" (func $args_read_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "args_read_into_array_i16" (func $args_read_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "args_read_into_array_i32" (func $args_read_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
-  (import "facet" "args_read_array_i8" (func $args_read_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32)))
-  (import "facet" "args_read_array_i16" (func $args_read_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32)))
-  (import "facet" "args_read_array_i32" (func $args_read_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32)))
+  (import "facet" "args_read_array_i8" (func $args_read_array_i8 (param i32 i32) (result (ref null $facet_string_i8) i32)))
+  (import "facet" "args_read_array_i16" (func $args_read_array_i16 (param i32 i32) (result (ref null $facet_string_i16) i32)))
+  (import "facet" "args_read_array_i32" (func $args_read_array_i32 (param i32 i32) (result (ref null $facet_string_i32) i32)))
 
   (import "facet" "env_count" (func $env_count (result i32 i32)))
   (import "facet" "env_len_i8" (func $env_len_i8 (param i32 i32 i32) (result i64 i32)))
@@ -51,9 +51,9 @@
   (import "facet" "env_read_into_array_i8" (func $env_read_into_array_i8 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "env_read_into_array_i16" (func $env_read_into_array_i16 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "env_read_into_array_i32" (func $env_read_into_array_i32 (param i32 i32 i32 (ref array) i32 i32) (result i64 i32)))
-  (import "facet" "env_read_array_i8" (func $env_read_array_i8 (param i32 i32 i32) (result (ref null $wpsi_string_i8) i32)))
-  (import "facet" "env_read_array_i16" (func $env_read_array_i16 (param i32 i32 i32) (result (ref null $wpsi_string_i16) i32)))
-  (import "facet" "env_read_array_i32" (func $env_read_array_i32 (param i32 i32 i32) (result (ref null $wpsi_string_i32) i32)))
+  (import "facet" "env_read_array_i8" (func $env_read_array_i8 (param i32 i32 i32) (result (ref null $facet_string_i8) i32)))
+  (import "facet" "env_read_array_i16" (func $env_read_array_i16 (param i32 i32 i32) (result (ref null $facet_string_i16) i32)))
+  (import "facet" "env_read_array_i32" (func $env_read_array_i32 (param i32 i32 i32) (result (ref null $facet_string_i32) i32)))
 
   ;; Clocks
   (import "facet" "clock_system_now"
@@ -97,9 +97,9 @@
   (import "facet" "fs_preopen_name_read_into_array_i8" (func $fs_preopen_name_read_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "fs_preopen_name_read_into_array_i16" (func $fs_preopen_name_read_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "fs_preopen_name_read_into_array_i32" (func $fs_preopen_name_read_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32)))
-  (import "facet" "fs_preopen_name_read_array_i8" (func $fs_preopen_name_read_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32)))
-  (import "facet" "fs_preopen_name_read_array_i16" (func $fs_preopen_name_read_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32)))
-  (import "facet" "fs_preopen_name_read_array_i32" (func $fs_preopen_name_read_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32)))
+  (import "facet" "fs_preopen_name_read_array_i8" (func $fs_preopen_name_read_array_i8 (param i32 i32) (result (ref null $facet_string_i8) i32)))
+  (import "facet" "fs_preopen_name_read_array_i16" (func $fs_preopen_name_read_array_i16 (param i32 i32) (result (ref null $facet_string_i16) i32)))
+  (import "facet" "fs_preopen_name_read_array_i32" (func $fs_preopen_name_read_array_i32 (param i32 i32) (result (ref null $facet_string_i32) i32)))
 
   ;; Descriptor metadata
   (import "facet" "fd_rights" (func $fd_rights (param i32) (result i64 i32)))
@@ -264,17 +264,17 @@
   (import "facet" "dir_iter_next_mem32_i8" (func $dir_iter_next_mem32_i8 (param i32 i32 i32 i32 i32) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_mem64_i8" (func $dir_iter_next_mem64_i8 (param i32 i32 i32 i64 i64) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_into_array_i8" (func $dir_iter_next_into_array_i8 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
-  (import "facet" "dir_iter_next_array_i8" (func $dir_iter_next_array_i8 (param i32 i32) (result (ref null $wpsi_string_i8) i32 i64 i32 i32)))
+  (import "facet" "dir_iter_next_array_i8" (func $dir_iter_next_array_i8 (param i32 i32) (result (ref null $facet_string_i8) i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_len_i16" (func $dir_iter_next_len_i16 (param i32 i32) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_mem32_i16" (func $dir_iter_next_mem32_i16 (param i32 i32 i32 i32 i32) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_mem64_i16" (func $dir_iter_next_mem64_i16 (param i32 i32 i32 i64 i64) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_into_array_i16" (func $dir_iter_next_into_array_i16 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
-  (import "facet" "dir_iter_next_array_i16" (func $dir_iter_next_array_i16 (param i32 i32) (result (ref null $wpsi_string_i16) i32 i64 i32 i32)))
+  (import "facet" "dir_iter_next_array_i16" (func $dir_iter_next_array_i16 (param i32 i32) (result (ref null $facet_string_i16) i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_len_i32" (func $dir_iter_next_len_i32 (param i32 i32) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_mem32_i32" (func $dir_iter_next_mem32_i32 (param i32 i32 i32 i32 i32) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_mem64_i32" (func $dir_iter_next_mem64_i32 (param i32 i32 i32 i64 i64) (result i64 i32 i64 i32 i32)))
   (import "facet" "dir_iter_next_into_array_i32" (func $dir_iter_next_into_array_i32 (param i32 i32 (ref array) i32 i32) (result i64 i32 i64 i32 i32)))
-  (import "facet" "dir_iter_next_array_i32" (func $dir_iter_next_array_i32 (param i32 i32) (result (ref null $wpsi_string_i32) i32 i64 i32 i32)))
+  (import "facet" "dir_iter_next_array_i32" (func $dir_iter_next_array_i32 (param i32 i32) (result (ref null $facet_string_i32) i32 i64 i32 i32)))
   (import "facet" "dir_iter_rewind" (func $dir_iter_rewind (param i32) (result i32)))
 
   ;; Links and symbolic links
@@ -290,7 +290,7 @@
   (import "facet" "path_readlink_mem64_i8" (func $path_readlink_mem64_i8 (param i32 i32 i64 i64 i32 i32 i64 i64 i32) (result i64 i32)))
   (import "facet" "path_readlink_len_array_i8" (func $path_readlink_len_array_i8 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
   (import "facet" "path_readlink_into_array_i8" (func $path_readlink_into_array_i8 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
-  (import "facet" "path_readlink_array_i8" (func $path_readlink_array_i8 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i8) i32)))
+  (import "facet" "path_readlink_array_i8" (func $path_readlink_array_i8 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $facet_string_i8) i32)))
   (import "facet" "path_link_mem32_i16" (func $path_link_mem32_i16 (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)))
   (import "facet" "path_link_mem64_i16" (func $path_link_mem64_i16 (param i32 i32 i64 i64 i32 i32 i32 i64 i64 i32 i32) (result i32)))
   (import "facet" "path_link_array_i16" (func $path_link_array_i16 (param i32 (ref array) i32 i32 i32 i32 (ref array) i32 i32 i32 i32) (result i32)))
@@ -303,7 +303,7 @@
   (import "facet" "path_readlink_mem64_i16" (func $path_readlink_mem64_i16 (param i32 i32 i64 i64 i32 i32 i64 i64 i32) (result i64 i32)))
   (import "facet" "path_readlink_len_array_i16" (func $path_readlink_len_array_i16 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
   (import "facet" "path_readlink_into_array_i16" (func $path_readlink_into_array_i16 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
-  (import "facet" "path_readlink_array_i16" (func $path_readlink_array_i16 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i16) i32)))
+  (import "facet" "path_readlink_array_i16" (func $path_readlink_array_i16 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $facet_string_i16) i32)))
   (import "facet" "path_link_mem32_i32" (func $path_link_mem32_i32 (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)))
   (import "facet" "path_link_mem64_i32" (func $path_link_mem64_i32 (param i32 i32 i64 i64 i32 i32 i32 i64 i64 i32 i32) (result i32)))
   (import "facet" "path_link_array_i32" (func $path_link_array_i32 (param i32 (ref array) i32 i32 i32 i32 (ref array) i32 i32 i32 i32) (result i32)))
@@ -316,7 +316,7 @@
   (import "facet" "path_readlink_mem64_i32" (func $path_readlink_mem64_i32 (param i32 i32 i64 i64 i32 i32 i64 i64 i32) (result i64 i32)))
   (import "facet" "path_readlink_len_array_i32" (func $path_readlink_len_array_i32 (param i32 (ref array) i32 i32 i32 i32) (result i64 i32)))
   (import "facet" "path_readlink_into_array_i32" (func $path_readlink_into_array_i32 (param i32 (ref array) i32 i32 i32 (ref array) i32 i32 i32) (result i64 i32)))
-  (import "facet" "path_readlink_array_i32" (func $path_readlink_array_i32 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $wpsi_string_i32) i32)))
+  (import "facet" "path_readlink_array_i32" (func $path_readlink_array_i32 (param i32 (ref array) i32 i32 i32 i32) (result (ref null $facet_string_i32) i32)))
 
   ;; Socket lifecycle
   (import "facet" "socket_open"

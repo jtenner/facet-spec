@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/socket_recvfrom_array_i16
+;; Facet conformance test: imports/socket_recvfrom_array_i16
 ;; Purpose: Exact Core signature for facet.socket_recvfrom_array_i16.
 ;; Required profiles: gc-array
 ;;

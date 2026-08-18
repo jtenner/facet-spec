@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/fd-write-logical-byte-view-i64
+;; Facet conformance test: gc-array/fd-write-logical-byte-view-i64
 ;; Purpose: fd_write_array_i64 uses the normative little-endian logical byte view.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;

@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/random-fill-i8
+;; Facet conformance test: gc-array/random-fill-i8
 ;; Purpose: array<i8> is recognized and only the selected logical byte range is modified.
 ;; Required profiles: core, gc-array
 ;;

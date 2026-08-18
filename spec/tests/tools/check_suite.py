@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static integrity checks for the WPSI conformance suite.
+"""Static integrity checks for the Facet conformance suite.
 
 This intentionally depends only on Python's standard library. Full WAST syntax
 validation is performed separately by ``parse_wast.py`` with a pinned
@@ -24,7 +24,7 @@ VALID_RIGHTS = {
 }
 VALID_PROTOCOLS = {"tcp", "udp", "http"}
 METADATA = {
-    "id": re.compile(r"^;; WPSI conformance test:\s*(\S+)\s*$", re.MULTILINE),
+    "id": re.compile(r"^;; Facet conformance test:\s*(\S+)\s*$", re.MULTILINE),
     "purpose": re.compile(r"^;; Purpose:\s*(.+?)\s*$", re.MULTILINE),
     "profiles": re.compile(r"^;; Required profiles:\s*(.+?)\s*$", re.MULTILINE),
 }
@@ -350,7 +350,7 @@ def check_imports(wast_paths: list[Path]) -> None:
         return
     canonical = import_signatures(canonical_path)
     if not canonical:
-        fail("spec/imports.wat contains no wpsi function imports")
+        fail("spec/imports.wat contains no facet function imports")
     for path in wast_paths:
         for name, signature in import_signatures(path).items():
             expected = canonical.get(name)
@@ -398,7 +398,7 @@ def main() -> int:
         if not balanced_sexpr(text):
             fail(f"unbalanced WAST: {path}")
         if 'import "facet"' not in text:
-            fail(f"test has no WPSI import: {path}")
+            fail(f"test has no Facet import: {path}")
         manifest = path.with_suffix(".json")
         if manifest.exists():
             check_manifest(manifest)

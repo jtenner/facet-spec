@@ -1,4 +1,4 @@
-;; WPSI conformance test: clocks/sleep-for-zero
+;; Facet conformance test: clocks/sleep-for-zero
 ;; Purpose: A zero-duration sleep succeeds and does not require special timer handling.
 ;; Required profiles: core, clocks
 ;;

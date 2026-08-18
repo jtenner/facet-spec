@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-parent-escape-rejected
+;; Facet conformance test: filesystem/path-parent-escape-rejected
 ;; Purpose: Parent traversal cannot escape a directory capability.
 ;; Required profiles: core, memory32, filesystem, capabilities, adversarial
 ;;

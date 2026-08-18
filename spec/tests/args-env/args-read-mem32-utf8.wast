@@ -1,4 +1,4 @@
-;; WPSI conformance test: args-env/args-read-mem32-utf8
+;; Facet conformance test: args-env/args-read-mem32-utf8
 ;; Purpose: Arguments copy directly into caller-owned Memory32 without an intermediate string handle.
 ;; Required profiles: core, memory32, args-env, text
 ;;

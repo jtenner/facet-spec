@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-invalid-utf32-too-large
+;; Facet conformance test: filesystem/path-invalid-utf32-too-large
 ;; Purpose: A UTF-32 value above U+10FFFF is rejected as an illegal sequence.
 ;; Required profiles: core, memory32, filesystem, text, adversarial
 ;;

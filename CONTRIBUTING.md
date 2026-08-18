@@ -1,6 +1,6 @@
-# Contributing to WPSI
+# Contributing to Facet
 
-WPSI is an experimental system-interface specification.
+Facet is an experimental system-interface specification.
 
 Contributions should prefer small and explicit Core WebAssembly mechanisms.
 

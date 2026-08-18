@@ -1,4 +1,4 @@
-;; WPSI conformance test: adversarial/stale-handle-after-reallocation
+;; Facet conformance test: adversarial/stale-handle-after-reallocation
 ;; Purpose: A closed numeric handle never aliases a subsequently allocated resource.
 ;; Required profiles: core, poll, adversarial
 ;;

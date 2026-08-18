@@ -1,4 +1,4 @@
-;; WPSI conformance test: links/symlink-readlink
+;; Facet conformance test: links/symlink-readlink
 ;; Purpose: A symbolic-link target round-trips directly into caller-owned linear memory.
 ;; Required profiles: core, memory32, filesystem, links
 ;;

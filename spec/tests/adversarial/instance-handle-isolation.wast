@@ -1,4 +1,4 @@
-;; WPSI conformance test: adversarial/instance-handle-isolation
+;; Facet conformance test: adversarial/instance-handle-isolation
 ;; Purpose: Resource handles are instance-local and cannot be reused by another module instance.
 ;; Required profiles: core, filesystem, adversarial
 ;; Test kind: harness

@@ -1,4 +1,4 @@
-;; WPSI conformance test: links/hard-link-survives-source-removal
+;; Facet conformance test: links/hard-link-survives-source-removal
 ;; Purpose: A hard link remains valid after the original directory entry is removed.
 ;; Required profiles: core, memory32, filesystem, links
 ;;

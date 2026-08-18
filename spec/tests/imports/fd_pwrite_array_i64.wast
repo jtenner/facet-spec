@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/fd_pwrite_array_i64
+;; Facet conformance test: imports/fd_pwrite_array_i64
 ;; Purpose: Exact Core signature for facet.fd_pwrite_array_i64.
 ;; Required profiles: gc-array
 ;;

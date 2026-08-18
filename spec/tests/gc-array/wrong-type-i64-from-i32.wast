@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/wrong-type-i64-from-i32
+;; Facet conformance test: gc-array/wrong-type-i64-from-i32
 ;; Purpose: The i64 entry point rejects a dynamic array<i32> with ERR_TYPE.
 ;; Required profiles: core, gc-array, adversarial
 ;;

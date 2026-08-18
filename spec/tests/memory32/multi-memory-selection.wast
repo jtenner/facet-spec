@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory32/multi-memory-selection
+;; Facet conformance test: memory32/multi-memory-selection
 ;; Purpose: The explicit memory index selects memory one while memory zero remains unchanged.
 ;; Required profiles: core, memory32, multi-memory
 ;;

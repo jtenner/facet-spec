@@ -1,4 +1,4 @@
-;; WPSI conformance test: memory32/pread-pwrite-preserve-position
+;; Facet conformance test: memory32/pread-pwrite-preserve-position
 ;; Purpose: Positional I/O modifies file data without changing the sequential descriptor position.
 ;; Required profiles: core, memory32, filesystem
 ;;

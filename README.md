@@ -1,10 +1,10 @@
-# WPSI
+# Facet
 
-WPSI is a small system interface for Core WebAssembly.
+Facet is a small system interface for Core WebAssembly.
 
 It lets a WebAssembly guest use system resources such as files, clocks, random data, sockets, and polling.
 
-WPSI uses ordinary Core WebAssembly imports. It does not require a component model, a canonical ABI, or a special linker.
+Facet uses ordinary Core WebAssembly imports. It does not require a component model, a canonical ABI, or a special linker.
 
 ## The main idea
 
@@ -68,7 +68,7 @@ _i32 = 32-bit code points
 
 The `wtf` argument selects strict Unicode or reversible surrogate-sentinel behavior.
 
-WPSI does not use an encoding enum.
+Facet does not use an encoding enum.
 
 ### Capability-oriented resources
 
@@ -78,15 +78,15 @@ A resource cannot gain more authority than the capability from which it was deri
 
 ### Synchronous call lifetime
 
-Every WPSI imported function is synchronous.
+Every Facet imported function is synchronous.
 
 The runtime MUST NOT retain a guest pointer, GC reference, or other borrowed guest storage after the function returns.
 
 Nonblocking operations can return `ERR_AGAIN`.
 
-A scheduler can then use `wpsi-poll` and retry the operation later.
+A scheduler can then use `facet-poll` and retry the operation later.
 
-Concurrency belongs outside the WPSI call boundary.
+Concurrency belongs outside the Facet call boundary.
 
 ### No mandatory filesystem allocation
 
@@ -98,7 +98,7 @@ The name `~` does not grant special authority and does not automatically refer t
 
 ### Import-driven feature detection
 
-WPSI has one global ABI version.
+Facet has one global ABI version.
 
 Profiles do not have independent versions.
 
@@ -145,9 +145,9 @@ The suite covers:
 - resource lifetime;
 - adversarial bounds and capability cases.
 
-The host-manifest format follows `WebAssembly/wasi-testsuite` conventions where those conventions fit the WPSI contract.
+The host-manifest format follows `WebAssembly/wasi-testsuite` conventions where those conventions fit the Facet contract.
 
-WPSI adds `preopens` provisioning for tests that need more than one explicit directory capability.
+Facet adds `preopens` provisioning for tests that need more than one explicit directory capability.
 
 Static checks validate the catalog, manifests, fixtures, metadata, import signatures, and source hygiene.
 
@@ -155,7 +155,7 @@ CI also parses the canonical imports and every WAST source with a pinned `wasm-t
 
 ## Status
 
-WPSI 0.1 is an experimental draft.
+Facet 0.1 is an experimental draft.
 
 The first reference implementation is planned as a Wago plugin.
 
@@ -163,4 +163,4 @@ A second independent runtime prototype is planned before ABI stabilization.
 
 ## License
 
-WPSI is licensed under the [MIT License](LICENSE).
+Facet is licensed under the [MIT License](LICENSE).

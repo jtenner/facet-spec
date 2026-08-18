@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/preopen-root
+;; Facet conformance test: filesystem/preopen-root
 ;; Purpose: The WASI-compatible root manifest exposes one preopen whose display name can be read directly as `/`.
 ;; Required profiles: core, memory32, filesystem
 ;;

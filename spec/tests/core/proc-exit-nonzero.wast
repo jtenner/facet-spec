@@ -1,4 +1,4 @@
-;; WPSI conformance test: core/proc-exit-nonzero
+;; Facet conformance test: core/proc-exit-nonzero
 ;; Purpose: proc_exit terminates execution with the exact unsigned exit code supplied by the guest.
 ;; Required profiles: core
 ;; Test kind: harness

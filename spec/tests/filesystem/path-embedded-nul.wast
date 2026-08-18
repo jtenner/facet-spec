@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-embedded-nul
+;; Facet conformance test: filesystem/path-embedded-nul
 ;; Purpose: Filesystem paths reject embedded NUL without truncating the name.
 ;; Required profiles: core, memory32, filesystem, text, adversarial
 ;;

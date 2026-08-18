@@ -1,4 +1,4 @@
-;; WPSI conformance test: network/socket-invalid-handle
+;; Facet conformance test: network/socket-invalid-handle
 ;; Purpose: Socket operations validate handles before host access.
 ;; Required profiles: core, network
 ;;

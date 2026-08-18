@@ -1,4 +1,4 @@
-;; WPSI conformance test: core/handle-zero-invalid
+;; Facet conformance test: core/handle-zero-invalid
 ;; Purpose: Handle zero is permanently invalid.
 ;; Required profiles: core
 ;;

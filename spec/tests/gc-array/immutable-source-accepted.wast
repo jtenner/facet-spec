@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/immutable-source-accepted
+;; Facet conformance test: gc-array/immutable-source-accepted
 ;; Purpose: Source-only GC I/O accepts an immutable packed byte array.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;

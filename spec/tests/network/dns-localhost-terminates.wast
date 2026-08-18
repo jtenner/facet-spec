@@ -1,4 +1,4 @@
-;; WPSI conformance test: network/dns-localhost-terminates
+;; Facet conformance test: network/dns-localhost-terminates
 ;; Purpose: DNS iteration for localhost yields at least one address and terminates.
 ;; Required profiles: core, memory32, network
 ;;

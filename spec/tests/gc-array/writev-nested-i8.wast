@@ -1,4 +1,4 @@
-;; WPSI conformance test: gc-array/writev-nested-i8
+;; Facet conformance test: gc-array/writev-nested-i8
 ;; Purpose: GC writev traverses a nested array in outer-index order.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;

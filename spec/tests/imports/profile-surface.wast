@@ -1,4 +1,4 @@
-;; WPSI conformance test: imports/profile-surface
+;; Facet conformance test: imports/profile-surface
 ;; Purpose: Representative imports guard profile naming and Core signatures.
 ;; Required profiles: core, memory32, memory64, gc-array, filesystem, links, network, poll
 ;;

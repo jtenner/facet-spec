@@ -1,4 +1,4 @@
-;; WPSI conformance test: clocks/sleep-until-past
+;; Facet conformance test: clocks/sleep-until-past
 ;; Purpose: Sleeping until a deadline that has already arrived succeeds immediately.
 ;; Required profiles: core, clocks
 ;;

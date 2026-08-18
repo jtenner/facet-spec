@@ -1,4 +1,4 @@
-;; WPSI conformance test: clocks/system-nanoseconds-range
+;; Facet conformance test: clocks/system-nanoseconds-range
 ;; Purpose: System clock nanoseconds are always less than one billion.
 ;; Required profiles: core, clocks
 ;;

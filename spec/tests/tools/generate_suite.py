@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the deterministic WPSI conformance-test catalog.
+"""Regenerate the deterministic Facet conformance-test catalog.
 
 The WAST files are the canonical test sources. Their first metadata comments
 encode the stable test id, purpose, required profiles, and optional test kind.
@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent.parent
-ID_RE = re.compile(r"^;; WPSI conformance test:\s*(\S+)\s*$", re.MULTILINE)
+ID_RE = re.compile(r"^;; Facet conformance test:\s*(\S+)\s*$", re.MULTILINE)
 PURPOSE_RE = re.compile(r"^;; Purpose:\s*(.+?)\s*$", re.MULTILINE)
 PROFILES_RE = re.compile(r"^;; Required profiles:\s*(.+?)\s*$", re.MULTILINE)
 KIND_RE = re.compile(r"^;; Test kind:\s*(\S+)\s*$", re.MULTILINE)
@@ -64,7 +64,7 @@ def render() -> str:
     tests = [metadata(path) for path in sorted(ROOT.rglob("*.wast"))]
     catalog = {
         "version": 1,
-        "specification": "WPSI 0.1",
+        "specification": "Facet 0.1",
         "test_count": len(tests),
         "tests": tests,
     }

@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/eof-is-success
+;; Facet conformance test: filesystem/eof-is-success
 ;; Purpose: EOF is represented as zero bytes and ERR_OK.
 ;; Required profiles: core, memory32, filesystem
 ;;

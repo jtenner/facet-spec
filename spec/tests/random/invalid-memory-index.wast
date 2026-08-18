@@ -1,4 +1,4 @@
-;; WPSI conformance test: random/invalid-memory-index
+;; Facet conformance test: random/invalid-memory-index
 ;; Purpose: An invalid memory index returns ERR_FAULT rather than selecting memory zero.
 ;; Required profiles: core, memory32, adversarial
 ;;

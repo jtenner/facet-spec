@@ -1,4 +1,4 @@
-;; WPSI conformance test: filesystem/path-utf8
+;; Facet conformance test: filesystem/path-utf8
 ;; Purpose: A UTF-8 path opens a Unicode-named fixture without UTF-8 canonicalization.
 ;; Required profiles: core, memory32, filesystem, text
 ;;

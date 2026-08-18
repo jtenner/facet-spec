@@ -1,6 +1,6 @@
-# WPSI Roadmap
+# Facet Roadmap
 
-WPSI is an experimental 0.1 draft.
+Facet is an experimental 0.1 draft.
 
 ## Phase 0 — Specification hygiene
 
@@ -17,7 +17,7 @@ WPSI is an experimental 0.1 draft.
 - [x] Require stale-handle safety.
 - [x] Define WASI-compatible error categories where practical.
 - [x] Define capability-beneath path and symbolic-link resolution.
-- [x] Freeze WPSI 0.1 GC raw-buffer behavior.
+- [x] Freeze Facet 0.1 GC raw-buffer behavior.
 - [x] Support `i64` GC byte ranges and partial wide elements.
 - [x] Use abstract `(ref array)` parameters for raw GC buffers.
 - [x] Permit immutable GC source arrays.
@@ -25,7 +25,7 @@ WPSI is an experimental 0.1 draft.
 - [x] Define direct string transfer for linear memory and existing GC arrays.
 - [x] Define caller-typed allocated GC string results.
 - [x] Define polling snapshot and readiness semantics.
-- [x] Freeze WPSI 0.1 imported calls as synchronous.
+- [x] Freeze Facet 0.1 imported calls as synchronous.
 - [x] Forbid retained guest-storage borrows after return.
 - [x] Define one global ABI version.
 - [x] Make import and type matching authoritative for feature detection.
@@ -33,7 +33,7 @@ WPSI is an experimental 0.1 draft.
 - [x] Add a comprehensive WAST conformance suite.
 - [x] Pin syntax validation in CI.
 - [x] Parse `spec/imports.wat` directly in CI.
-- [x] Resolve the WPSI 0.1 ABI questions tracked in `docs/open-questions.md`.
+- [x] Resolve the Facet 0.1 ABI questions tracked in `docs/open-questions.md`.
 - [x] Add a controlled project glossary.
 - [x] Add a simple-technical-English writing guide.
 - [x] Rewrite human-facing normative and implementation documentation for accessibility without changing ABI behavior.
@@ -41,7 +41,7 @@ WPSI is an experimental 0.1 draft.
 
 ## Phase 1 — Wago reference implementation
 
-Implement WPSI as a Wago plugin.
+Implement Facet as a Wago plugin.
 
 Wago is the first implementation vehicle because it already supports:
 
@@ -54,14 +54,14 @@ Wago is the first implementation vehicle because it already supports:
 
 Implement profiles in this order:
 
-1. `wpsi-core`;
-2. `wpsi-memory32`;
-3. `wpsi-filesystem`;
-4. `wpsi-gc-array`;
-5. `wpsi-memory64`;
-6. `wpsi-poll`;
-7. `wpsi-network`;
-8. `wpsi-links`.
+1. `facet-core`;
+2. `facet-memory32`;
+3. `facet-filesystem`;
+4. `facet-gc-array`;
+5. `facet-memory64`;
+6. `facet-poll`;
+7. `facet-network`;
+8. `facet-links`.
 
 The Wago implementation should use [`spec/behavior.md`](spec/behavior.md) as its behavioral contract.
 
@@ -102,7 +102,7 @@ The purpose is to find assumptions that accidentally depend on Wago before ABI s
 
 ## Phase 4 — ABI stabilization
 
-Before WPSI 1.0:
+Before Facet 1.0:
 
 - freeze error-number semantics;
 - freeze text and WTF semantics;
@@ -114,7 +114,7 @@ Before WPSI 1.0:
 
 ## Open ABI questions
 
-There are currently no unresolved WPSI 0.1 ABI design questions.
+There are currently no unresolved Facet 0.1 ABI design questions.
 
 Implementation work can still expose specification defects.
 
