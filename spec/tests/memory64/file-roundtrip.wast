@@ -24,6 +24,6 @@
     (drop (call $close (local.get $fd))) (drop (call $close (local.get $dir)))
     (i32.or (local.get $e)
       (i32.or (i64.ne (local.get $n) (i64.const 8))
-        (i32.ne (i64.load (i64.const 64)) (i64.const 3761688987575706989)))))
+        (i64.ne (i64.load (i64.const 64)) (i64.const 3761688987575706989)))))
 )
 (assert_return (invoke "run") (i32.const 0))
