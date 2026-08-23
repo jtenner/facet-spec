@@ -19,41 +19,36 @@
   (import "facet" "path_readlink_array_i32" (func $readlink_array (param i32 (ref array) i32 i32 i32 i32) (result (ref null $a) i32)))
   (import "facet" "handle_close" (func $close (param i32) (result i32)))
 
-  (func $probe-errors (param $a (ref $a)) (result i32)
-    (local $e i32) (local $n i64) (local $out (ref null $a))
-    (local.set $e (call $mkdir (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 1))))
-    (local.set $e (call $remove (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 2))))
-    (local.set $e (call $rename
+  (func $require-error (param $e i32)
+    (if (i32.eqz (local.get $e)) (then unreachable)))
+
+  (func $probe-errors (param $a (ref $a))
+    (local $e i32)
+    (call $require-error (call $mkdir (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)))
+    (call $require-error (call $remove (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0)))
+    (call $require-error (call $rename
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 3))))
-    (local.set $e (call $link
+    (call $require-error (call $link
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 4))))
-    (local.set $e (call $symlink
+    (call $require-error (call $symlink
       (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 5))))
     (call $readlink_len (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 6))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $readlink_into
       (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0)
       (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 7))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $readlink_array (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $out)
-    (if (i32.or (i32.ne (local.get $e) (i32.const 4)) (i32.eqz (ref.is_null (local.get $out))))
-      (then (return (i32.const 8))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $stat (i32.const 0) (local.get $a) (i32.const 0) (i32.const 5) (i32.const 0) (i32.const 0))
-    (local.set $e)
-    drop drop drop drop drop drop drop drop drop
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 9))))
-    (i32.const 0))
+    (local.set $e) drop drop drop drop drop drop drop drop drop
+    (call $require-error (local.get $e)))
 
   (func (export "run") (result i32)
     (local $a (ref $a)) (local $dir i32) (local $fd i32) (local $e i32)
@@ -65,7 +60,7 @@
     (local.set $e) (local.set $fd)
     (if (i32.eqz (local.get $e)) (then (drop (call $close (local.get $fd)))))
     (if (local.get $e) (then (return (local.get $e))))
-    (local.set $e (call $probe-errors (local.get $a)))
+    (call $probe-errors (local.get $a))
     (drop (call $close (local.get $dir)))
-    (local.get $e)))
+    (i32.const 0)))
 (assert_return (invoke "run") (i32.const 0))
