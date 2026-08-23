@@ -1,5 +1,5 @@
 ;; Facet conformance test: gc-array/writev-nested-i8
-;; Purpose: GC descriptor I/O preserves logical byte views across array storage families.
+;; Purpose: GC writev traverses a nested array in outer-index order.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;
 ;; SPDX-License-Identifier: MIT
@@ -105,8 +105,7 @@
     (local.set $r64 (array.new_default $r64 (i32.const 0)))
     (local.set $rv128 (array.new_default $rv128 (i32.const 0)))
 
-    ;; Sequential reads for the storage widths that previously had only import
-    ;; declarations. Zero-length reads are successful no-ops on a valid descriptor.
+    ;; Sequential reads for the storage widths that previously had only import declarations.
     (call $read_i8 (local.get $fd) (local.get $r8) (i64.const 0) (i64.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $read_i32 (local.get $fd) (local.get $r32) (i64.const 0) (i64.const 0))
@@ -114,8 +113,7 @@
     (call $read_i64 (local.get $fd) (local.get $r64) (i64.const 0) (i64.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
 
-    ;; Positional GC I/O exercises all five byte-view storage classes without
-    ;; changing the descriptor position or fixture contents.
+    ;; Positional GC I/O exercises all five byte-view storage classes.
     (call $pread_i8 (local.get $fd) (i64.const 0) (local.get $r8) (i64.const 0) (i64.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $pread_i16 (local.get $fd) (i64.const 0) (local.get $r16) (i64.const 0) (i64.const 0))
@@ -126,7 +124,6 @@
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $pread_v128 (local.get $fd) (i64.const 0) (local.get $rv128) (i64.const 0) (i64.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
-
     (call $pwrite_i8 (local.get $fd) (i64.const 0) (local.get $r8) (i64.const 0) (i64.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $pwrite_i16 (local.get $fd) (i64.const 0) (local.get $r16) (i64.const 0) (i64.const 0))
@@ -159,7 +156,6 @@
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $readv_v128 (local.get $fd) (local.get $rrv128) (i32.const 0) (i32.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
-
     (call $writev_i16 (local.get $fd) (local.get $ww16) (i32.const 0) (i32.const 0))
     (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $writev_i32 (local.get $fd) (local.get $ww32) (i32.const 0) (i32.const 0))
