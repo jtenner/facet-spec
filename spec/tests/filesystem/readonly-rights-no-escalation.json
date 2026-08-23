@@ -13,6 +13,11 @@
             "iterate",
             "open"
           ]
+        },
+        {
+          "host": "../fixtures/readonly",
+          "guest": "/zero",
+          "rights": []
         }
       ]
     },
