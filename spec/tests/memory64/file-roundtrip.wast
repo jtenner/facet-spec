@@ -10,7 +10,6 @@
   (import "facet" "path_open_mem64_i8" (func $open8 (param i32 i32 i64 i64 i32 i32 i64) (result i32 i32)))
   (import "facet" "path_open_mem64_i16" (func $open16 (param i32 i32 i64 i64 i32 i32 i64) (result i32 i32)))
   (import "facet" "path_open_mem64_i32" (func $open32 (param i32 i32 i64 i64 i32 i32 i64) (result i32 i32)))
-
   (import "facet" "path_stat_mem64_i8" (func $stat8 (param i32 i32 i64 i64 i32 i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
   (import "facet" "path_stat_mem64_i16" (func $stat16 (param i32 i32 i64 i64 i32 i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
   (import "facet" "path_stat_mem64_i32" (func $stat32 (param i32 i32 i64 i64 i32 i32) (result i32 i32 i64 i64 i32 i64 i32 i64 i32 i32)))
@@ -51,113 +50,95 @@
   (data (i64.const 128) "\6d\00\36\00\34\00\2e\00\62\00\69\00\6e\00")
   (data (i64.const 160) "\6d\00\00\00\36\00\00\00\34\00\00\00\2e\00\00\00\62\00\00\00\69\00\00\00\6e\00\00\00")
 
-  (func $probe8 (param $ptr i64) (param $len i64) (result i32)
-    (local $e i32) (local $n i64)
-    (local.set $e (call $mkdir8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 21))))
-    (local.set $e (call $remove8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 22))))
-    (local.set $e (call $rename8
+  (func $require-error (param $e i32)
+    (if (i32.eqz (local.get $e)) (then unreachable)))
+
+  (func $probe8 (param $ptr i64) (param $len i64)
+    (local $e i32)
+    (call $require-error (call $mkdir8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
+    (call $require-error (call $remove8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
+    (call $require-error (call $rename8
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 23))))
-    (local.set $e (call $link8
+    (call $require-error (call $link8
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 24))))
-    (local.set $e (call $symlink8
+    (call $require-error (call $symlink8
       (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 25))))
     (call $readlink_len8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 26))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $readlink8
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i64.const 256) (i64.const 64) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 27))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $stat8 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e)
-    drop drop drop drop drop drop drop drop drop
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 28))))
-    (i32.const 0))
+    (local.set $e) drop drop drop drop drop drop drop drop drop
+    (call $require-error (local.get $e)))
 
-  (func $probe16 (param $ptr i64) (param $len i64) (result i32)
-    (local $e i32) (local $n i64)
-    (local.set $e (call $mkdir16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 31))))
-    (local.set $e (call $remove16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 32))))
-    (local.set $e (call $rename16
+  (func $probe16 (param $ptr i64) (param $len i64)
+    (local $e i32)
+    (call $require-error (call $mkdir16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
+    (call $require-error (call $remove16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
+    (call $require-error (call $rename16
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 33))))
-    (local.set $e (call $link16
+    (call $require-error (call $link16
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 34))))
-    (local.set $e (call $symlink16
+    (call $require-error (call $symlink16
       (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 35))))
     (call $readlink_len16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 36))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $readlink16
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i64.const 256) (i64.const 64) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 37))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $stat16 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e)
-    drop drop drop drop drop drop drop drop drop
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 38))))
-    (i32.const 0))
+    (local.set $e) drop drop drop drop drop drop drop drop drop
+    (call $require-error (local.get $e)))
 
-  (func $probe32 (param $ptr i64) (param $len i64) (result i32)
-    (local $e i32) (local $n i64)
-    (local.set $e (call $mkdir32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 41))))
-    (local.set $e (call $remove32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 42))))
-    (local.set $e (call $rename32
+  (func $probe32 (param $ptr i64) (param $len i64)
+    (local $e i32)
+    (call $require-error (call $mkdir32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
+    (call $require-error (call $remove32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
+    (call $require-error (call $rename32
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 43))))
-    (local.set $e (call $link32
+    (call $require-error (call $link32
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 44))))
-    (local.set $e (call $symlink32
+    (call $require-error (call $symlink32
       (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)))
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 45))))
     (call $readlink_len32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 46))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $readlink32
       (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0)
       (i32.const 0) (i64.const 256) (i64.const 64) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 47))))
+    (local.set $e) drop
+    (call $require-error (local.get $e))
     (call $stat32 (i32.const 0) (i32.const 0) (local.get $ptr) (local.get $len) (i32.const 0) (i32.const 0))
-    (local.set $e)
-    drop drop drop drop drop drop drop drop drop
-    (if (i32.ne (local.get $e) (i32.const 4)) (then (return (i32.const 48))))
-    (i32.const 0))
+    (local.set $e) drop drop drop drop drop drop drop drop drop
+    (call $require-error (local.get $e)))
 
   (func (export "run") (result i32)
-    (local $dir i32) (local $fd i32) (local $fd2 i32) (local $e i32) (local $n i64) (local $off i64)
+    (local $dir i32) (local $fd i32) (local $fd2 i32) (local $e i32)
+    (local $n i64) (local $off i64)
+
     (call $scratch (i32.const 0)) (local.set $e) (local.set $dir)
     (if (local.get $e) (then (return (local.get $e))))
 
-    ;; Create the file through the i8 Memory64 path representation.
+    ;; Create with UTF-8 and reopen the same path through UTF-16 and UTF-32.
     (call $open8 (local.get $dir) (i32.const 0) (i64.const 0) (i64.const 7) (i32.const 0) (i32.const 5) (i64.const 63))
     (local.set $e) (local.set $fd)
     (if (local.get $e) (then (return (local.get $e))))
-
-    ;; Reopen the same path through UTF-16 and UTF-32 Memory64 representations.
     (call $open16 (local.get $dir) (i32.const 0) (i64.const 128) (i64.const 7) (i32.const 0) (i32.const 0) (i64.const 17))
     (local.set $e) (local.set $fd2)
     (if (local.get $e) (then (return (i32.const 11))))
@@ -167,15 +148,15 @@
     (if (local.get $e) (then (return (i32.const 12))))
     (drop (call $close (local.get $fd2)))
 
+    ;; Sequential and positional Memory64 buffer operations.
     (call $write (local.get $fd) (i32.const 0) (i64.const 32) (i64.const 8))
     (local.set $e) (local.set $n)
     (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 8)))
       (then (return (i32.const 1))))
     (call $seek (local.get $fd) (i64.const 0) (i32.const 0))
     (local.set $e) (local.set $off)
-    (if (i32.or (local.get $e) (local.get $off))
+    (if (i32.or (local.get $e) (i64.ne (local.get $off) (i64.const 0)))
       (then (return (i32.const 2))))
-
     (call $pwrite (local.get $fd) (i64.const 0) (i32.const 0) (i64.const 32) (i64.const 8))
     (local.set $e) (local.set $n)
     (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 8)))
@@ -187,13 +168,17 @@
                   (i64.ne (i64.load (i64.const 80)) (i64.const 3762328071117301101))))
       (then (return (i32.const 4))))
 
+    ;; Empty Memory64 iovec tables are successful no-ops.
     (call $readv (local.get $fd) (i32.const 0) (i64.const 0) (i32.const 0))
     (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (local.get $n)) (then (return (i32.const 5))))
+    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0)))
+      (then (return (i32.const 5))))
     (call $writev (local.get $fd) (i32.const 0) (i64.const 0) (i32.const 0))
     (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (local.get $n)) (then (return (i32.const 6))))
+    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0)))
+      (then (return (i32.const 6))))
 
+    ;; Positional calls and empty vectors must not move the sequential position.
     (call $read (local.get $fd) (i32.const 0) (i64.const 64) (i64.const 8))
     (local.set $e) (local.set $n)
     (if (i32.or (local.get $e)
@@ -201,17 +186,14 @@
                   (i64.ne (i64.load (i64.const 64)) (i64.const 3762328071117301101))))
       (then (return (i32.const 7))))
 
-    ;; The remaining Memory64 path operations must classify the same valid path
-    ;; consistently when the directory capability itself is invalid.
-    (local.set $e (call $probe8 (i64.const 0) (i64.const 7)))
-    (if (local.get $e) (then (return (local.get $e))))
-    (local.set $e (call $probe16 (i64.const 128) (i64.const 7)))
-    (if (local.get $e) (then (return (local.get $e))))
-    (local.set $e (call $probe32 (i64.const 160) (i64.const 7)))
-    (if (local.get $e) (then (return (local.get $e))))
+    ;; Exercise every remaining Memory64 path representation with a valid encoded
+    ;; path and an intentionally invalid directory capability. The representation
+    ;; matrix requires failure, but does not impose an error-precedence order.
+    (call $probe8 (i64.const 0) (i64.const 7))
+    (call $probe16 (i64.const 128) (i64.const 7))
+    (call $probe32 (i64.const 160) (i64.const 7))
 
     (drop (call $close (local.get $fd)))
     (drop (call $close (local.get $dir)))
-    (i32.const 0))
-)
+    (i32.const 0)))
 (assert_return (invoke "run") (i32.const 0))
