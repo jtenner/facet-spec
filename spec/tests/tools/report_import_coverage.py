@@ -54,7 +54,7 @@ def direct_function_calls(roots: list[Any]) -> set[str]:
     called: set[str] = set()
     for node in walk_lists(roots):
         for index, item in enumerate(node[:-1]):
-            if item not in {"call", "return_call"}:
+            if not isinstance(item, str) or item not in {"call", "return_call"}:
                 continue
             target = node[index + 1]
             if isinstance(target, str) and target.startswith("$"):
