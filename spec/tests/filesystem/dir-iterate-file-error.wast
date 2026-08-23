@@ -14,7 +14,7 @@
   (func (export "run") (result i32 i32)
     (local $dir i32) (local $fd i32) (local $it i32) (local $e i32)
     (call $scratch (i32.const 0)) (local.set $e) (local.set $dir)
-    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 4) (i32.const 0) (i32.const 5) (i64.const 17)) (local.set $e) (local.set $fd)
+    (call $open (local.get $dir) (i32.const 0) (i32.const 0) (i32.const 4) (i32.const 0) (i32.const 1) (i64.const 17)) (local.set $e) (local.set $fd)
     (call $iter (local.get $fd)) (local.set $e) (local.set $it)
     (drop (call $close (local.get $fd)))
     (drop (call $close (local.get $dir)))
