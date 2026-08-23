@@ -18,4 +18,4 @@
     (local.set $e) (local.set $cn) (local.set $cs) (local.set $mn) (local.set $ms) (local.set $an) (local.set $as) (local.set $size) (local.set $flags) (local.set $type)
     (drop (call $close (local.get $dir)))
     (local.get $type) (local.get $size) (local.get $e)))
-(assert_return (invoke "run") (i32.const 1) (i64.const 28) (i32.const 0))
+(assert_return (invoke "run") (i32.const 1) (i64.const 29) (i32.const 0))
