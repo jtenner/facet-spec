@@ -21,6 +21,6 @@
     (i32.or (local.get $e)
       (i32.or (i64.ne (local.get $n) (i64.const 10))
         (i32.or (i32.ne (i32.load (i32.const 64)) (i32.const 1735549300))
-                (i32.ne (i32.load16_u (i32.const 72)) (i32.const 29752))))))
+                (i32.ne (i32.load16_u (i32.const 72)) (i32.const 29816))))))
 )
 (assert_return (invoke "run") (i32.const 0))
