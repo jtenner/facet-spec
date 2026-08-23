@@ -1,5 +1,5 @@
 ;; Facet conformance test: filesystem/readonly-rights-no-escalation
-;; Purpose: A read-only preopen cannot create a writable child descriptor, and explicit empty rights grant zero authority.
+;; Purpose: A read-only preopen cannot create a writable child descriptor.
 ;; Required profiles: core, memory32, filesystem, capabilities
 ;;
 ;; SPDX-License-Identifier: MIT
