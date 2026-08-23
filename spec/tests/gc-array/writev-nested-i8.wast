@@ -1,5 +1,5 @@
 ;; Facet conformance test: gc-array/writev-nested-i8
-;; Purpose: GC writev traverses a nested array in outer-index order.
+;; Purpose: GC descriptor I/O preserves logical byte views across array storage families.
 ;; Required profiles: core, memory32, gc-array, filesystem
 ;;
 ;; SPDX-License-Identifier: MIT
@@ -8,7 +8,7 @@
   (type $bytes (array i8))
   (type $buffers (array (mut (ref null $bytes))))
 
-  ;; Zero-length nested vectors exercise the structural representation contract for
+  ;; Zero-length operations exercise the structural representation contract for
   ;; every logical byte-view width without introducing partial-I/O nondeterminism.
   (type $r8 (array (mut i8)))
   (type $r16 (array (mut i16)))
@@ -32,6 +32,22 @@
 
   (import "facet" "fs_preopen_get" (func $scratch (param i32) (result i32 i32)))
   (import "facet" "path_open_mem32_i8" (func $open (param i32 i32 i32 i32 i32 i32 i64) (result i32 i32)))
+
+  (import "facet" "fd_read_array_i8" (func $read_i8 (param i32 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_read_array_i32" (func $read_i32 (param i32 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_read_array_i64" (func $read_i64 (param i32 (ref array) i64 i64) (result i64 i32)))
+
+  (import "facet" "fd_pread_array_i8" (func $pread_i8 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pread_array_i16" (func $pread_i16 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pread_array_i32" (func $pread_i32 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pread_array_i64" (func $pread_i64 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pread_array_v128" (func $pread_v128 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pwrite_array_i8" (func $pwrite_i8 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pwrite_array_i16" (func $pwrite_i16 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pwrite_array_i32" (func $pwrite_i32 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pwrite_array_i64" (func $pwrite_i64 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+  (import "facet" "fd_pwrite_array_v128" (func $pwrite_v128 (param i32 i64 (ref array) i64 i64) (result i64 i32)))
+
   (import "facet" "fd_writev_array_i8" (func $writev_i8 (param i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "fd_writev_array_i16" (func $writev_i16 (param i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "fd_writev_array_i32" (func $writev_i32 (param i32 (ref array) i32 i32) (result i64 i32)))
@@ -44,11 +60,18 @@
   (import "facet" "fd_readv_array_v128" (func $readv_v128 (param i32 (ref array) i32 i32) (result i64 i32)))
   (import "facet" "fd_read_mem32" (func $read (param i32 i32 i32 i32) (result i64 i32)))
   (import "facet" "fd_seek" (func $seek (param i32 i64 i32) (result i64 i32)))
+
   (memory 1)
   (data (i32.const 0) "nested.bin")
 
+  (func $require-zero (param $n i64) (param $e i32)
+    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0)))
+      (then unreachable)))
+
   (func (export "run") (result i32)
     (local $x (ref $bytes)) (local $y (ref $bytes)) (local $b (ref $buffers))
+    (local $r8 (ref $r8)) (local $r16 (ref $r16)) (local $r32 (ref $r32))
+    (local $r64 (ref $r64)) (local $rv128 (ref $rv128))
     (local $rr8 (ref $rr8)) (local $rr16 (ref $rr16)) (local $rr32 (ref $rr32))
     (local $rr64 (ref $rr64)) (local $rrv128 (ref $rrv128))
     (local $ww16 (ref $ww16)) (local $ww32 (ref $ww32)) (local $ww64 (ref $ww64))
@@ -75,8 +98,47 @@
                   (i32.ne (i32.load16_u (i32.const 68)) (i32.const 17989))))
       (then (return (i32.const 2))))
 
-    ;; A zero-length vector is a successful no-op, but the host still receives and
-    ;; structurally validates the outer GC array type for each representation family.
+    ;; Allocate zero-length concrete GC arrays for every supported storage family.
+    (local.set $r8 (array.new_default $r8 (i32.const 0)))
+    (local.set $r16 (array.new_default $r16 (i32.const 0)))
+    (local.set $r32 (array.new_default $r32 (i32.const 0)))
+    (local.set $r64 (array.new_default $r64 (i32.const 0)))
+    (local.set $rv128 (array.new_default $rv128 (i32.const 0)))
+
+    ;; Sequential reads for the storage widths that previously had only import
+    ;; declarations. Zero-length reads are successful no-ops on a valid descriptor.
+    (call $read_i8 (local.get $fd) (local.get $r8) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $read_i32 (local.get $fd) (local.get $r32) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $read_i64 (local.get $fd) (local.get $r64) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+
+    ;; Positional GC I/O exercises all five byte-view storage classes without
+    ;; changing the descriptor position or fixture contents.
+    (call $pread_i8 (local.get $fd) (i64.const 0) (local.get $r8) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pread_i16 (local.get $fd) (i64.const 0) (local.get $r16) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pread_i32 (local.get $fd) (i64.const 0) (local.get $r32) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pread_i64 (local.get $fd) (i64.const 0) (local.get $r64) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pread_v128 (local.get $fd) (i64.const 0) (local.get $rv128) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+
+    (call $pwrite_i8 (local.get $fd) (i64.const 0) (local.get $r8) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pwrite_i16 (local.get $fd) (i64.const 0) (local.get $r16) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pwrite_i32 (local.get $fd) (i64.const 0) (local.get $r32) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pwrite_i64 (local.get $fd) (i64.const 0) (local.get $r64) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+    (call $pwrite_v128 (local.get $fd) (i64.const 0) (local.get $rv128) (i64.const 0) (i64.const 0))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
+
+    ;; Nested vectored GC I/O validates the outer array shape for each family.
     (local.set $rr8 (array.new_default $rr8 (i32.const 0)))
     (local.set $rr16 (array.new_default $rr16 (i32.const 0)))
     (local.set $rr32 (array.new_default $rr32 (i32.const 0)))
@@ -88,33 +150,24 @@
     (local.set $wwv128 (array.new_default $wwv128 (i32.const 0)))
 
     (call $readv_i8 (local.get $fd) (local.get $rr8) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 3))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $readv_i16 (local.get $fd) (local.get $rr16) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 4))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $readv_i32 (local.get $fd) (local.get $rr32) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 5))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $readv_i64 (local.get $fd) (local.get $rr64) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 6))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $readv_v128 (local.get $fd) (local.get $rrv128) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 7))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
 
     (call $writev_i16 (local.get $fd) (local.get $ww16) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 8))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $writev_i32 (local.get $fd) (local.get $ww32) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 9))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $writev_i64 (local.get $fd) (local.get $ww64) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 10))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
     (call $writev_v128 (local.get $fd) (local.get $wwv128) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $n)
-    (if (i32.or (local.get $e) (i64.ne (local.get $n) (i64.const 0))) (then (return (i32.const 11))))
+    (local.set $e) (local.set $n) (call $require-zero (local.get $n) (local.get $e))
 
     (i32.const 0))
 )
