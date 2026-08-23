@@ -70,6 +70,16 @@ A harness or runtime adapter MUST preserve this distinction. It MUST NOT transla
 
 The same authority rule applies to embedding APIs: a representable zero-rights preopen MUST remain zero authority after normalization.
 
+## Canonical structural import signatures
+
+`spec/imports.wat` is the canonical Core WebAssembly import contract for Facet 0.1. An implementation MUST reject an importing module whose Facet function signature is not structurally compatible with the canonical declaration, even when the runtime's native host-function registry represents reference values only through a coarser ABI category.
+
+In particular, a canonical `(ref array)` parameter is a non-null abstract array reference. It MUST NOT be silently accepted as `(ref null array)`, `(ref any)`, an exact reference, or an arbitrary caller-defined heap type merely because those representations share one host ABI slot category.
+
+The allocating string and readlink imports are deliberate templates. For those imports, the importing module selects the concrete nullable result array type. The selected type MUST have the storage class required by the import suffix (`i8`, `i16`, or `i32`). A mismatched concrete result type is a module-linking or instantiation failure, not a guest-visible runtime `ERR_TYPE` fallback.
+
+A runtime MAY enforce these rules when it binds host imports, when it validates the importing module, or immediately before instantiation, provided no guest code executes with an incompatible Facet signature.
+
 ## DNS names
 
 Facet 0.1 DNS names are ASCII DNS presentation strings.
@@ -79,6 +89,16 @@ After decoding the selected `_i8`, `_i16`, or `_i32` representation, every code 
 Facet 0.1 performs no implicit IDNA, UTS #46, locale, or Unicode-hostname conversion. A guest that needs an internationalized domain name MUST convert it to an ASCII IDNA form before calling Facet.
 
 The runtime supplies the resulting ASCII name to its resolver without adding a NUL byte. Embedder resolver search-domain policy MAY still apply when that authority is granted.
+
+## DNS resolution lifetime
+
+A DNS operation MUST NOT create an indefinitely unbounded host wait. The runtime MUST impose a finite implementation-defined resolver deadline or an equivalent finite cancellation policy.
+
+If the host runtime exposes cancellation of the active guest invocation to the resolver integration, cancellation of that invocation SHOULD cancel the outstanding resolver operation. A cancellation that terminates resolution maps to `ERR_CANCELED`. Resolver deadline expiry maps to `ERR_TIMED_OUT`.
+
+Runtime or plugin shutdown MUST be able to cancel outstanding resolver work that it owns. An implementation whose host-callback API does not expose the active invocation cancellation context MUST still use a finite resolver deadline; lack of such an API does not permit an unbounded background resolver call.
+
+The precise finite deadline is implementation-defined in Facet 0.1 and SHOULD be documented by the runtime adapter.
 
 ## Nonblocking stream connection completion
 
@@ -121,6 +141,7 @@ When the host reports an error with a direct Facet category, implementations use
 - allocation failure -> `ERR_NO_MEMORY`;
 - numeric/platform overflow -> `ERR_OVERFLOW`;
 - cancellation -> `ERR_CANCELED`;
+- deadline/timeout expiry -> `ERR_TIMED_OUT`;
 - storage quota exhaustion -> `ERR_QUOTA`.
 
 Unknown or platform-specific errors continue to use `ERR_OTHER` when no accurate portable category exists.
