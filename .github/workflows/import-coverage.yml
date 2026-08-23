@@ -1,4 +1,4 @@
-name: Facet import coverage
+name: Facet WAST import declarations
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - name: Validate suite and report canonical import coverage
+      - name: Validate suite and report direct WAST import declarations
         run: |
           python3 spec/tests/tools/check_suite.py
           python3 spec/tests/tools/report_import_coverage.py
