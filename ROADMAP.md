@@ -88,9 +88,9 @@ The next goal is to execute it against real runtimes.
 - [x] Add stale-handle tests.
 - [x] Add compatible JSON harness manifests and deterministic fixtures.
 - [x] Connect the Wago plugin to the complete suite.
-- [ ] Add forced moving-GC runtime tests.
-- [ ] Add cross-representation differential execution against the Wago plugin.
-- [ ] Publish a runtime conformance matrix.
+- [x] Add forced moving-GC runtime tests.
+- [x] Add cross-representation differential execution against the Wago plugin.
+- [x] Publish a runtime conformance matrix.
 
 ## Phase 3 — Second runtime prototype
 

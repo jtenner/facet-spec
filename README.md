@@ -121,6 +121,7 @@ Read these documents in this order if you are new to the project:
 - [`spec/imports.wat`](spec/imports.wat) — canonical Core WebAssembly import declarations.
 - [`spec/tests/README.md`](spec/tests/README.md) — conformance-suite and host-manifest contract.
 - [`spec/tests/catalog.json`](spec/tests/catalog.json) — machine-readable conformance-test inventory.
+- [`docs/conformance-matrix.md`](docs/conformance-matrix.md) — published runtime conformance results.
 - [`docs/writing-style.md`](docs/writing-style.md) — project rules for simple technical English.
 - [`docs/open-questions.md`](docs/open-questions.md) — current ABI question status.
 - [`ROADMAP.md`](ROADMAP.md) — implementation and stabilization roadmap.
