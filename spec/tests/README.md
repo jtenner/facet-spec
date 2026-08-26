@@ -125,6 +125,10 @@ read write seek tell stat set-size sync
 open create remove rename link symlink readlink iterate
 ```
 
+Omitting the `rights` member and specifying `"rights": []` have different meanings.
+
+An omitted `rights` member allows the harness to apply its documented default preopen rights. An explicit empty array grants exactly zero Facet rights. A harness MUST preserve this distinction when it constructs runtime configuration.
+
 If a preopen grants mutation rights, the runner MUST give that test an isolated view of the fixture directory.
 
 The runner MUST NOT mutate the checked-in fixture tree directly.

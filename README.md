@@ -157,7 +157,7 @@ CI also parses the canonical imports and every WAST source with a pinned `wasm-t
 
 Facet 0.1 is an experimental draft.
 
-The first reference implementation is planned as a Wago plugin.
+The first reference implementation is [`jtenner/wago-facet`](https://github.com/jtenner/wago-facet), a Wago plugin that executes the complete Facet 0.1 conformance suite. It is being hardened for its first stable release.
 
 A second independent runtime prototype is planned before ABI stabilization.
 

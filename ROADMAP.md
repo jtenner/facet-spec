@@ -41,7 +41,7 @@ Facet is an experimental 0.1 draft.
 
 ## Phase 1 — Wago reference implementation
 
-Implement Facet as a Wago plugin.
+The Facet reference implementation is [`jtenner/wago-facet`](https://github.com/jtenner/wago-facet), implemented as a Wago plugin.
 
 Wago is the first implementation vehicle because it already supports:
 
@@ -87,7 +87,7 @@ The next goal is to execute it against real runtimes.
 - [x] Add capability-escape tests.
 - [x] Add stale-handle tests.
 - [x] Add compatible JSON harness manifests and deterministic fixtures.
-- [ ] Connect the Wago plugin to the complete suite.
+- [x] Connect the Wago plugin to the complete suite.
 - [ ] Add forced moving-GC runtime tests.
 - [ ] Add cross-representation differential execution against the Wago plugin.
 - [ ] Publish a runtime conformance matrix.

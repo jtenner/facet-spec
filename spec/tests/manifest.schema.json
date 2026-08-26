@@ -50,6 +50,7 @@
     "rights": {
       "type": "array",
       "uniqueItems": true,
+      "description": "Facet rights granted to one preopen. Omission is distinct from an explicit empty array: omitted rights may use the harness default, while [] grants exactly zero rights.",
       "items": {
         "enum": [
           "read",
