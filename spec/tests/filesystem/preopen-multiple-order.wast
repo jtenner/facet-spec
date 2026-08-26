@@ -12,7 +12,7 @@
   (func $first-byte (param $index i32) (param $at i32) (result i32)
     (local $dir i32) (local $e i32) (local $n i64)
     (call $get (local.get $index)) (local.set $e) (local.set $dir)
-    (call $read (local.get $index) (i32.const 0) (i32.const 0) (local.get $at) (i32.const 1)) (local.set $e) (local.set $n)
+    (call $read (local.get $index) (i32.const 0) (i32.const 0) (local.get $at) (i32.const 8)) (local.set $e) (local.set $n)
     (i32.load8_u (local.get $at)))
   (func (export "run") (result i32 i32 i32)
     (local $n i32) (local $e i32)

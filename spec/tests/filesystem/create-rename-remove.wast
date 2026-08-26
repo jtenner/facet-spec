@@ -16,7 +16,7 @@
   (func $staterr (param $dir i32) (param $ptr i32) (result i32)
     (local $e i32) (local $t i32) (local $f i32) (local $z i64) (local $ns i32)
     (call $stat (local.get $dir) (i32.const 0) (local.get $ptr) (i32.const 7) (i32.const 0) (i32.const 0))
-    (local.set $e) (local.set $ns) (local.set $z) (local.set $ns) (local.set $z) (local.set $ns) (local.set $z) (local.set $f) (local.set $t)
+    (local.set $e) (local.set $ns) (local.set $z) (local.set $ns) (local.set $z) (local.set $ns) (local.set $z) (local.set $z) (local.set $f) (local.set $t)
     (local.get $e))
   (func (export "run") (result i32)
     (local $dir i32) (local $fd i32) (local $e i32)

@@ -17,7 +17,7 @@
   (func (export "run") (result i32)
     (local $x (ref $bytes)) (local $y (ref $bytes)) (local $b (ref $buffers))
     (local $dir i32) (local $fd i32) (local $e i32) (local $n i64) (local $off i64)
-    (local.set $x (array.new_fixed $bytes 3 (i32.const 97) (i32.const 98) (i32.const 99)))
+    (local.set $x (array.new_fixed $bytes 3 (i32.const 65) (i32.const 66) (i32.const 67)))
     (local.set $y (array.new_fixed $bytes 3 (i32.const 68) (i32.const 69) (i32.const 70)))
     (local.set $b (array.new_default $buffers (i32.const 2)))
     (array.set $buffers (local.get $b) (i32.const 0) (local.get $x))

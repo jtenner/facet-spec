@@ -34,7 +34,7 @@
     (call $tell (local.get $fd)) (local.set $e) (local.set $off)
     (drop (call $close (local.get $fd))) (drop (call $close (local.get $dir)))
     (i32.or (i64.ne (local.get $off) (i64.const 8))
-      (i32.or (i32.ne (i32.load (i32.const 64)) (i32.const 1482248801))
+      (i32.or (i32.ne (i32.load (i32.const 64)) (i32.const 1498964577))
               (i32.ne (i32.load (i32.const 68)) (i32.const 1751606885)))))
 )
 (assert_return (invoke "run") (i32.const 0))
