@@ -29,6 +29,7 @@ This file records notable specification changes.
 - Normative `spec/behavior.md` for validation order, error normalization, text transfer, path resolution, GC rules, polling, and networking.
 - Complete WAST declaration and direct-invocation coverage for all 261 canonical imports.
 - Finite runtime resource budgets for guest-controlled host allocations.
+- Published runtime conformance matrix with default and forced moving-GC results.
 - `docs/terminology.md` for controlled project terminology.
 - `docs/writing-style.md` for simple technical English and accessibility rules.
 
