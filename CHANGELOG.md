@@ -27,6 +27,8 @@ This file records notable specification changes.
 - Exact import-signature validation.
 - Pinned `wasm-tools` parsing in CI.
 - Normative `spec/behavior.md` for validation order, error normalization, text transfer, path resolution, GC rules, polling, and networking.
+- Complete WAST declaration and direct-invocation coverage for all 261 canonical imports.
+- Finite runtime resource budgets for guest-controlled host allocations.
 - `docs/terminology.md` for controlled project terminology.
 - `docs/writing-style.md` for simple technical English and accessibility rules.
 
@@ -46,6 +48,11 @@ This file records notable specification changes.
 - `~` is only an optional preopen display-name convention.
 - Filesystem path resolution uses a capability-beneath model.
 - Paths cannot escape through `..` or rooted symbolic links.
+- Final path-component and filesystem flag combinations have deterministic behavior.
+- Preopen directory authority is pinned before guest observation.
+- Explicit empty preopen rights grant exactly zero authority.
+- Directory-entry inode values are stable identity hints or zero when unavailable.
+- Capability-resolution cross-device errors are distinct from ordinary cross-device filesystem errors.
 - Wide GC arrays support arbitrary partial-element byte ranges.
 - Raw GC inputs use `(ref array)` with dynamic storage validation.
 - Source arrays can be immutable.
@@ -59,6 +66,7 @@ This file records notable specification changes.
 - Profiles do not have independent versions.
 - Facet has no separate feature-query API.
 - Import presence and exact Core WebAssembly type matching are authoritative for optional support.
+- Canonical reference-type imports require exact structural compatibility.
 - Host-originated strings use source-specific length and copy APIs instead of string resource handles.
 - A GC caller can provide an existing destination array or request allocation of its concrete result array type.
 - Text APIs do not use an `ENC_*` selector.
@@ -69,7 +77,12 @@ This file records notable specification changes.
 - Polling is level-triggered and snapshot-based.
 - I/O errors and hangups are readiness events instead of `poll_wait` failures.
 - Networking uses WASI-style socket state and error categories adapted to synchronous Facet calls.
+- A retried nonblocking stream connection requires readiness before a zero external socket error means success.
+- DNS names are ASCII presentation strings with no implicit IDNA conversion.
+- DNS resolution has a finite runtime-defined deadline or equivalent cancellation policy.
 - Network authority is embedder policy, not a guest-visible policy object.
+- Portable I/O, allocation, overflow, cancellation, timeout, and quota failures use their direct Facet error categories.
+- A descriptor whose external flags cannot be restored cannot remain usable.
 - Human-facing documentation follows a simple-technical-English style inspired by controlled technical English.
 - Documentation rewrites must preserve normative ABI meaning.
 - Project prose uses `guest`, `runtime`, `embedder`, and `operating system` instead of using `host` for several different actors when a more precise term exists.

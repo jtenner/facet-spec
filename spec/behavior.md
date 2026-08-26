@@ -181,6 +181,21 @@ Each Facet call still completes or returns `ERR_AGAIN` before its guest-storage 
 
 A scheduler can use `facet-poll` to wait for readiness and retry a nonblocking operation.
 
+### 1.4 Resource exhaustion
+
+A Facet runtime MUST impose finite implementation limits on guest-controlled host allocations that are not already bounded by guest memory itself.
+
+This includes at least:
+
+- iovec counts;
+- aggregate vectored-I/O bytes staged in runtime memory;
+- decoded text units copied into runtime allocations;
+- active poll registrations and timers.
+
+Exceeding an implementation resource budget returns `ERR_QUOTA` before the unbounded allocation is attempted.
+
+Directory iteration SHOULD stream entries instead of materializing an entire directory in runtime memory.
+
 ## 2. Error semantics
 
 Facet has its own compact numeric error namespace.
@@ -260,6 +275,19 @@ The runtime MUST NOT guess an unrelated portable error category only to avoid `E
 
 If the runtime cannot classify an external failure faithfully, it MUST return `ERR_OTHER`.
 
+When the external system reports a direct Facet category, the runtime uses that category instead of `ERR_OTHER`.
+
+Facet 0.1 includes these stable mappings:
+
+- I/O failure -> `ERR_IO`;
+- allocation failure -> `ERR_NO_MEMORY`;
+- numeric or platform overflow -> `ERR_OVERFLOW`;
+- cancellation -> `ERR_CANCELED`;
+- deadline or timeout expiry -> `ERR_TIMED_OUT`;
+- storage quota exhaustion -> `ERR_QUOTA`.
+
+Unknown or platform-specific errors continue to use `ERR_OTHER` when no accurate portable category exists.
+
 ### 2.3 Validation failures are side-effect free
 
 If a function fails during validation stages 1 through 7, all non-error results MUST be zero.
@@ -275,6 +303,12 @@ A byte-stream read or write can transfer some bytes before an external error occ
 If the operation transferred one or more bytes, Facet returns the transferred byte count with `ERR_OK`.
 
 A later operation can report the deferred external condition.
+
+If an implementation temporarily changes external descriptor flags, it MUST NOT continue using a descriptor whose external flags can no longer be synchronized with the runtime's logical descriptor state.
+
+If a partial write is already externally visible when flag restoration fails, the operation MAY report the transferred byte count under the partial-I/O rules.
+
+Before a later operation, the runtime MUST poison or close the descriptor, or retain a terminal deferred error for it.
 
 If the operation transferred zero bytes, return the external condition normally.
 
@@ -331,6 +365,18 @@ The binding can select that preopen and pass `x` as the relative path.
 
 Without that higher-level rule, a `~` path component is an ordinary filename component.
 
+### 3.1.1 Preopen authority identity
+
+A configured preopen selects one directory authority.
+
+The runtime MUST materialize or otherwise pin that authority before guest code can observe the preopen.
+
+After the authority is selected, a later change to an ambient external pathname MUST NOT cause the Facet preopen to resolve to a different directory.
+
+Two guest instances created from one activated configuration MUST NOT receive different underlying directory authority merely because the pathname used to configure the preopen was renamed, replaced, or retargeted between guest calls.
+
+A representable zero-rights preopen MUST remain zero authority after runtime or embedding-API normalization.
+
 ### 3.2 `.` and `..`
 
 `.` names the current directory component.
@@ -340,6 +386,39 @@ Without that higher-level rule, a `~` path component is an ordinary filename com
 If `..` would move above the supplied directory capability, resolution returns `ERR_PERMISSION`.
 
 A path MUST NOT leave the capability temporarily and later re-enter it.
+
+### 3.2.1 Final path components
+
+`path_open_*` and `path_stat_*` operate on a resolved target.
+
+For these operations, a final `.` names the resolved current directory.
+
+A final `..` is resolved normally and returns `ERR_PERMISSION` if resolution would move above the supplied directory capability.
+
+For these operations, a trailing `/` requires the resolved target to be a directory.
+
+If the target exists and is not a directory, return `ERR_NOT_DIRECTORY`.
+
+Entry operations require a concrete final directory-entry name.
+
+The following operations return `ERR_INVALID` when the final component is `.`, `..`, or empty because the path ends in `/`:
+
+- `path_create_dir_*`;
+- `path_remove_*`;
+- both source and destination of `path_rename_*`;
+- both source and destination entry positions of `path_link_*`;
+- the destination of `path_symlink_*`;
+- `path_readlink_*`.
+
+### 3.2.2 Cross-device errors
+
+An `EXDEV`-equivalent error produced specifically by capability-beneath path resolution maps to `ERR_PERMISSION`.
+
+This error indicates an attempted escape from the supplied directory authority.
+
+An `EXDEV`-equivalent error from an otherwise-authorized filesystem operation does not indicate a Facet capability failure.
+
+For example, rename or hard-link creation across mount points returns `ERR_OTHER` when no more specific portable Facet category applies.
 
 ### 3.3 Intermediate symbolic links
 
@@ -404,6 +483,42 @@ The runtime enforces the capability boundary later if that link is followed.
 `path_readlink_*` returns the stored target text without resolving it.
 
 If an externally created symbolic link contains an absolute or rooted target, `path_readlink_*` returns `ERR_PERMISSION`.
+
+### 3.6 Filesystem flag combinations
+
+Facet 0.1 defines these combinations exactly:
+
+- `OPEN_EXCLUSIVE` without `OPEN_CREATE` returns `ERR_INVALID`;
+- `OPEN_TRUNCATE` without requested `RIGHT_WRITE` returns `ERR_CAPABILITY`;
+- `OPEN_APPEND` without requested `RIGHT_WRITE` returns `ERR_CAPABILITY`;
+- `OPEN_DIRECTORY` combined with `OPEN_CREATE` or `OPEN_TRUNCATE` returns `ERR_INVALID`;
+- `path_remove_*` requires exactly one of `REMOVE_FILE` or `REMOVE_DIRECTORY`; zero or both bits returns `ERR_INVALID`;
+- rename flags `0` and `RENAME_REPLACE` both request ordinary replacement semantics;
+- `RENAME_NO_REPLACE` and `RENAME_EXCHANGE` are mutually exclusive with every other rename mode; any combined rename mode returns `ERR_INVALID`;
+- `fd_set_flags(fd, 0)` is a valid no-op for a preopen or directory descriptor;
+- setting `FD_APPEND` or `FD_NONBLOCK` on a preopen or directory descriptor returns `ERR_INVALID`.
+
+These are scalar, descriptor, or authority validation rules.
+
+Validation completes before the external filesystem is mutated.
+
+### 3.7 Directory-entry inode semantics
+
+The `inode` field returned by directory iteration is an opaque filesystem identity hint.
+
+`inode == 0` means that a stable inode-like value is unavailable.
+
+A guest MUST NOT treat zero as a real object identity.
+
+When a runtime returns a nonzero inode for an entry, the value MUST identify the object named by that entry when the entry snapshot is created.
+
+For an unchanged entry that continues to name the same object, a runtime MUST return the same nonzero inode after `dir_iter_rewind` during the lifetime of that directory resource.
+
+The runtime MUST obtain entry metadata from the directory enumeration itself or relative to the directory capability.
+
+It MUST NOT resolve an entry through a process-global current working directory or another ambient namespace.
+
+If enumeration succeeds but an optional descriptor-relative metadata query cannot produce a stable inode, the runtime MAY return inode zero instead of failing iteration.
 
 ## 4. Settled Wasm GC array rules
 
@@ -827,6 +942,18 @@ With `SOCK_NONBLOCK`, `socket_connect` MAY return `ERR_AGAIN` while connection e
 
 After `socket_connect` returns `ERR_AGAIN`, the guest can wait for writable or error readiness with `facet-poll`.
 
+A later retry MUST NOT report success merely because the external socket error state is currently zero.
+
+The runtime first observes writable, error, or hangup readiness for the socket.
+
+If none is ready, the retry returns `ERR_AGAIN`.
+
+After readiness, the runtime reads the external connection error state.
+
+Zero means connected.
+
+A nonzero external error maps to the corresponding Facet error.
+
 The guest can then call `socket_connect` again with the same remote address to obtain the final result.
 
 Calling `socket_connect` with a different remote address while a connect is pending returns `ERR_BUSY`.
@@ -886,6 +1013,20 @@ If a receive buffer is smaller than the datagram, the operation copies the fitti
 
 `dns_resolve_*` accepts `AF_UNSPEC`, `AF_INET4`, or `AF_INET6`.
 
+Facet 0.1 DNS names are ASCII DNS presentation strings.
+
+After decoding the selected `_i8`, `_i16`, or `_i32` representation, every code point in a DNS name MUST be in `U+0001..U+007F`.
+
+An embedded U+0000 or any non-ASCII code point returns `ERR_INVALID`.
+
+Facet 0.1 performs no implicit IDNA, UTS #46, locale, or Unicode-hostname conversion.
+
+A guest that needs an internationalized domain name MUST convert it to an ASCII IDNA form before calling Facet.
+
+The runtime supplies the resulting ASCII name to its resolver without adding a NUL byte.
+
+Embedder resolver search-domain policy MAY still apply when that authority is granted.
+
 A name with no suitable address returns `ERR_NO_ENTRY`.
 
 A temporary resolver failure returns `ERR_AGAIN`.
@@ -895,6 +1036,24 @@ A permanent resolver or protocol failure returns `ERR_PROTOCOL` when that catego
 If no more specific portable category applies, return `ERR_OTHER`.
 
 An embedder network-policy denial returns `ERR_CAPABILITY`.
+
+A DNS operation MUST NOT create an indefinitely unbounded external wait.
+
+The runtime MUST impose a finite implementation-defined resolver deadline or an equivalent finite cancellation policy.
+
+If the runtime exposes cancellation of the active guest invocation to the resolver integration, cancellation of that invocation SHOULD cancel the outstanding resolver operation.
+
+A cancellation that terminates resolution maps to `ERR_CANCELED`.
+
+Resolver deadline expiry maps to `ERR_TIMED_OUT`.
+
+Runtime or plugin shutdown MUST be able to cancel outstanding resolver work that it owns.
+
+A runtime whose callback API does not expose the active invocation cancellation context MUST still use a finite resolver deadline.
+
+The lack of that API does not permit an unbounded background resolver call.
+
+The precise finite deadline is implementation-defined in Facet 0.1 and SHOULD be documented by the runtime adapter.
 
 `dns_next` uses an explicit `done` result.
 
@@ -924,6 +1083,32 @@ The runtime MUST NOT require profile-version negotiation in addition to normal C
 The runtime MUST NOT require a scalar feature-query call in addition to normal Core Wasm linking.
 
 Profile labels are descriptive groupings for documentation and conformance only.
+
+### 8.1 Canonical structural import signatures
+
+[`imports.wat`](imports.wat) is the canonical Core WebAssembly import contract for Facet 0.1.
+
+An implementation MUST reject an importing module whose Facet function signature is not structurally compatible with the canonical declaration.
+
+This rule applies even when the runtime's native function registry represents reference values through a coarser ABI category.
+
+A canonical `(ref array)` parameter is a non-null abstract array reference.
+
+It MUST NOT be silently accepted as `(ref null array)`, `(ref any)`, an exact reference, or an arbitrary caller-defined heap type merely because those representations share one runtime ABI slot category.
+
+The allocating string and readlink imports are deliberate templates.
+
+For those imports, the importing module selects the concrete nullable result array type.
+
+The selected type MUST have the storage class required by the import suffix: `i8`, `i16`, or `i32`.
+
+A mismatched concrete result type is a module-linking or instantiation failure.
+
+It is not a guest-visible runtime `ERR_TYPE` fallback.
+
+A runtime MAY enforce these rules when it binds imports, validates the importing module, or immediately before instantiation.
+
+No guest code may execute with an incompatible Facet signature.
 
 ## 9. Compatibility references
 

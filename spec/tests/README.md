@@ -262,3 +262,53 @@ Out-of-bounds runtime memory access is always a test failure.
 Leaked authority is always a test failure.
 
 These remain failures even when the guest supplied invalid data.
+
+## Structure
+
+```text
+core/          version, stdio, process, handle lifecycle
+args-env/      arguments, environment, text widths, and WTF behavior
+clocks/        system and monotonic clocks
+random/        bounds and mutation rules
+memory32/      Memory32 and multi-memory I/O
+memory64/      Memory64 I/O and overflow handling
+gc-array/      typed arrays, byte views, mutability, nested arrays
+filesystem/    descriptors, paths, rights, preopens, and the optional `~` convention
+links/         hard links and symbolic links
+network/       sockets and DNS
+poll/          poll sets, timers, and readiness
+adversarial/   overflow, atomicity, stale handles, and isolation
+imports/       signature and feature-surface guards
+tools/         deterministic generation and static validation
+fixtures/      external directories used by manifests
+```
+
+## Authoring requirements
+
+A new test MUST:
+
+- include a purpose comment;
+- include a required-profile comment;
+- assert one primary behavior;
+- preserve sentinels around modified buffers;
+- close resources that it acquires unless lifecycle is the behavior under test;
+- avoid wall-clock timing assumptions when a property assertion is sufficient;
+- avoid public-network dependencies;
+- use exact error codes only when the Facet specification fixes them;
+- be added to `catalog.json` by the generator.
+
+The current catalog contains **143** focused tests.
+
+Run:
+
+```bash
+python3 spec/tests/tools/generate_suite.py --check
+python3 spec/tests/tools/check_suite.py
+```
+
+When `wasm-tools` is installed, also run:
+
+```bash
+wasm-tools parse spec/imports.wat -o /tmp/facet-imports.wasm
+python3 spec/tests/tools/parse_wast.py --wasm-tools wasm-tools
+```

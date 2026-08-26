@@ -113,9 +113,8 @@ Read these documents in this order if you are new to the project:
 1. [`docs/terminology.md`](docs/terminology.md) — the terms used by the specification.
 2. [`SPEC.md`](SPEC.md) — the normative ABI, constants, representations, and function signatures.
 3. [`spec/behavior.md`](spec/behavior.md) — normative behavior, validation order, errors, path rules, polling, and networking.
-4. [`spec/release-semantics.md`](spec/release-semantics.md) — normative Facet 0.1 release clarifications discovered by the reference implementation.
-5. [`docs/design.md`](docs/design.md) — why the ABI has this shape.
-6. [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — guidance for runtime implementers.
+4. [`docs/design.md`](docs/design.md) — why the ABI has this shape.
+5. [`docs/runtime-implementation.md`](docs/runtime-implementation.md) — guidance for runtime implementers.
 
 ## Other documents
 

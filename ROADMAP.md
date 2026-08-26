@@ -63,7 +63,7 @@ Implement profiles in this order:
 7. `facet-network`;
 8. `facet-links`.
 
-The Wago implementation should use [`spec/behavior.md`](spec/behavior.md) and [`spec/release-semantics.md`](spec/release-semantics.md) as its behavioral contract.
+The Wago implementation should use [`spec/behavior.md`](spec/behavior.md) as its behavioral contract.
 
 It should use the conformance suite as its acceptance test.
 

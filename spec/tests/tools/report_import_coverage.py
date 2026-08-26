@@ -62,6 +62,27 @@ def direct_function_calls(roots: list[Any]) -> set[str]:
     return called
 
 
+def wasm_modules(roots: list[Any]) -> list[list[Any]]:
+    """Return every module command without merging its identifier scope."""
+    return [
+        node
+        for node in walk_lists(roots)
+        if node and node[0] == "module"
+    ]
+
+
+def directly_invoked_facet_imports(roots: list[Any]) -> set[str]:
+    """Return Facet imports directly called within the same Wasm module."""
+    invoked: set[str] = set()
+    for module in wasm_modules(roots):
+        aliases = facet_import_aliases(module)
+        called = direct_function_calls(module)
+        invoked.update(
+            name for name, local_ids in aliases.items() if local_ids & called
+        )
+    return invoked
+
+
 def main() -> int:
     canonical_path = REPO / "spec" / "imports.wat"
     canonical = import_signatures(canonical_path)
@@ -74,8 +95,7 @@ def main() -> int:
         relative = str(path.relative_to(REPO))
         signatures = import_signatures(path)
         roots = parse_sexpr(path.read_text(encoding="utf-8"))
-        aliases = facet_import_aliases(roots)
-        called = direct_function_calls(roots)
+        directly_invoked = directly_invoked_facet_imports(roots)
 
         for name, signature in signatures.items():
             expected = canonical.get(name)
@@ -87,7 +107,7 @@ def main() -> int:
                     f"got {signature}, expected {expected}"
                 )
             declared.setdefault(name, []).append(relative)
-            if aliases.get(name, set()) & called:
+            if name in directly_invoked:
                 invoked.setdefault(name, []).append(relative)
 
     missing_declarations = sorted(set(canonical) - set(declared))
